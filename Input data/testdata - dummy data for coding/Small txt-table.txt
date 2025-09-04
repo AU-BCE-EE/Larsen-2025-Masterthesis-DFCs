@@ -1,6 +1,0 @@
-ID   Name        Age   Department
-1    Alice       29    Finance
-2    Bob         34    Marketing
-3    Charlie     41    HR
-4    Diana       25    IT
-5    Edward      38    Sales
