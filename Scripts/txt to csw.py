@@ -12,7 +12,7 @@ import pandas as pd
 # copy the filepath
 # put r in front so python knows to handle it as a raw string
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\Data\testdata\NH3 data") 
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\data")
+output_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\Dummy output")
 
 ### File conversion ###
 for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputfolder
@@ -27,8 +27,7 @@ for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputf
     
     # Save as .csv
     current_file.to_csv(csv_file, index=False)
-    print(f"Saved {csv_file.name}")
-
+    
 print('Conversion Performed')
 
 ### Code references ###
