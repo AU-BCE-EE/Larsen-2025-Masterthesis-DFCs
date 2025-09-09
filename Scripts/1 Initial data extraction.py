@@ -11,17 +11,15 @@
 # v1 - fully functional, can potentially be further optimized
 
 ### Packages ### 
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 
-### Variables ####
-# Folders:
-# copy the filepath
-# put r in front so python knows to handle it as a raw string
+### Constants ####
+# Folders copy the filepath.Put r in front so python knows to handle it as a raw string
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\Actual data - only 1 file")
 output_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\Dummy output")
 
-### Data extraction ###
+### Actual Code-section ###
 # Looping over files in the designated inputfolder
 for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputfolder (txt-file specific as an extra precuation to avoid errors)
     current_table = pd.read_csv(txt_file, sep=r'\s+') # loads the current file in the loop as a table(pd-dataframe), indicating that the collum seperator is sevral empty spaces
