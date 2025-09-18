@@ -1,4 +1,5 @@
 ### Script description ###
+# V1:
 # Reads txt-files from a designated input-folder, containing raw data from the dynamic flux chambers (DFC's) as txt-files
 # For each file, load it as a table, extract and save the following parameters, currently:
 # - Concentration [ppb], as a an average of the last 30 s before a valve-shift idealy also with the corresponding std-deviation
@@ -6,36 +7,43 @@
 # - Corresponding date [y-m-d] and time of day [h:min:s:ms]
 # Save these parameters in a new clearer table
 # Save the new table as a csv-file in a designated outputfolder, one for each txt-file
+# V2:
+# before saving the data, sort it based on the valve Id, and thereafter the time
 
 ### Currrent version ###
-# v1 - fully functional, can potentially be further optimized
+# v1
 
 ### Packages ### 
 from pathlib import Path
 import pandas as pd
 
-### Constants ####
-# Folders copy the filepath.Put r in front so python knows to handle it as a raw string
+### Scrip initialization ####
+# Folders:copy the filepath.Put r in front so python knows to handle it as a raw string
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\Actual data - only 1 file")
-output_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\Dummy output")
+output_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\1 Dummy_extracted")
+
+# overwrite
+overwrite = True # False/True statement, old files with the same name will not be overwritten if set to False
 
 ### Actual Code-section ###
+## Setup loopng over the files ##
 # Looping over files in the designated inputfolder
 for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputfolder (txt-file specific as an extra precuation to avoid errors)
-    current_table = pd.read_csv(txt_file, sep=r'\s+') # loads the current file in the loop as a table(pd-dataframe), indicating that the collum seperator is sevral empty spaces
-    current_table_copy = current_table # precation, creating a copy to maintain the original file as is
+    current_df = pd.read_csv(txt_file, sep=r'\s+') # loads the current file in the loop as a table(pd-dataframe), indicating that the collum seperator is sevral empty spaces
+    # precation, creating a copy to maintain the original file as is
     # print(current_table_copy['MPVPosition'].head(10)) # prints the first 10 datapoints of a collum as a manual check of the code
     
-    ## Loop initialization for rows in the current txt-file ##
-    extracted_data = {'Concentration[PPB]' : [], 'Concentration_stdev[PPB]' : [], 'Valve-position[-]': [], 'date[y-m-d]' : [], 
-    'time[h-min-s.ms]' : []} 
+    # Loop initialization for rows in the current txt-file
+    extracted_data = {'C[PPB]' : [], 'C_STDEV[PPB]' : [], 'VALVE_POS[-]': [], 'DATE[y-m-d]' : [], 
+    'TIME[h-min-s.ms]' : []} 
     #print(extracted_data)
     # extracted data will be continusly added to this dictionary and converted into a table at the end, saving computer-power compared to tables
 
     previous_vale_postion = None # initlazation of shift check
     in_shift = False # initialization of shift-check
 
-    for row_index, row in current_table_copy.iterrows(): # loops over the table top to bottom (in the rows)
+    ## Actual data-extraction ##
+    for row_index, row in current_df.iterrows(): # loops over the table top to bottom (in the rows)
         # defining the collums of interest using thier respective header:
         vale_position = row['MPVPosition'] # Position of the vale, determining which DFC chamber is meassured. 
 
@@ -50,7 +58,7 @@ for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputf
                 start_index = max(0, row_index - 30) # tackes the last 30 measurements, or 0, extra precuation if the shift occurs at the start of the table
                 #print('shift index ', row_index, 'go back 30 ', start_index)
 
-                data_window = current_table_copy.loc[start_index : row_index - 1] # panda feauture df.loc[row , collum] creates a sub-table with the ability to slice (includes the last index unlike slicing in normal pyhton)
+                data_window = current_df.loc[start_index : row_index - 1] # panda feauture df.loc[row , collum] creates a sub-table with the ability to slice (includes the last index unlike slicing in normal pyhton)
 
                 if len(data_window) > 0: # extra check that the data-window has been corectly created to avoid error-calls
                     middle_row = data_window.iloc[len(data_window) // 2 ] # tackes the entire row in the middle of the window, notice the integer division always rounds down
@@ -65,11 +73,11 @@ for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputf
                     #print(NH3_concentration, '' , NH3_stdev)
 
                     # Saving collected data into the dict
-                    extracted_data['Concentration[PPB]'].append(NH3_concentration)
-                    extracted_data['Concentration_stdev[PPB]'].append(NH3_stdev)
-                    extracted_data['Valve-position[-]'].append(valve_ID)  # current valve pos at shift
-                    extracted_data['date[y-m-d]'].append(date_val)
-                    extracted_data['time[h-min-s.ms]'].append(time_val)
+                    extracted_data['C[PPB]'].append(NH3_concentration)
+                    extracted_data['C_STDEV[PPB]'].append(NH3_stdev)
+                    extracted_data['VALVE_POS[-]'].append(valve_ID)  # current valve pos at shift
+                    extracted_data['DATE[y-m-d]'].append(date_val)
+                    extracted_data['TIME[h-min-s.ms]'].append(time_val)
 
             elif valve_diff < 0.0001: # resets the shift-check when the there is no longer a difference between current and previous valve value
                 in_shift = False
@@ -77,12 +85,13 @@ for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputf
         previous_vale_postion = vale_position # shift of the current valve-postion in the loop       
     
     ## Saving the extracted data as csv-files ##
+    
     #print(extracted_data)
     new_table = pd.DataFrame(data=extracted_data) # conveting the dict into a table
     #print(new_table)
     output_file = output_folder / f"{txt_file.stem}_extracted.csv" # defines the path for the outputfile, connecting the outputfolder, txt-file name and adding _extracted.csv as a suffix
 
-    if output_file.exists():
+    if output_file.exists() and overwrite is False:
         continue  # moves on to the next txt_file
 
     new_table.to_csv(output_file, index=False) 
