@@ -37,7 +37,7 @@ Q = 1986 * (1/1000) * 60 # 1986[L/min] * (1/1000) [m3/L] * 60 [min/h] = ... [m3/
 TAN = 1800 # [mg/L] Total ammonia nitrogen for the slurry used in this experiment 
 slurry_aplication = 3.5 # [L/m2] 
 TAN_m2 = TAN * slurry_aplication # [mg/m2], amount of TAN per m2
-print(TAN_m2)
+#print(TAN_m2)
 
 # Starting time
 # starting time of the first meassurement in this experiment, remember '' to create a string
@@ -80,8 +80,6 @@ combined_df = combined_df.drop(columns=['DATE[y-m-d]', 'TIME[h-min-s.ms]'])
 # using a built-in panda-function to intepret the DATE_TIME as time-values, not simply strings
 combined_df['DATE_TIME'] = pd.to_datetime(combined_df['DATE_TIME'], format="%Y-%m-%d %H:%M:%S.%f") 
 combined_df['TIME_NORMALIZED[h]'] = (combined_df['DATE_TIME'] - start_time).dt.total_seconds() / 3600 # [h]
-combined_df['TIME_NORMALIZED[h]'] = (combined_df['DATE_TIME'] - start_time).dt.total_seconds() / 3600 # [h]
-
 
 ## Sorting the data ##
 # firstly by valve ID, then by time

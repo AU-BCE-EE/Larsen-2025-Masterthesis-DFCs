@@ -85,7 +85,6 @@ for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputf
         previous_vale_postion = vale_position # shift of the current valve-postion in the loop       
     
     ## Saving the extracted data as csv-files ##
-    
     #print(extracted_data)
     new_table = pd.DataFrame(data=extracted_data) # conveting the dict into a table
     #print(new_table)

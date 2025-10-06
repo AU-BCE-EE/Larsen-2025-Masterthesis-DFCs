@@ -23,23 +23,21 @@ valve_ids = [1, 16] # specifies the valve from which data are extracted
 # specification/ initalization of the y-axis data
 x_collum_title = 'TIME_NORMALIZED[h]'
 y_collum_title = 'F[mg/m2 h]'
-data_dict = {}
+data_dict = {} # initallzing a dict to store x and y data
 
 ### Actual Script ### 
 # Loading the csv-file as a df:
 combined_df = pd.read_csv(input_folder / input_file_name) # notice the / to combine the names
 #print(combined_df)
 
-# Filtering the table 
-filtered_df = combined_df[combined_df['VALVE_POS[-]'].round(5).isin(valve_ids)] # creates a new df with only the valve_pos of interest, rounding as an extra precuation - Python can sometimes be weird with decimals (floats)
-# print(filtered_df)
-
 # extracting data
 for id in valve_ids: # looping  over the valve id list
-    valve_df = filtered_df[filtered_df['VALVE_POS[-]'] == id].reset_index(drop=True) # breifly crating a 
-    data_dict[id] = {"x": valve_df[x_collum_title],"y": valve_df[y_collum_title]} # storing specified data in the dict
-    # ovreall structure is a dict of dics
-    # outer dict has the valve id's as keys, and the x&y dicts as values
+    valve_df = combined_df[combined_df['VALVE_POS[-]'].round(5) == id].reset_index(drop=True) # selects the VALVE-POS collum from the combined_df folder,
+    # rounds the number, as Python is weird with integers,
+    # Checks if the VALVE-POS values matches the current id,
+    # Based on this check, creates a new reduced df with restet index values
+    data_dict[id] = {"x": valve_df[x_collum_title],"y": valve_df[y_collum_title]} # storing specified data in the dict,
+    # outer dict has the valve id's as keys, and the x&y dicts as values,
     # inner has the x-data as keys and the y-data as values
 
 ## Plotting Data ##
@@ -50,6 +48,5 @@ plt.xlabel('Time [h]')
 plt.ylabel('Flux [mg / m2 h]')
 plt.legend()
 plt.show()
-
 
 ### Coding references ### 
