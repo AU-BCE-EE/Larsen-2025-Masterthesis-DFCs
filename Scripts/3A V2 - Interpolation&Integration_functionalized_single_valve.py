@@ -57,7 +57,7 @@ def interpolate_valve(valve_data, interp_method = 'all'):
     for id,data in valve_data.items(): # looping over the valve data dict
         x,y = data['x'], data['y'] # extracting x and y data from the dict
 
-        x_expanded = np.linspace(0, x[-1], num=int(x[-1] * 120) + 1) # expands the time-values to every half min
+        x_expanded = np.linspace(x[0], x[-1], num=int((x[-1] - x[0]) * 120) + 1) # expands the time-values to every half min
 
         interp_result = {"x_expanded": x_expanded} # extract the x-value into the dict
 
@@ -117,11 +117,11 @@ def plot_interp_results(valve_id, valve_data, interp_results):
     x_expanded = results["x_expanded"]
 
     if "y_linear" in results:
-        plt.plot(x_expanded, results["y_linear"], 'x', color='black', markersize=1,
+        plt.plot(x_expanded, results["y_linear"], '-', color='black', markersize=1,
                  label=f'valve {valve_id} (linear interp)')
         
     if "y_cubic" in results:
-        plt.plot(x_expanded, results["y_cubic"], 'x', color='gray', markersize=1,
+        plt.plot(x_expanded, results["y_cubic"], '-', color='gray', markersize=1,
                  label=f'valve {valve_id} (cubic spline interp)')
 
     
@@ -135,7 +135,7 @@ def plot_interp_results(valve_id, valve_data, interp_results):
 # Folders
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\2 Dummy_converted") # copy the filepath
 input_file_name = 'dummy_test_1_converted.csv' # copy the name as a string, don't forget .csv
-valve_ids = [5,9,16] # valve ID's to be investigated as a list
+valve_ids = [16] # valve ID's to be investigated as a list
 
 
 # Tan & slurry aplication
@@ -145,12 +145,13 @@ TAN_m2 = TAN * slurry_aplication # [mg/m2], amount of TAN per m2
 
 ## Function-calls ## 
 df = load_data(input_folder,input_file_name)
-valve_data = extract_valve_data(df,valve_ids)
+valve_data = extract_valve_data(df, valve_ids)
 interp_results = interpolate_valve(valve_data, interp_method="all")  # only linear
 integrals = integrate_valve(valve_data, interp_results, TAN_m2)
-plot_interp_results(9, valve_data, interp_results)
+plot_interp_results(16, valve_data, interp_results)
 
 ## Print tests ##
-#print(valve_data[5]['x'])
+print(valve_data)
+print(interp_results[16]['x_expanded'])
 #print(integrals)
 ### Coding references ### 
