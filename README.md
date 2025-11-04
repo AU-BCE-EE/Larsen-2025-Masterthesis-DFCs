@@ -1,4 +1,4 @@
-# template-data
+# template-data test
 Data and files concerning NH3 emission mitigation from manure meassured using dynamic flux chambers (DFCs)
 Related to the maintainers master thesis under Johanna Pedersen
 Project time is 2025-08-25 to 2026-06-03
