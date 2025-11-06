@@ -47,4 +47,32 @@ def interpolate_valve(valve_data, interp_method = 'linear'):
     return interp_results
 
 
+def process_input_folder(input_folder , output_folder, overwrite = False):
+    '''
+    Function handles overall logic of loading and saving multiple data from a folder.
+    extract_data_from_piccarro_file is used for each file in the folder    
+    '''
+
+    output_folder.mkdir(parents=True, exist_ok=True) 
+    # creates the outputfolder if it doesnt already exist
+    # exist_ok = True ensures script simply moves on if output_folder exist instead of raising a value_error
+
+    txt_files = list(input_folder.glob("*.txt"))
+    if len(txt_files) == 0:
+        print(f"No .txt files found in {input_folder}")
+        return
+    
+    for txt_file in txt_files:
+        print(f'Processing {txt_file.name}') # .name provides simply the filename not the entire path
+        extracted_df = extract_data_from_piccaro_file(txt_file)
+
+        output_file = output_folder / f"{txt_file.stem}_extracted.csv"
+    
+        if output_file.exists() and not overwrite:
+            print(f"Skipping existing file: {output_file.name}")
+            continue
+
+        extracted_df.to_csv(output_file, index=False)
+        print(f"Saved: {output_file.name}")
+
 ### Changing another script, saving this here for now ### 

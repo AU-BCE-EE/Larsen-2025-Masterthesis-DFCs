@@ -30,7 +30,6 @@ overwrite = True # False/True statement, old files with the same name will not b
 # Looping over files in the designated inputfolder
 for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputfolder (txt-file specific as an extra precuation to avoid errors)
     current_df = pd.read_csv(txt_file, sep=r'\s+') # loads the current file in the loop as a table(pd-dataframe), indicating that the collum seperator is sevral empty spaces
-    # precation, creating a copy to maintain the original file as is
     # print(current_table_copy['MPVPosition'].head(10)) # prints the first 10 datapoints of a collum as a manual check of the code
     
     # Loop initialization for rows in the current txt-file
@@ -95,7 +94,7 @@ for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputf
 
     new_table.to_csv(output_file, index=False) 
 
-print('\n' 'script is done without error-calls' '\n')
+    print("\nAll files processed successfully\n")
 
 ### Code references ### 
 # https://www.geeksforgeeks.org/python/how-to-read-text-files-with-pandas/
@@ -103,6 +102,8 @@ print('\n' 'script is done without error-calls' '\n')
 # https://stackoverflow.com/questions/28218698/how-to-iterate-over-columns-of-a-pandas-dataframe
 # https://stackoverflow.com/questions/13784192/creating-an-empty-pandas-dataframe-and-then-filling-it 
 # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html 
+
+
 
 
 

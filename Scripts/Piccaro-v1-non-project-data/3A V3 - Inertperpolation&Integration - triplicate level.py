@@ -231,7 +231,7 @@ def integration(corrected_df, TAN_m2):
     for method in corrected_df['treatment'].unique():
         # creating a df for each method
         method_df = corrected_df[corrected_df['treatment'] == method].reset_index(drop=True)
-        method_integration_results = {} 
+        integrated_results = [] 
 
         # initializing objects to gather integral-data
         integrals = [0.0] # as the 1st point cannot be calculated
@@ -252,6 +252,18 @@ def integration(corrected_df, TAN_m2):
         integrals.append(integral) 
         cumulative.append(cumulative[-1] + (integral if not np.isnan(integral) else 0)) # adding current an previous integralsum together
         # if the integarl is nan it is simply set to 0 for the cumulated integral-value
+        
+        # creating result-collums
+        method_df['integral_step[mg/m2]'] = integrals
+        method_df['integral_cumulative[mg/m2]'] = cumulative
+        method_df['integral_cumulative_norm[TAN]'] = method_df['integral_cumulative[mg/m2]'] / TAN_m2
+
+        integrated_results.append(method_df)
+
+    # combining results from all methods into a cobined df
+    integrated_df = pd.concat(integrated_results, ignore_index=True)
+    return integrated_df
+
 
         
 

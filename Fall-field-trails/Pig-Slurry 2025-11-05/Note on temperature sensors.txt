@@ -1,0 +1,3 @@
+sensor 3 and 4 meassured outside the DFC's and was left in the soil from the cattle-trail
+Sensor 1 placed soil 10:53 real-time, where DFC 13 was later placed
+Sensor 2 placed in soil 10:56 real-time, where DFC 14 was later placed
