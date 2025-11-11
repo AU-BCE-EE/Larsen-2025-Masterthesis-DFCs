@@ -18,6 +18,19 @@ import pandas as pd
 import numpy as np
 
 ### Functions ###
+def load_picarro_file_as_df(file_path):
+    '''
+    Loads the raw picarro-files
+
+    Args:
+        file_path (Path object) the file-path of the folder the file is contained within
+
+    returns:
+        df (pd.df) a dataframe with all data from the raw picarro file contained within
+    '''
+    return pd.read_csv(file_path, sep=r'\s+', engine='python')
+    # Collums in the file are seperated with several empty spaces
+
 def time_normalization_global(df, global_start = None):
     '''
     Takes a df with the DATE and TIME collum (present in the raw piccarro files).
@@ -27,6 +40,8 @@ def time_normalization_global(df, global_start = None):
     Or using the first measurment.
     Returns the df with the prevously described collums.
     '''
+    
+    # Combining DATE and TIME collums
     if 'DATE_TIME' not in df.columns:
         # Combining time and date into a single collum
         df['DATE_TIME'] = df['DATE'] + ' ' + df['TIME'] # combines the time and date id's in a single new collum
@@ -35,12 +50,19 @@ def time_normalization_global(df, global_start = None):
         df = df.drop(columns=['DATE', 'TIME'])
 
 
+    # Defining start-time with either method
     if global_start is None:
         start_time = df['DATE_TIME'].iloc[0] # .iloc takes the first value of the collum
-        df['TIME_NORM_GLOBAL[h]'] = (df['DATE_TIME'] - start_time).dt.total_seconds() / 3600 # [h]
 
-    if isinstance(global_start, str):
-        df['TIME_NORM_GLOBAL[h]'] = (df['DATE_TIME'] - start_time).dt.total_seconds() / 3600 # [h]
+    elif isinstance(global_start, str):
+        start_time = pd.to_datetime(global_start)
+        
+    else:
+        raise ValueError('global_start must be NONE or a string')
+
+
+    # Normalization:
+    df['TIME_NORM_GLOBAL[h]'] = (df['DATE_TIME'] - start_time).dt.total_seconds() / 3600 # [h]
 
     return df
 
@@ -68,20 +90,20 @@ def time_normalization_local(df, local_starts=None):
     df['TIME_NORMALIZED_LOCAL'] = np.nan
 
     for valve_id in valve_ids:
-        mask = df['MPVPosition'] == valve_id
-        valve_times = df.loc[mask, 'DATE_TIME']
+        valve_df = df['MPVPosition'] == valve_id
+        valve_times = df.loc[valve_df, 'DATE_TIME']
 
         if local_starts is not None and valve_id in local_starts:
             start_time = pd.to_datetime(local_starts[valve_id])
         else:
             start_time = valve_times.min()
 
-        df.loc[mask, 'TIME_NORMALIZED_LOCAL'] = (valve_times - start_time).dt.total_seconds()
+        df.loc[valve_df, 'TIME_NORMALIZED_LOCAL'] = (valve_times - start_time).dt.total_seconds()
 
     return df
    
-def visualize_raw_data(txt_file):
-    df = pd.read_csv(txt_file, sep=r'\s+')
+def visualize_raw_data_per_day(file_path):
+    df = load_picarro_file_as_df(file_path)
     # loads the current file in the loop as a table(pd-dataframe)
     #  indicating that the collum seperator is several empty spaces
 
@@ -89,11 +111,11 @@ def visualize_raw_data(txt_file):
     times = time_normalized_df['TIME_NORM_GLOBAL[h]'] 
     cs = time_normalized_df['NH3']
 
-    plt.plot(times , cs, '.-k')
+    plt.plot(times , cs, '.k', markersize = 1)
     # make the graph pretty
-    plt.xlabel('time [min]', fontsize=12)
+    plt.xlabel('time [h]', fontsize=12)
     #plt.xlim([0, max(times)*1.1]) # automatic definition of the x-axis
-    plt.xlim([0, 150]) # manual definition of the x-axis
+    plt.xlim([0, 24]) # manual definition of the x-axis
     plt.ylabel('concentration [ppb]', fontsize=12)
     plt.ylim([0,max(cs)*1.1])
 
@@ -109,7 +131,7 @@ def visualize_raw_data(txt_file):
     # show the graph
     plt.show()
     
-def extract_data_from_picarro_file(txt_file):
+def extract_data_from_picarro_file(file_path, cycle_min = 7):
     '''
     Extracts needed data from the raw Picarro files and returns them as a dataframe.
     Input: a txt_file with several empty spaces as column dividers (as in raw Picarro files).
@@ -124,9 +146,7 @@ def extract_data_from_picarro_file(txt_file):
     - VALVE_ID
     - DATE_TIME [y-m-d-h-min-s.ms]
     '''
-    # Load the file as a table (pd.DataFrame)
-    df = pd.read_csv(txt_file, sep=r'\s+')
-    # \s+ means "split on one or more spaces" (true for raw Picarro files)
+    df = load_picarro_file_as_df(file_path)
 
     # Combine DATE and TIME into datetime objects
     df['DATE_TIME'] = pd.to_datetime(df['DATE'] + ' ' + df['TIME'], format="%Y-%m-%d %H:%M:%S.%f")
@@ -154,7 +174,7 @@ def extract_data_from_picarro_file(txt_file):
                 cycle_df = df.loc[last_valve_shift_index:index - 1]
                 cycle_time = (cycle_df['DATE_TIME'].iloc[-1] - cycle_df['DATE_TIME'].iloc[0]).total_seconds()
 
-                if cycle_time > 60 * 7:  # only accept cycles longer than 7 minutes
+                if cycle_time > 60 * cycle_min:
                     # Gather data 30 s before the shift
                     start_index = max(0, index - 30)
                     data_window = df.loc[start_index:index - 1]
@@ -189,52 +209,72 @@ def extract_data_from_picarro_file(txt_file):
     return extracted_df
 
 
-def combine_folder_txts_into_single_df(input_folder, Visualization = False):
+def combine_folder_txts_into_single_df(input_folder, output_folder, cycle_min = 7, visualization = False):
     '''
     Function handles overall logic of loading multiple data from a folder.
     extract_data_from_piccarro_file() function is used for each file in the folder.
     Extracted data from multiple files are merged and saved as a single csv-file. 
+
     '''
 
-    txt_files = list(input_folder.glob("*.txt"))
-    if len(txt_files) == 0:
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    
+    data_files = list(input_folder.glob("*.dat")) + list(input_folder.glob("*.dat"))
+
+    if len(data_files) == 0:
         print(f"No .txt files found in {input_folder}")
         return
     
     all_data = []
     
-    for txt_file in txt_files:
-        print(f'Processing {txt_file.name}') # .name provides simply the filename not the entire path
-        extracted_df = extract_data_from_picarro_file(txt_file)
+    for file_path in data_files:
+        print(f'Processing {file_path.name}') # .name provides simply the filename not the entire path
+        extracted_df = extract_data_from_picarro_file(file_path, cycle_min)
 
         if not extracted_df.empty: # if not checks if the object is empty, extra precuation
             all_data.append(extracted_df)
 
+        if visualization == True:
+            visualize_raw_data_per_day(file_path)
+
     if not all_data:
         print('No data was extracted, something is wrong')
-        return
+        return None
     
     # creating a single df from all_data and sorting it
     merged_df = pd.concat(all_data, ignore_index=True)
-
-    sorted_df = extracted_df.sort_values(by=['VALVE_POS[-]', 'DATE_Time']) # sorting the dataframe
+    sorted_df = merged_df.sort_values(by=['VALVE_ID', 'DATE_TIME']).reset_index(drop=True)
 
     return sorted_df
 
-def remove_data(df, dict):
+def remove_data(df, removal_dict):
     '''
     Removes unreliable data due to known field-errors.
     using a df with picarro data.
 
 
-    uisng tuble (str, [ints]) to determine which data to remove.
+    uisng tuble ([str], [ints]) to determine which data to remove.
     str simillar to the DATE_TIME-collum in the piccaro data, start and end of the remmoval seperated by (something!) 
-    ex 2023-04-12 12:12:57.520 --- 2023-04-12 18:12:46.058.
+    ex 2023-04-12 12:12:57.520 & 2023-04-12 18:12:46.058.
     The ints coresponding to valve id's.
     If no values are provided (the dict is empty) all data in the respective time-interval is removed.
 
     Returns a df with the specified data removed.
     '''
+    cleaned_df = df.copy()
+
+    # check and potential conversion of DATE_TIME collum into date_time object
+    if not np.issubdtype(cleaned_df['DATE_TIME'].dtype, np.datetime64):
+        cleaned_df['DATE_TIME'] = pd.to_datetime(cleaned_df['DATE_TIME'])
+
+    # extracting time-values
+    for (start_str, end_str), valve_ids in removal_dict.items():
+        start = pd.to_datetime(start_str)
+        end = pd.to_datetime(end_str)
+
+    return cleaned_df
+
 
 def save_df_as_csv(df, output_folder, overwrite = True):
     '''
@@ -252,16 +292,19 @@ def save_df_as_csv(df, output_folder, overwrite = True):
     
 ### Constants ### 
 
-### Function calls ###
+### Script Excecution ###
 if __name__ == "__main__":
     # copy the folderpath
-    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\Actual data - only 1 file")
+    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-experiments\Cattle trails\Raw-picarro-files")
     # copy the folderpath, add at least.csw
-    output_file = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\1 Dummy_extracted")
+    output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
 
-    combine_folder_txts_into_single_df(input_folder , output_file, overwrite = False)
+    combined_df = combine_folder_txts_into_single_df(input_folder, output_folder, cycle_min=7, visualization = False)
 
+
+    
 ### Print tests ### 
+#print(combined_df)
 
 ### Coding references ###
 # https://www.geeksforgeeks.org/python/python-os-mkdir-method/ 

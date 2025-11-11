@@ -20,39 +20,50 @@ def load_data(input_folder,input_file_name):
 
 ### defining constants ###
 # folder and filename
-input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Fall Experiments\slurry acidification - initial lab scale\2nd trial") # copy the filepath
-input_file_name = 'Titrations - 2nd trail.csv' # copy the name as a string, don't forget .csv
+input_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Lab-acidification-test-before-lab-field-trails") # copy the filepath
+input_file_name_pig = '2025-10-14-titration-pig-2nd.csv' # copy the name as a string, don't forget .csv
+input_file_name_cattle = '2025-11-11-Titration-cattle-3rd.csv'
 
 ### function-calls ###
-df = load_data(input_folder,input_file_name)
+df_pig = load_data(input_folder,input_file_name_pig)
+df_cattle = load_data(input_folder, input_file_name_cattle)
 
 # Extracting data from DF
-x_data1 = df['V (acid) [mL]'] 
-x_data2 = df['m(H2SO4) / m(slurry) [kg/ton]']
-x_data3 = df['V(acid) / m(slurry) [L/ton]']
+# x-axis arrays
+xs1_pig = df_pig['V(acid) / m(slurry) [L/ton]']
+xs2_pig = df_pig['m(H2SO4) / m(slurry) [kg/ton]']
 
-y_data1 = df['pH Cattle H2SO4 (mean)']
-y_data2 = df['pH cattle AA (mean)']
-y_data3 = df['pH pig H2SO4 (mean)']
-y_data4 = df['pH pig AA (mean)']
+xs1_cattle = df_cattle['V(acid) / m(slurry) [L/Ton]']
+xs2_cattle = df_cattle['V(H2SO4) / m(slurry) [kg/Ton]'] # actually the mass of H2SO4
 
-y_stdev1 = df['stdev pH H2SO4 cattle']
-y_stdev2 = df['pH stdev Cattle AA']
-y_stdev3 = df['pH stdev pig H2SO4']
-y_stdev4 = df['pH stdev pig AA']
+# y-axis arrays
+pH_pig_AA = df_pig['pH pig AA (mean)']
+pH_pig_H2SO4 = df_pig['pH pig H2SO4 (mean)']
+
+pH_cattle_AA = df_cattle['pH(AA) avg']
+pH_cattle_H2SO4 = df_cattle['pH(H2SO4) avg']
+
+# std-deviation
+pH_stdev_pig_AA = df_pig['pH stdev pig AA']
+pH_stdev_pig_H2SO4 = df_pig['pH stdev pig H2SO4']
+
+pH_stdev_cattle_AA = df_cattle['pH(AA) stdev']
+pH_stdev_cattle_H2SO4 = df_cattle['pH(H2SO4) stdev']
+print('PH stedev', pH_stdev_cattle_H2SO4)
 
 ### Plot the stuff ###
-# measured current and voltage
-plt.errorbar(x_data2, y_data1, yerr=y_stdev1, fmt='o',
-             color='#2b8cbe', label='Cattle H2SO4', capsize=2)
-#plt.errorbar(x_data2, y_data2, yerr=y_stdev2, fmt='o',
- #            color='#a6bddb', label='Cattle AA', capsize=2)
+# catte 
+plt.errorbar(xs1_cattle, pH_cattle_AA, yerr=pH_stdev_cattle_AA, fmt='o',
+             color='#2b8cbe', label='Cattle AA', capsize=2)
+
+plt.errorbar(xs1_cattle, pH_cattle_H2SO4, yerr=pH_stdev_cattle_H2SO4, fmt='o',
+             color='#a6bddb', label='Cattle H2SO4', capsize=2)
 
 # Pig
-plt.errorbar(x_data2, y_data3, yerr=y_stdev3, fmt='o',
+plt.errorbar(xs1_pig, pH_pig_AA, yerr = pH_stdev_pig_AA, fmt='o',
              color="#8e5107", label='Pig H2SO4', capsize=2)
-#plt.errorbar(x_data1, y_data4, yerr=y_stdev4, fmt='o',
-#             color='#d8b365', label='Pig AA', capsize=2)
+plt.errorbar(xs1_pig, pH_pig_H2SO4, yerr = pH_stdev_pig_H2SO4, fmt='o',
+             color='#d8b365', label='Pig AA', capsize=2)
 
 
 # legend
@@ -63,14 +74,14 @@ ax = plt.gca()
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
-# axis limits
-#plt.xlim(0, 4500)
+# Manual axis limits
+#plt.xlim(0, 12)
 
 # axis titles
-plt.xlabel('m(H2SO4) / m(slurry) [kg / ton]', fontsize=14, fontname='Times New Roman')
+plt.xlabel('V(acid) / m(slurry) [L / ton]', fontsize=14, fontname='Times New Roman')
 plt.ylabel('pH', fontsize=14, fontname='Times New Roman')
 
-# axis ticks
+# Manual axis ticks
 #plt.tick_params(axis='both', labelsize=12)
 #plt.xticks(range(0, 4400, 400), fontname='Times New Roman')
 #plt.yticks(range(1500, 3500, 200), fontname='Times New Roman')
@@ -79,7 +90,8 @@ plt.ylabel('pH', fontsize=14, fontname='Times New Roman')
 plt.show()
 
 ### print-test ###
-#print(df)
+#print(df_pig)
+#print(df_cattle)
 #print(data)
 #print(x_data)
 #print(type(x_data))
