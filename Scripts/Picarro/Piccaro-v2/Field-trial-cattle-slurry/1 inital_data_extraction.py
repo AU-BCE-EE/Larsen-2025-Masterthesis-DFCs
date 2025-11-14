@@ -36,6 +36,7 @@ def time_normalization_global(df, global_start = None):
         df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'], format="%Y-%m-%d %H:%M:%S.%f") # convert into a pd.datetime object
         df = df.drop(columns=['DATE', 'TIME']) # remmoving individual time and date collums
 
+    df = df.sort_values('DATE_TIME').reset_index(drop=True) # sorting uisng time (earliest first)
 
     # Defining start-time with either method
     if global_start is None:
@@ -69,7 +70,7 @@ def time_normalization_local(df, local_starts=None):
         df['DATE_TIME'] = pd.to_datetime(df['DATE'] + ' ' + df['TIME'], format="%Y-%m-%d %H:%M:%S.%f") #  combining DATE and TIME collum, conversion into pd.datetime object
         df = df.drop(columns=['DATE', 'TIME']) # removing old collums
 
-
+    df = df.sort_values('DATE_TIME').reset_index(drop=True) # sorting the df using time (earliest first)
     # identifying valve_ids:
     df['VALVE_ID'] = df['VALVE_ID'].round(5)
     valve_ids = df['VALVE_ID'].unique()
@@ -79,7 +80,7 @@ def time_normalization_local(df, local_starts=None):
         local_starts = {float(k): v for k, v in local_starts.items()}
 
     # initializing collum
-    df['TIME_NORMALIZED_LOCAL'] = np.nan
+    df['TIME_NORM_LOCAL[h]'] = np.nan
 
     for valve_id in valve_ids:
         # creating sub_dfs for each valve id
@@ -94,7 +95,7 @@ def time_normalization_local(df, local_starts=None):
             start_time = valve_times.min()
 
         # normalizing
-        df.loc[valve_df, 'TIME_NORM_LOCAL[h]'] = (valve_times - start_time).dt.total_seconds()
+        df.loc[valve_df, 'TIME_NORM_LOCAL[h]'] = (valve_times - start_time).dt.total_seconds() / 3600
 
     print('time-normalization performed per valve')
     return df
@@ -288,7 +289,7 @@ def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualizatio
 
 def remove_data(df, removal_dict, drop_rows = False):
     '''
-    Replaces PPB-measurments and the related std-deviation with nan for unreliable data due to known field-errors.
+    Removes or replaces PPB-measurments and the related std-deviation with nan for unreliable data due to known field-errors.
     
     Input:
         A df with extracted data:
@@ -335,12 +336,32 @@ def remove_data(df, removal_dict, drop_rows = False):
 
     return cleaned_df
 
+def add_method(df, method_dict):
+    '''
+    Add and addtional collum with slurry treatment id using .map().
 
-def save_df_as_csv(df, output_folder, overwrite = True):
+    Input:
+        df - dataframe with VALVE_ID collum present
+        method: dict with ints (valve ids) as keys, and str as values (methods).
+    
+    Returns: 
+        df with additional collum with treatment ids
+    '''    
+    if "VALVE_ID" not in df.columns:
+        raise ValueError("VALVE_ID column not present")
+    
+    else:
+        df = df.copy()
+        df["TREATMENT"] = df["VALVE_ID"].astype(int).map(method_dict) # using .map() to add a new collum with method ID, using the valve id
+        print('mehod collum added')
+        return df
+
+
+def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
     '''
     
     '''
-    output_file = output_folder / "test_extracted.csv"
+    output_file = output_folder / f"{output_file_name}.csv"
 
     if output_file.exists() and not overwrite:
         print(f"Skipping existing file: {output_file.name}")
@@ -356,6 +377,9 @@ faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000
 end_of_experiment_removal_dict= {('2025-11-04 13:51:0.000', '2025-11-04 14:11:35.808') : []} 
 dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [1, 2, 3, 6, 7, 10, 19]}
 
+treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
+11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
+
 ### Script Excecution ###
 if __name__ == "__main__":
     # copy the folderpath
@@ -363,13 +387,19 @@ if __name__ == "__main__":
     # copy the folderpath, add at least.csw
     output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
 
+    output_file_name = Path('cattle-field-extracted')
+
     combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
-    #combined_df = time_normalization_global(combined_df)
-    #combined_df = time_normalization_local(combined_df)
+    combined_df = time_normalization_global(combined_df)
+    combined_df = time_normalization_local(combined_df)
 
     combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
     combined_df = remove_data(combined_df, end_of_experiment_removal_dict, drop_rows= True)
     combined_df = remove_data(combined_df, dummy_valve_removal_dict, drop_rows=True)
+
+    combined_df = add_method(combined_df, treatment_method_dict)
+
+    save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=True)
     
 ### Print tests ### 
 print(combined_df)
