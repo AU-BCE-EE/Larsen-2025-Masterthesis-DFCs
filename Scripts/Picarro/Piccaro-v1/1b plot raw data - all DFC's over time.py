@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 ### Scrip initialization ####
 # Folders
 # copy the filepath.Put r in front so python knows to handle it as a raw string
-input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning - store filer\testdata - dummy data for coding\Actual data - only 1 file")
+input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Speciale kodning dummy filer\testdata - dummy data for coding\Actual data - only 1 file")
 
 # Starting time
 # starting time of the first meassurement in this experiment, not simply this file wherefore it has to be input here, remember '' to create a string
@@ -59,11 +59,11 @@ for txt_file in input_folder.glob("*.txt"): # loops over txt-files in the inputf
     
 ## Plot the stuff ## 
 # note to self, create a std-plot function
-plt.plot(times , Cs, '.-k')
+plt.plot(times , Cs, 'k')
 # make the graph pretty
 plt.xlabel('time [min]', fontsize=12)
 #plt.xlim([0, max(times)*1.1]) # automatic definition of the x-axis
-plt.xlim([0, 150]) # manual definition of the x-axis
+plt.xlim([0, 240]) # manual definition of the x-axis
 plt.ylabel('concentration [ppb]', fontsize=12)
 plt.ylim([0,max(Cs)*1.1])
 

@@ -76,3 +76,90 @@ def process_input_folder(input_folder , output_folder, overwrite = False):
         print(f"Saved: {output_file.name}")
 
 ### Changing another script, saving this here for now ### 
+
+def extract_data_from_picarro_file(file_path, cycle_min = 7):
+    '''
+    Extracts needed data from the raw Picarro files and returns them as a dataframe.
+   
+    Input: a DAT_file with several empty spaces as column dividers (as in raw Picarro files).
+
+    Gathers data from the last 30 s before a valve-shift (when the measurement is stable).
+    As an additional check, only extracts from valve-cycles with >7 min of data(avoiding quick manual shifts to test the equipment).
+    Short cycles if they are within the range 00:00-00:10 are however kept (the picarro creates a new file around midnight "cutting"
+    stable valve-cycle) 
+
+    Returns a df with the following columns:
+    - C[PPB]
+    - C_STDEV[PPB]
+    - VALVE_ID
+    - DATE_TIME [y-m-d-h-min-s.ms]
+    '''
+    df = load_picarro_file_as_df(file_path)
+
+    # Combine DATE and TIME into datetime objects
+    df['DATE_TIME'] = pd.to_datetime(df['DATE'] + ' ' + df['TIME'], format="%Y-%m-%d %H:%M:%S.%f")
+    df = df.drop(columns=['DATE', 'TIME'])
+    
+    # Initialize storage dictionary
+    extracted_data = {'C[PPB]': [], 'C_STDEV[PPB]': [], 'VALVE_ID': [], 'DATE_TIME': []}
+
+    # Initialize loop logic
+    previous_valve_pos = None
+    in_shift = False
+    last_valve_shift_index = 0
+
+    for index, row in df.iterrows():
+        valve_pos = row['MPVPosition']
+
+        if previous_valve_pos is not None:  # avoid error at first row
+            valve_diff = valve_pos - previous_valve_pos
+
+            # Detect valve-position shift
+            if valve_diff > 0.0001 and not in_shift:
+                in_shift = True  # avoid picking up additional shift-points
+
+                # Define the current valve cycle
+                cycle_df = df.loc[last_valve_shift_index:index - 1]
+                cycle_time = (cycle_df['DATE_TIME'].iloc[-1] - cycle_df['DATE_TIME'].iloc[0]).total_seconds()
+
+                if cycle_time > 60 * cycle_min:
+                    # Gather data 30 s before the shift
+                    start_index = max(0, index - 30)
+                    data_window = df.loc[start_index:index - 1]
+
+                    if len(data_window) > 0:
+                        middle_row = data_window.iloc[len(data_window) // 2]
+                        time_val = middle_row['DATE_TIME']
+                        valve_ID = middle_row['MPVPosition']
+
+                        NH3_concentration = data_window['NH3'].mean()
+                        NH3_stdev = data_window['NH3'].std()
+
+                        # Save extracted values
+                        extracted_data['C[PPB]'].append(NH3_concentration)
+                        extracted_data['C_STDEV[PPB]'].append(NH3_stdev)
+                        extracted_data['VALVE_ID'].append(valve_ID)
+                        extracted_data['DATE_TIME'].append(time_val)
+                
+                else:
+                    current_time = df.loc[index, 'DATE_TIME']
+                    if:
+                        ...
+                    
+                    else:
+                        print(f"Skipped short valve cycle ({cycle_time/60:.1f} min) at {current_time}.")
+
+                # Update cycle start index *after* processing
+                last_valve_shift_index = index
+
+            elif valve_diff < 0.0001:
+                in_shift = False 
+        
+        previous_valve_pos = valve_pos
+
+    extracted_df = pd.DataFrame(extracted_data)
+    return extracted_df
+
+
+
+
