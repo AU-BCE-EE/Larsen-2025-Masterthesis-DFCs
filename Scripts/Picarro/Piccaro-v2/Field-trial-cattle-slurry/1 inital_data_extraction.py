@@ -192,7 +192,7 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
         if previous_valve_pos is not None:  # check avoids error at initial point
             valve_diff = valve_pos - previous_valve_pos  # checking if shift occurs via difference of previous and current valve ID
 
-            if valve_diff > 0.0001 and not in_shift:  # If a difference occurs a shift is happening
+            if abs(valve_diff) > 0.5 and not in_shift:  # If a difference occurs a shift is happening
                 in_shift = True  # only first row in a shift is gathered
 
                 cycle_df = df.loc[last_valve_shift_index:index - 1]  # creating a smaller DF to determine time
@@ -234,8 +234,6 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
     result_df = result_df.drop_duplicates(subset=["VALVE_ID", "DATE_TIME"], keep="first").reset_index(drop=True)
 
     return result_df
-
-
 
 
 def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualization = False):
@@ -376,6 +374,7 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000') : [11, 12, 13, 14, 15, 16, 18, 17]}
 end_of_experiment_removal_dict= {('2025-11-04 13:51:0.000', '2025-11-04 14:11:35.808') : []} 
 dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [1, 2, 3, 6, 7, 10, 19]}
+#dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [18]}
 
 treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
 11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
@@ -387,7 +386,7 @@ if __name__ == "__main__":
     # copy the folderpath, add at least.csw
     output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
 
-    output_file_name = Path('cattle-field-extracted')
+    output_file_name = Path('cattle-field-extracted-valve18')
 
     combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
     combined_df = time_normalization_global(combined_df)
@@ -399,10 +398,10 @@ if __name__ == "__main__":
 
     combined_df = add_method(combined_df, treatment_method_dict)
 
-    save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=True)
+    save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=False)
     
 ### Print tests ### 
-print(combined_df)
+#print(combined_df)
 
 ### Coding references ###
 # https://www.geeksforgeeks.org/python/python-os-mkdir-method/ 

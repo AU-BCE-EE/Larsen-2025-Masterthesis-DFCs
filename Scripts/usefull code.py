@@ -1,5 +1,5 @@
 ### Script description ###
-# Usefull codes/function with explantion - potentially not used in final version of actual scrits, therefore saved here
+# Usefull codes/functions with explantion - potentially not used in final version of actual scrits, therefore saved here
 
 ### Packages ###
 import pandas as pd
@@ -162,4 +162,35 @@ def extract_data_from_picarro_file(file_path, cycle_min = 7):
 
 
 
+def combine_csw_files_into_single_df(input_folder):
+    '''
+    Function handles overall logic of loading multiple data from a folder
+    
+    input: input_folder (path-object)
+
+    Return: a single df from multiple csv-files sorted with respect a created DATE_TIME collum
+    '''
+
+    input_folder = Path(input_folder) # defining the folder as a path object, as an extra check
+    data_files = list(input_folder.glob("*.csv")) # grapping dat-files in the folder
+
+    all_data = []
+
+    # print if no files where found
+    if len(data_files) == 0:
+        print(f"No .csv files found in {input_folder}")
+        return
+   
+    for file in data_files:
+        df = pd.read_csv(input_folder / file)
+        df = date_time_object_conversion(df)
+        
+        all_data.append(df)
+        
+
+    print('all files have been processed')
+    merged_df = pd.concat(all_data, ignore_index=True)# creating a single df from all_data 
+    sorted_df = merged_df.sort_values(by=['DATE_TIME']).reset_index(drop=True) # and sorting it
+
+    return sorted_df
 
