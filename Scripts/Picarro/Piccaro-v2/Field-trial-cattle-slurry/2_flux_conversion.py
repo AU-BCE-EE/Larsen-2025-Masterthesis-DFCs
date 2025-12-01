@@ -190,9 +190,30 @@ def preliminary_visualization(df, valve_lvl = False):
             return
    
 
+def add_mapped_column(df, mapping_dict, from_col, new_col):
+    """
+    Adding a new collum to a df using a dictionary and .map
+    
+    Input:
+        df contaning from_col(str) (the collum header)
+        mapping dict, keys are already present a df-collum, values will be inserted
+        new_col(str), header for the collum added
+
+    Return:
+        df with new_col added
+    """
+    if from_col not in df.columns:
+        raise ValueError(f"Column '{from_col}' not present in DataFrame")
+    
+    df = df.copy()
+    df[new_col] = df[from_col].map(mapping_dict)
+    
+    return df
+
+
 def TAN_normalization(df, TAN_M2_dict,Tan_M2_stdev_dict):
     '''
-    normalizing fluxes and related std_dev (error propagation) agianst slurry TAN-values
+    normalizing fluxes and related std_dev (plus error propagation) agianst slurry TAN-values
     
     input:
         df with the following collums included
@@ -207,6 +228,77 @@ def TAN_normalization(df, TAN_M2_dict,Tan_M2_stdev_dict):
             TAN_RATE[h-1]
             TAN_RATE_STDEV
     '''
+    # adding new collums from dictionary
+    df['TAN[mg/m2]'] = df['TREATMENT'].map(TAN_M2_dict)
+    df['TAN_STDEV[mg/m2]'] = df['TREATMENT'].map(Tan_M2_stdev_dict)
+
+    # as background is not present .map() insterts nan - replace those with 0's
+    df['TAN[mg/m2]'] =  df['TAN[mg/m2]'].fillna(0.0)
+    df['TAN_STDEV[mg/m2]'] =  df['TAN_STDEV[mg/m2]'].fillna(0.0)
+    
+    # TAN normalization
+    mask = df['TAN[mg/m2]'] > 0
+
+    df['TAN_RATE[1/h]'] = 0.0
+    df.loc[mask, 'TAN_RATE[1/h]'] = df.loc[mask, 'F[mg/h m2]'] / df.loc[mask, 'TAN[mg/m2]']
+    
+    # Error propagation
+    df['TAN_RATE_STDEV[1/h]'] = 0.0
+
+    rel_f = df['F_STDEV[mg/h m2]'] / df['F[mg/h m2]']
+    rel_tan = df['TAN_STDEV[mg/m2]'] / df['TAN[mg/m2]']
+
+    df.loc[mask, 'TAN_RATE_STDEV'] = (df.loc[mask, 'TAN_RATE[1/h]'] *((rel_f[mask]**2 + rel_tan[mask]**2)**0.5))
+    return df
+
+
+def preliminary_visualization2(df, y_col, yerr_col, valve_lvl=False):
+    xcol = 'TIME_NORM_GLOBAL[h]'
+
+    if not valve_lvl:
+        for treatment, t_data in df.groupby('TREATMENT'):
+            t_data = t_data.sort_values(xcol)
+            x = t_data[xcol]
+            y = t_data[y_col]
+            s = t_data[yerr_col]
+
+            plt.errorbar(x, y, yerr=s, fmt='.', capsize=1, label=treatment)
+
+        plt.xlabel('Global time [h]')
+        plt.ylabel(y_col)
+        plt.legend(frameon=False, loc='center left', bbox_to_anchor=(1, 0.5))
+
+        ax = plt.gca()
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        plt.show()
+        return
+
+    # valve-level version
+    treatments = df['TREATMENT'].unique()
+    fig, axes = plt.subplots(len(treatments), 1, sharex=True,
+                             figsize=(10, 3*len(treatments)))
+
+    if len(treatments) == 1:
+        axes = [axes]
+
+    for ax, (trt, t_data) in zip(axes, df.groupby('TREATMENT')):
+
+        for valve, v_data in t_data.groupby('VALVE_ID'):
+            v_data = v_data.sort_values(xcol)
+            ax.errorbar(v_data[xcol],
+                        v_data[y_col],
+                        yerr=v_data[yerr_col],
+                        fmt='.',
+                        capsize=1,
+                        label=str(valve))
+
+        ax.set_title(str(trt))
+        ax.legend(frameon=False, loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plt.xlabel('Global time [h]')
+    fig.supylabel(y_col)
+    plt.show()
 
 
 ### Input folders and files ###
@@ -219,9 +311,9 @@ weather_df = date_time_object_conversion(weather_df)
 input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data\cattle-field-extracted-valve18.csv")
 
 ### Constants ###
-preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6}
-TAN_M2_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2}
-TaN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3}
+preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6} # pa
+TAN_M2_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2} # [mg/m2]
+TaN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2]
 
 ### Script Excecution ###
 
@@ -233,7 +325,11 @@ combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_conversion_nonconst_weather(combined_df)
 
-preliminary_visualization(combined_df, valve_lvl = True)
+combined_df = TAN_normalization(combined_df, TAN_M2_dict, TaN_M2_stdev_dict)
+
+#preliminary_visualization(combined_df, valve_lvl = True)
+#preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
+preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
 
 ### Print-tests ###
 #print(weather_df)
