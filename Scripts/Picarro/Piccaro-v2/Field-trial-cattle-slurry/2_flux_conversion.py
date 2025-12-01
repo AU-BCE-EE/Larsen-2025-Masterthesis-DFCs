@@ -78,7 +78,7 @@ def add_presure_drop(df, preasure_drop_dict):
     
     else:
         df = df.copy()
-        df['P_DROP[pa]'] = df["VALVE_ID"].astype(int).map(preasure_drop_dict) # using .map() to add a new collum with method ID, using the valve id
+        df['P_DROP[pa]'] = df[f"VALVE_ID"].astype(int).map(preasure_drop_dict) # using .map() to add a new collum with method ID, using the valve id
        
     return df
 
@@ -144,6 +144,22 @@ def preliminary_visualization(df, valve_lvl = False):
 
             plt.errorbar(times, f, yerr = f_stdev, fmt = '.', label=f'{treatment}', capsize=1)
 
+             # axis titles
+            plt.xlabel('Global time [h]', fontsize=14, fontname='Times New Roman')
+            plt.ylabel('flux [mg / m2 h]', fontsize=14, fontname='Times New Roman')
+    
+            # legend
+            plt.legend(fontsize=12, prop={'family': 'Times New Roman'},frameon=False) # legend font
+
+            # removing non-axis sides
+            ax = plt.gca() 
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+    
+            # show the graph
+            plt.show()
+            return
+
         elif valve_lvl == True:
             treatments = df['TREATMENT'].unique()
             fig, axes = plt.subplots(len(treatments), 1, sharex=True, figsize=(10, 3 * len(treatments)))
@@ -166,67 +182,60 @@ def preliminary_visualization(df, valve_lvl = False):
 
                     ax.set_title(str(treatment))
                     ax.legend(frameon=False)
+                    ax.legend(frameon=False, loc="center left", bbox_to_anchor=(1.0, 0.5))
 
             plt.xlabel('Global time [h]')
+            fig.supylabel("flux [mg / m2 h]")
             plt.show()
             return
-    # axis titles
-    plt.xlabel('Global time [h]', fontsize=14, fontname='Times New Roman')
-    plt.ylabel('flux [mg / m2 h]', fontsize=14, fontname='Times New Roman')
-    
-    # legend
-    plt.legend(fontsize=12, prop={'family': 'Times New Roman'},frameon=False) # legend font
+   
 
-    # removing non-axis sides
-    ax = plt.gca() 
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    
-    # show the graph
-    plt.show()
-        
-
-
-
-
-def TAN_normalization(df):
+def TAN_normalization(df, TAN_M2_dict,Tan_M2_stdev_dict):
     '''
-    normalizing fluxes and related std_dev agianst slurry TAN-values
+    normalizing fluxes and related std_dev (error propagation) agianst slurry TAN-values
     
     input:
         df with the following collums included
             F[mg/h m2]
             F_STDEV[mg/h m2]
 
+        TAN_M2_dict{'treatment': TAN[mg/m2]}
+        TAN_M2_stdev_dict {'treatment' : TAN_stdev [mg/m2]}
+
     output:
         df with the folloing collums added
-            ...
+            TAN_RATE[h-1]
+            TAN_RATE_STDEV
     '''
 
 
-
-### Constants ###
-# Weather data folders and files:
+### Input folders and files ###
+# Weather data:
 input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv")
 weather_df = load_csv_file_as_df(input_path_weather)
 weather_df = date_time_object_conversion(weather_df)
 
+# picarro data:
 input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data\cattle-field-extracted-valve18.csv")
+
+### Constants ###
+preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6}
+TAN_M2_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2}
+TaN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3}
+
+### Script Excecution ###
+
 picarro_df = load_csv_file_as_df(input_path_picarro)
 
 combined_df = add_weather_conditions(picarro_df, weather_df)
 
-preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6}
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_conversion_nonconst_weather(combined_df)
 
 preliminary_visualization(combined_df, valve_lvl = True)
 
-
-### Script Excecution ###
-
 ### Print-tests ###
 #print(weather_df)
-print(combined_df)
+#print(combined_df)
 ### Code references ###
