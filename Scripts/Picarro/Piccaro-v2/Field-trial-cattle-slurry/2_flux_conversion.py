@@ -8,6 +8,18 @@ import pandas as pd
 
 
 ### Functions ###
+def load_csv_file_as_df(file_path):
+    '''
+    Loads the raw picarro-files
+    Helper-function to avoid repating code
+
+    Input: file_path (Path object) the file-path of the folder the file is contained within
+
+    returns: df (pd.df) a dataframe with all data from the raw picarro file contained within
+    '''
+    return pd.read_csv(file_path)
+    # Collums in the file are seperated with several empty spaces
+
 def date_time_object_conversion(df):
     '''
     combines data and time collums found in weather_data, and convert these into a time object
@@ -50,17 +62,6 @@ def add_weather_conditions(picarro_df, weather_df):
     merged_df = merged_df.rename(columns={"mesotp10": "T_GROUND_10cm[DEGC]","pres": "P_ATMOSPHERE[hpa]"})
     return merged_df
 
-def load_csv_file_as_df(file_path):
-    '''
-    Loads the raw picarro-files
-    Helper-function to avoid repating code
-
-    Input: file_path (Path object) the file-path of the folder the file is contained within
-
-    returns: df (pd.df) a dataframe with all data from the raw picarro file contained within
-    '''
-    return pd.read_csv(file_path)
-    # Collums in the file are seperated with several empty spaces
 
 def add_presure_drop(df, preasure_drop_dict):
     '''
@@ -78,7 +79,7 @@ def add_presure_drop(df, preasure_drop_dict):
     
     else:
         df = df.copy()
-        df['P_DROP[pa]'] = df[f"VALVE_ID"].astype(int).map(preasure_drop_dict) # using .map() to add a new collum with method ID, using the valve id
+        df['P_DROP[pa]'] = df[f"VALVE_ID"].astype('Int64').map(preasure_drop_dict) # using .map() to add a new collum with method ID, using the valve id
        
     return df
 
@@ -88,7 +89,7 @@ def flux_conversion_nonconst_weather(df):
     Converting concentration-measurements [PPB] and related std-deviation into fluxes [mg/m2 h], adding them as new collums in the df assuming constant weather conditons
     
     input:
-        DF with C[PPB] and C_STDEV[PPB] collum P[hpa] and T_GROUND_10cm[DEGC] as collum
+        DF with C[PPB] and C_STDEV[PPB] collum P[hpa] and T_GROUND_10cm[DEGC] as collums
 
     returns:
         DF previusly mentioned, with flux-collums added
@@ -98,7 +99,7 @@ def flux_conversion_nonconst_weather(df):
     MW_N = 14 * 10**3 # molecular weight of elementary nitrogen [mg/mol]
     D = 0.7 # chamber diameter [m]
     A = (D/2)**2 * pi # area enclosed by single chamber
-    K = 3 # emperical constant, dp and q relation at physical restriction 
+    K = 3 # emperical chamber dependent constant, presuredrop and flow relation at restriction 
     
     # Gathering needed collums from df:
     C_PPB = df['C[PPB]']
@@ -248,7 +249,7 @@ def TAN_normalization(df, TAN_M2_dict,Tan_M2_stdev_dict):
     rel_f = df['F_STDEV[mg/h m2]'] / df['F[mg/h m2]']
     rel_tan = df['TAN_STDEV[mg/m2]'] / df['TAN[mg/m2]']
 
-    df.loc[mask, 'TAN_RATE_STDEV'] = (df.loc[mask, 'TAN_RATE[1/h]'] *((rel_f[mask]**2 + rel_tan[mask]**2)**0.5))
+    df.loc[mask, 'TAN_RATE_STDEV[1/h]'] = (df.loc[mask, 'TAN_RATE[1/h]'] *((rel_f[mask]**2 + rel_tan[mask]**2)**0.5))
     return df
 
 
@@ -301,14 +302,37 @@ def preliminary_visualization2(df, y_col, yerr_col, valve_lvl=False):
     plt.show()
 
 
+def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
+    '''
+    saves a df as a csv-file in a designated outputfolder
+
+    Input:
+        df: the dataframe to be saved
+        outputfolder(path object): the file-path of the output folder
+        output_file_name(path object): wanted name of the created file
+        overwrite(BOOl): designate whether the function should overwrite an existing file
+    '''
+    output_file = output_folder / f"{output_file_name}.csv"
+
+    if output_file.exists() and not overwrite:
+        print(f"The file with the following name already exist: {output_file.name}")
+        return
+
+    df.to_csv(output_file, index=False)
+    print(f" output_file saved as: {output_file}")
+
+
 ### Input folders and files ###
 # Weather data:
 input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv")
 weather_df = load_csv_file_as_df(input_path_weather)
 weather_df = date_time_object_conversion(weather_df)
-
 # picarro data:
 input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data\cattle-field-extracted-valve18.csv")
+
+### Output folders and files ###
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\2-flux-data")
+output_file_name = Path('cattle-slurry-field-flux')
 
 ### Constants ###
 preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6} # pa
@@ -327,11 +351,14 @@ flux_conversion_nonconst_weather(combined_df)
 
 combined_df = TAN_normalization(combined_df, TAN_M2_dict, TaN_M2_stdev_dict)
 
-#preliminary_visualization(combined_df, valve_lvl = True)
+save_df_as_csv(combined_df, output_folder, output_file_name, overwrite = False)
+
 #preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
-preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
+#preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
 
 ### Print-tests ###
 #print(weather_df)
-#print(combined_df)
+# print(combined_df)
+
+
 ### Code references ###

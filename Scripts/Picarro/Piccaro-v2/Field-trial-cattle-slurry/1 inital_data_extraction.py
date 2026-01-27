@@ -31,7 +31,7 @@ def time_normalization_global(df, global_start = None):
     Returns: the df the collums DATE_TIME and TIME_NORM_GLOBAL[h] collums
     '''
     
-    if 'DATE_TIME' not in df.columns:
+    if 'DATE_TIME' not in df.columns: # check wheter the collum already exists
         df['DATE_TIME'] = df['DATE'] + ' ' + df['TIME'] # combines the time and date id's in a single new collum
         df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'], format="%Y-%m-%d %H:%M:%S.%f") # convert into a pd.datetime object
         df = df.drop(columns=['DATE', 'TIME']) # remmoving individual time and date collums
@@ -385,7 +385,6 @@ if __name__ == "__main__":
     input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-experiments\Cattle trails\Raw-picarro-files")
     # copy the folderpath, add at least.csw
     output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
-
     output_file_name = Path('cattle-field-extracted-valve18')
 
     combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
