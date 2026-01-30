@@ -3,7 +3,8 @@
 # remove empty datapoints
 # remove collums with background data such as temperature
 # Tag current "actual" datapoints
-# Create DFs related to single DFCs
+# Create DFs related to single valve IDs
+# normalize time-values, agianst first datapoint for all valves - NAN datapoints included
 # For backgrounds, interpolate and find avg value with stddev
 # For actual treatments, Interpolate DF_DFC data - tag interpolated values and subtract bkg avg, remember error accumulation
 # Intergrate DF_DFC data, accumulated emissions
@@ -13,6 +14,7 @@
 
 ### Packages ###
 import pandas as pd
+from numpy import linspace
 from pathlib import Path
 
 ### Data treatment functions ###
@@ -65,9 +67,95 @@ def create_sub_dfs_per_valve(df, valve_ids=None):
 
     return output_dict
 
+def time_normalization_valve_level(sub_df_dict):
+    '''
+   normalizes each sub df agianst first meassuremnt, inital NAN-rows included
+
+   Input:
+        sub_df: dictionay, valve IDs are keys, sub DFs for each valve ID are values
+
+    Output
+        sub_df: same dictionay, each sub_df with added row, Time_norm_valve
+
+    '''
+    for valve_id, sub_df in sub_df_dict.items(): # iterating over the dataframes
+        first_time = sub_df['TIME_NORM_GLOBAL[h]'].iloc[0] # extracting first timevalue from current sub_df
+
+        sub_df['TIME_NORM_VALVE[h]'] = sub_df['TIME_NORM_GLOBAL[h]'] - first_time # locally normalizing agianst first valve-specific measurement
+
+        sub_df_dict[valve_id] = sub_df # updating the dictionary
+    
+    return sub_df_dict
+    
+
+def remove_nan_datapoints(sub_df_dict):
+    '''
+    Remove datapoints with nan-values (faulty valve)
+
+    Input
+        sub_df_dict: ditionary with valve_id as keys and dataframes as values
+
+    Output
+        sub_df_dict: same dictionary with nan-rows remmoved
+
+    '''
+    for valve_id, sub_df in sub_df_dict.items(): # iterating over the dataframes
+        sub_df = sub_df.dropna(axis = 0, how = 'any').copy() # remove empty rows (due to valve error), notice the explicit creation of a copy, not a view
+        sub_df_dict[valve_id] = sub_df # updating the dictionary
+    
+    return sub_df_dict
+
+
+def round_flux(df):
+    '''
+    rounds flux-values before interpolation based of measurement-specific std-deviation
+    
+    input: 
+        dataframe with the F[mg/h m2] and F_STDEV[mg/h m2] collum
+
+    output:
+        original dataframe containing a F_rounded[mg/h m2] collum
+
+    '''
+    for index, row in df.interows():
+        F = df['F[mg/h m2]']
+        F_stdev = df['F_STDEV[mg/ h m2]'] 
+
+def linear_interpolation(df, tpts_per_h = 120 ):
+    '''
+   interpolation of the flux-values related to a specific df, by expanding the valve-specific time axis
+
+   input:
+        df: the dataframe to be interpolated
+        tpoints_per_h: int, amount of time points created per hour, even spacing, point per 0.5 minute as default
+
+    output:
+        df containing 3 collums: 
+            interpolated and original flux values
+            interpolated and original time-values
+            tag indicating wheter a specific value was meassured or interpolated
+
+    '''
+    # extracting original flux and time-values from the df
+    # rounding decimals based on the valve-specific std-deviation before interpolation
+
+    df.round({'F[mg/h m2]': 1})
+    F = df['F[mg/h m2]']
+    
+    # prepating time-axis
+    start_t = df['TIME_NORM_VALVE[h]'].iloc[0]
+    end_t = df['TIME_NORM_VALVE[h]'].iloc[-1]
+
+    n_t_pts = int((start_t - end_t) * tpts_per_h) + 1 
+
+    interp_time_axis = linspace(start_t, end_t, n_t_pts) # creating n_t_pts, n number of evenly spaced time points between start and endtime
+
+
+
+
 def merge_method_dicts(sub_df_dict, treatment):
     '''
-    merging triplicates (plots sharing the same treatment with different valve IDs) from the sub_df_dict structure, by averaing the troplicates, also creating a collum for the related std-deviation
+    merging triplicates (plots sharing the same treatment with different valve IDs) from the sub_df_dict structure, by averaging the triplicates, also creating a collum for the related std-deviation
 
     Input:
         sub_df_dict: dictionary containing valve ID's as keys and sub_dfs as values, containing a treament collum
@@ -80,27 +168,11 @@ def merge_method_dicts(sub_df_dict, treatment):
     valve_method_grouped = {} # dict with treatment_id as key and related triplicate valve ids as a value-list
 
     # Group valves by treatment
-    for valve_id, treatment_str in treatment_dict.items(): # looping over treatment dict
-        if treatment_str not in valve_method_grouped: # if the method_str doesn't already exist in treatment_grups dict
-            valve_method_grouped[treatment_str] = [] # then ad it as a key, initalize an empty list for the values
+    #for valve_id, treatment_str in treatment_dict.items(): # looping over treatment dict
+        #if treatment_str not in valve_method_grouped: # if the method_str doesn't already exist in treatment_grups dict
+            #valve_method_grouped[treatment_str] = [] # then ad it as a key, initalize an empty list for the values
 
-        valve_method_grouped[treatment_str].append(valve_id) # add the related valve_ids to the value-list
-
-def interpolation(df):
-    '''
-   interpolation of the flux-values related to a specific df, by expanding the valve-specific time axis
-
-   input:
-        df the dataframe to be interpolated
-
-    output:
-        df containing 3 collums: 
-            interpolated and original flux values
-            interpolated and original local time-values
-            tag indicating wheter a specific value was meassured or interpolated
-
-    '''
-
+        #valve_method_grouped[treatment_str].append(valve_id) # add the related valve_ids to the value-list
 
 ### Visualization functions ### 
 
@@ -116,11 +188,11 @@ input_df = load_csv_file_as_df(input_path) # load flux-data
 
 df_collum_drop = input_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]','TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', 'T_GROUND_10cm[DEGC]', 'P_ATMOSPHERE[hpa]', 'TIME_NORM_LOCAL[h]']).copy() # dropping collums unneeded data further calculations
 
-df_NAN_drop = df_collum_drop.dropna(axis = 0, how = 'any').copy() # remove empty rows (due to valve error), notice the explicit creation of a copy, not a view
-add_tag(df_NAN_drop,'measured','VALUE_TYPE') # add "meassured" tag before interpolating
+add_tag(df_collum_drop,'measured','VALUE_TYPE') # add "meassured" tag before interpolating
 
-
-sub_df_dict = create_sub_dfs_per_valve(df_NAN_drop)
+sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
+sub_df_dict = time_normalization_valve_level(sub_df_dict)
+sub_df_dict = remove_nan_datapoints(sub_df_dict)
 
 
 ### print test ###
