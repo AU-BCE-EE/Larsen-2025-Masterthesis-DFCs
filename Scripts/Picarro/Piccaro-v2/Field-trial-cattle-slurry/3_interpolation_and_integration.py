@@ -5,16 +5,16 @@
 # Tag current "actual" datapoints
 # Create DFs related to single valve IDs
 # normalize time-values, agianst first datapoint for all valves - NAN datapoints included
-# For backgrounds, interpolate and find avg value with stddev
-# For actual treatments, Interpolate DF_DFC data - tag interpolated values and subtract bkg avg, remember error accumulation
+# Interpolate all valve fluxes
+# Find common time
 # Intergrate DF_DFC data, accumulated emissions
 # normalize against TAN-values
 # determine avg and stddev for each treatment, ie. combine triplicate triplicates - remove tails?
 # For now use linear interpolation
 
 ### Packages ###
+import numpy as np
 import pandas as pd
-from numpy import linspace
 from pathlib import Path
 
 ### Data treatment functions ###
@@ -106,22 +106,7 @@ def remove_nan_datapoints(sub_df_dict):
     return sub_df_dict
 
 
-def round_flux(df):
-    '''
-    rounds flux-values before interpolation based of measurement-specific std-deviation
-    
-    input: 
-        dataframe with the F[mg/h m2] and F_STDEV[mg/h m2] collum
-
-    output:
-        original dataframe containing a F_rounded[mg/h m2] collum
-
-    '''
-    for index, row in df.interows():
-        F = df['F[mg/h m2]']
-        F_stdev = df['F_STDEV[mg/ h m2]'] 
-
-def linear_interpolation(df, tpts_per_h = 120 ):
+def interpolation_df_linear(df, tpts_per_h = 120 ):
     '''
    interpolation of the flux-values related to a specific df, by expanding the valve-specific time axis
 
@@ -130,27 +115,79 @@ def linear_interpolation(df, tpts_per_h = 120 ):
         tpoints_per_h: int, amount of time points created per hour, even spacing, point per 0.5 minute as default
 
     output:
-        df containing 3 collums: 
+        new df containing the following collums: 
             interpolated and original flux values
             interpolated and original time-values
             tag indicating wheter a specific value was meassured or interpolated
+            orgignal and interpolated error-values
 
     '''
-    # extracting original flux and time-values from the df
-    # rounding decimals based on the valve-specific std-deviation before interpolation
+    # To do
+    # also extract DATE_TIME for measured values 
 
-    df.round({'F[mg/h m2]': 1})
-    F = df['F[mg/h m2]']
-    
-    # prepating time-axis
-    start_t = df['TIME_NORM_VALVE[h]'].iloc[0]
-    end_t = df['TIME_NORM_VALVE[h]'].iloc[-1]
+    # extracting original flux and time-values from the df, converting each collum to a numpy array
+    F_meassured = df['F[mg/h m2]'].to_numpy() 
+    F_meassured_stdev = df['F_STDEV[mg/h m2]'].to_numpy()
+    t_measured = df['TIME_NORM_VALVE[h]'].to_numpy()
 
-    n_t_pts = int((start_t - end_t) * tpts_per_h) + 1 
+    # preparing time-axis
+    start_t = t_measured[0]
+    end_t = t_measured[-1] # start and end time for the valve measurement
 
-    interp_time_axis = linspace(start_t, end_t, n_t_pts) # creating n_t_pts, n number of evenly spaced time points between start and endtime
+    n_t_pts = int((end_t - start_t) * tpts_per_h) + 1 # amounts of points per hour
+    t_expanded = np.linspace(start_t, end_t, n_t_pts) # creating n_t_pts, n number of evenly spaced time points between start and endtime
 
+    # actual linear interpolation
+    F_expanded = np.interp(t_expanded, t_measured, F_meassured)  
 
+    # tagging interpolated values and determining error of interpolated values
+    measured_index_map = {t: i for i, t in enumerate(t_measured)} # creating dict of meassured vallues
+
+    # Preparing arrays for uncertainty and tagging
+    F_stdev_expanded = np.zeros_like(F_expanded)
+    data_type = np.full(len(t_expanded), 'interpolated', dtype=object)
+
+    # as time-values are floats, a tolerance value is contructed
+    # 2 pts closer than the tollerance is indistinguisable with 0.5 min time resoluton, therefore considered the same point
+    time_resolution_h = 1 / tpts_per_h # [h] 0.5 min
+    tollerance = time_resolution_h / 2
+
+    for i,t in enumerate(t_expanded): # iterating over the expanded time-scale
+        idx = np.argmin(np.abs(t_measured - t)) # finds the closest measured value
+        time_diff = abs(t_measured[idx] - t)
+
+        if time_diff <= tollerance: # considered a measured point, extracting measured deviation
+            F_stdev_expanded[i] = F_meassured_stdev[idx]
+            data_type[i] = 'measured' 
+            continue
+
+        # iteraing over an interpolated point
+        # Applying White2016 algoritm, eq. 15 to find deviation
+
+        # extracting closest meassured datapoints
+        if t < t_measured[idx]:
+            left_idx = idx - 1
+            right_idx = idx
+
+        else: 
+            left_idx =  1
+            right_idx = left_idx + 1 
+
+        t1, t2 = t_measured[left_idx], t_measured[right_idx]
+        F1, F2 = F_meassured_stdev[left_idx] , F_meassured_stdev[right_idx]
+
+        # weight factors
+        w1 = (t2 - t) / (t2 - t1)
+        w2 = (t - t1) / (t2 - t1)
+
+        variance = (w1**2) * (F1**2) + (w2**2) * (F2**2)
+        F_stdev_expanded[i] = np.sqrt(variance)
+
+    # storeing expanded values within a dataframe structure
+    interpolated_df = pd.DataFrame({'TIME_NORM_VALVE[h]': t_expanded,'F[mg/h m2]': F_expanded,'F_STDEV[mg/h m2]': F_stdev_expanded,'VALUE_TYPE': data_type})
+
+    # defninning error for interpolated values
+    return interpolated_df
 
 
 def merge_method_dicts(sub_df_dict, treatment):
@@ -164,15 +201,15 @@ def merge_method_dicts(sub_df_dict, treatment):
     Output:
         df containing data from all valves related to the specified treatment
     '''
-    combined_list = []
-    valve_method_grouped = {} # dict with treatment_id as key and related triplicate valve ids as a value-list
-
-    # Group valves by treatment
-    #for valve_id, treatment_str in treatment_dict.items(): # looping over treatment dict
-        #if treatment_str not in valve_method_grouped: # if the method_str doesn't already exist in treatment_grups dict
-            #valve_method_grouped[treatment_str] = [] # then ad it as a key, initalize an empty list for the values
-
-        #valve_method_grouped[treatment_str].append(valve_id) # add the related valve_ids to the value-list
+ 
+    # To do:
+    # extract sub_dfs with the same treatment 
+    # interpolate these 
+    # determine common time axis - times for which all 3 triplicates have datapoints
+    # remove heads - inital datapoints outside common time axis
+    # remove tails - final datapoints outside common time axis
+    # for each datapont, find avg and propagate std-deviation most likely need to use tolerance method as interpolation function
+    # return single averaged df, contaning same collums as 
 
 ### Visualization functions ### 
 
@@ -194,15 +231,23 @@ sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
 sub_df_dict = time_normalization_valve_level(sub_df_dict)
 sub_df_dict = remove_nan_datapoints(sub_df_dict)
 
+print(sub_df_dict)
+
+for valve_id , sub_df in sub_df_dict.items():
+    interp_res = interpolation_df_linear(sub_df)
+    measured_rows = interp_res[interp_res['VALUE_TYPE'] == 'measured']
+    print(measured_rows)
+
 
 ### print test ###
 #print(input_df)
 #print(df.head(50))
 #print(df.tail(10))
-print(sub_df_dict)
+
 
 ### Code references ###
 # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.drop.html
 # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.head.html
 # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.tail.html 
 # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.dropna.html 
+# white2016 https://doi.org/10.1007/s10765-016-2174-6 
