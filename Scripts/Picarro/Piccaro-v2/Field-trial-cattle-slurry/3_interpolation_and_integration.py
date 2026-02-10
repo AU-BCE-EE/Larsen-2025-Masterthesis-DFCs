@@ -158,32 +158,28 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
     F_measured_stdev = df['F_STDEV[mg/h m2]'].to_numpy()
     t_measured = df['TIME_NORM_VALVE[h]'].to_numpy()
 
+    # background time range
     background_start = background_time_range[0]
     background_end = background_time_range[1]
 
-    valve_start = t_measured[0]
-    valve_end = t_measured[-1]
-
     # Case 1, measurements fall outside the background range and is filtered off
     # Case 2, measurments fall entirely inside background range, the time axis is reduced
-    start_t = max(background_start, valve_start)
-    end_t = min(background_end, valve_end)
 
-    # filter off the data outside the least viable range
-    mask = (t_measured >= start_t) & (t_measured <= end_t)
-    t_measured = t_measured[mask]
-    F_measured = F_measured[mask]
-    F_measured_stdev = F_measured_stdev[mask]
+    # creating largest possible time-axis on background range
+    n_t_pts = int((background_end - background_start) * tpts_per_h) + 1 # amount of points
+    t_expanded = np.linspace(background_start, background_end, n_t_pts) # creating evenly spaced time points between start and endtime
 
-    n_t_pts = int((end_t - start_t) * tpts_per_h) + 1 # amount of points
-    t_expanded = np.linspace(start_t, end_t, n_t_pts) # creating evenly spaced time points between start and endtime
+    # filtering t_expanded to be within measuring range if this is one is smaller
+    valid_min = t_measured[0]
+    valid_max = t_measured[-1]
+    t_expanded = t_expanded[(t_expanded >= valid_min) & (t_expanded <= valid_max)]
 
     # actual linear interpolation
     F_expanded = np.interp(t_expanded, t_measured, F_measured)  
 
-    # Preparing arrays for uncertainty and tagging
+    # Preparing array for uncertainty calculation
     F_stdev_expanded = np.zeros_like(F_expanded)
-    data_type = np.full(len(t_expanded), 'interpolated', dtype=object)
+
 
     # as time-values are floats, a tolerance value is constructed
     # 2 pts closer than the tollerance is indistinguisable with 0.5 min time resoluton, therefore considered the same point
@@ -191,25 +187,22 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
     tolerance = time_resolution_h / 2
 
     for i, t in enumerate(t_expanded):
-
         # find insertion point
         right_idx = np.searchsorted(t_measured, t)
         left_idx = right_idx - 1
 
-        # exact (or near-exact) measurement
+        # time-point so close(with repect to the tolerance) to an actual measurement that it is treated as such
+        # std-deviation from the measured point is used
         if (left_idx >= 0 and abs(t_measured[left_idx] - t) <= tolerance):
             F_stdev_expanded[i] = F_measured_stdev[left_idx]
-            data_type[i] = 'measured'
             continue
         
-
-        # boundary safety (should not happen if filtering was correct)
+        # When 2 measurements cannot be found (at LHS data boundary) deviation is undefined
         if left_idx < 0 or right_idx >= len(t_measured):
             F_stdev_expanded[i] = np.nan
             continue
         
-
-        # interpolate uncertainty
+        # interpolatation uncertainty
         t1, t2 = t_measured[left_idx], t_measured[right_idx]
         F1, F2 = F_measured_stdev[left_idx], F_measured_stdev[right_idx]
 
@@ -220,7 +213,7 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
         F_stdev_expanded[i] = np.sqrt(variance)
         
     # storeing expanded values within a dataframe structure
-    interpolated_df = pd.DataFrame({'TIME_NORM_VALVE[h]': t_expanded,'F[mg/h m2]': F_expanded,'F_STDEV[mg/h m2]': F_stdev_expanded,'VALUE_TYPE': data_type})
+    interpolated_df = pd.DataFrame({'TIME_NORM_VALVE[h]': t_expanded,'F[mg/h m2]': F_expanded,'F_STDEV[mg/h m2]': F_stdev_expanded})
 
     # defninning error for interpolated values
     return interpolated_df
@@ -286,11 +279,12 @@ sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
 sub_df_dict = time_normalization_valve_level(sub_df_dict)
 sub_df_dict = remove_nan_datapoints(sub_df_dict)
 
-print(sub_df_dict)
+#print(sub_df_dict)
 bg_range = find_treatment_time_range( sub_df_dict, 'BACKGROUND')
 
 for id, sub_df in sub_df_dict.items():
-    print(interpolation_df_linear(sub_df, bg_range))
+    interp_df = interpolation_df_linear(sub_df, bg_range, tpts_per_h=120)
+    print(interp_df)
 
 
 
