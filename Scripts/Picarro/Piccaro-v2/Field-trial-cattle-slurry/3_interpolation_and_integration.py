@@ -122,9 +122,9 @@ def find_treatment_time_range(sub_df_dict, treatment):
 
     for sub_df in sub_df_dict.values():
         if sub_df['TREATMENT'].iloc[0] == treatment:
-            start = sub_df['TIME_NORM_VALVE[h]'].iloc[0]
-            end = sub_df['TIME_NORM_VALVE[h]'].iloc[-1]
-            print(start, end)
+            start = sub_df['TIME_NORM_GLOBAL[h]'].iloc[0]
+            end = sub_df['TIME_NORM_GLOBAL[h]'].iloc[-1]
+            #print(start, end)
 
             starts.append(start)
             ends.append(end)
@@ -156,7 +156,7 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
     # extracting original flux and time-values from the df, converting each collum to a numpy array
     F_measured = df['F[mg/h m2]'].to_numpy() 
     F_measured_stdev = df['F_STDEV[mg/h m2]'].to_numpy()
-    t_measured = df['TIME_NORM_VALVE[h]'].to_numpy()
+    t_measured = df['TIME_NORM_GLOBAL[h]'].to_numpy()
 
     # background time range
     background_start = background_time_range[0]
@@ -213,7 +213,7 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
         F_stdev_expanded[i] = np.sqrt(variance)
         
     # storeing expanded values within a dataframe structure
-    interpolated_df = pd.DataFrame({'TIME_NORM_VALVE[h]': t_expanded,'F[mg/h m2]': F_expanded,'F_STDEV[mg/h m2]': F_stdev_expanded})
+    interpolated_df = pd.DataFrame({'TIME_NORM_GLOBAL[h]': t_expanded,'F[mg/h m2]': F_expanded,'F_STDEV[mg/h m2]': F_stdev_expanded})
 
     # defninning error for interpolated values
     return interpolated_df
@@ -278,13 +278,16 @@ add_tag(df_collum_drop,'measured','VALUE_TYPE') # add "meassured" tag before int
 sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
 sub_df_dict = time_normalization_valve_level(sub_df_dict)
 sub_df_dict = remove_nan_datapoints(sub_df_dict)
+#print(sub_df_dict)
 
 #print(sub_df_dict)
-bg_range = find_treatment_time_range( sub_df_dict, 'BACKGROUND')
+bg_range = find_treatment_time_range( sub_df_dict,'BACKGROUND')
+print(bg_range, 'BACKGROUND')
 
 for id, sub_df in sub_df_dict.items():
     interp_df = interpolation_df_linear(sub_df, bg_range, tpts_per_h=120)
     print(interp_df)
+    continue
 
 
 
