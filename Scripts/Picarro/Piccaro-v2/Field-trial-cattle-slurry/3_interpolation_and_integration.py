@@ -42,6 +42,8 @@ def add_tag(df, tag, colum_name):
     returns:
         df with a tag-collum added
     '''
+    # Might delete, doesn't make sense to specify after interpolation
+
     df.loc[:, colum_name] = tag
     return df
 
@@ -133,14 +135,14 @@ def find_treatment_time_range(sub_df_dict, treatment):
     return max(starts), min(ends)
     
         
-def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
+def interpolation_df_linear(df: pd.DataFrame, background_time_range: tuple[int], tpts_per_h = 120) -> pd.DataFrame:
     '''
    interpolation of the flux-values related to a specific df, by expanding the valve-specific time axis
 
    input:
         df: the dataframe to be interpolated
-        tpoints_per_h: int, amount of time points created per hour, even spacing, point per 0.5 minute as default
-        time_range (bool or tuble): specified start and end for the interpolation, found automatically for the specific valve if undefined
+        tpoints_per_h: int, amount of time points created per hour, even spacing, point per 0.5 minute as default - essentially the chosen resolution
+        background_time_range (tuble): specified start and end for the interpolation, found automatically for the specific valve if undefined
 
     output:
         new df containing the following collums: 
@@ -151,12 +153,14 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
 
     '''
     # To do
-    # also extract DATE_TIME for measured values 
+    # also extract metadata such as DATETIME and TREATMENT? - might be done better in merging function?
 
     # extracting original flux and time-values from the df, converting each collum to a numpy array
     F_measured = df['F[mg/h m2]'].to_numpy() 
     F_measured_stdev = df['F_STDEV[mg/h m2]'].to_numpy()
     t_measured = df['TIME_NORM_GLOBAL[h]'].to_numpy()
+
+    treatment = df['TREATMENT'].iloc[0]
 
     # background time range
     background_start = background_time_range[0]
@@ -165,7 +169,7 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
     # Case 1, measurements fall outside the background range and is filtered off
     # Case 2, measurments fall entirely inside background range, the time axis is reduced
 
-    # creating largest possible time-axis on background range
+    # creating largest possible time-axis based on background range
     n_t_pts = int((background_end - background_start) * tpts_per_h) + 1 # amount of points
     t_expanded = np.linspace(background_start, background_end, n_t_pts) # creating evenly spaced time points between start and endtime
 
@@ -180,76 +184,93 @@ def interpolation_df_linear(df, background_time_range, tpts_per_h = 120):
     # Preparing array for uncertainty calculation
     F_stdev_expanded = np.zeros_like(F_expanded)
 
-
     # as time-values are floats, a tolerance value is constructed
-    # 2 pts closer than the tollerance is indistinguisable with 0.5 min time resoluton, therefore considered the same point
-    time_resolution_h = 1 / tpts_per_h # [h] 0.5 min
-    tolerance = time_resolution_h / 2
+    # 2 pts closer than the tollerance is indistinguisable within chosen resoluton, therefore considered the same point
+    time_resolution_h = 1 / tpts_per_h # [h] 120 points per hour = 0.5 min
+    tolerance = time_resolution_h / 2 # [h] 0.25 min
 
     for i, t in enumerate(t_expanded):
-        # find insertion point
+        # find closest measured point to the right
         right_idx = np.searchsorted(t_measured, t)
         left_idx = right_idx - 1
 
         # time-point so close(with repect to the tolerance) to an actual measurement that it is treated as such
-        # std-deviation from the measured point is used
         if (left_idx >= 0 and abs(t_measured[left_idx] - t) <= tolerance):
-            F_stdev_expanded[i] = F_measured_stdev[left_idx]
+            F_stdev_expanded[i] = F_measured_stdev[left_idx] # std-deviation from the measured point is used
             continue
         
-        # When 2 measurements cannot be found (at LHS data boundary) deviation is undefined
+        # if 1 measured point cannot be found on either side (happens at LHS data boundary) deviation is undefined
         if left_idx < 0 or right_idx >= len(t_measured):
             F_stdev_expanded[i] = np.nan
             continue
         
-        # interpolatation uncertainty
+        # both measured point was found without issues, varriance interpolation 
         t1, t2 = t_measured[left_idx], t_measured[right_idx]
         F1, F2 = F_measured_stdev[left_idx], F_measured_stdev[right_idx]
 
+        # weight functions
         w1 = (t2 - t) / (t2 - t1)
         w2 = (t - t1) / (t2 - t1)
 
         variance = (w1**2) * (F1**2) + (w2**2) * (F2**2)
         F_stdev_expanded[i] = np.sqrt(variance)
+
+    # Create DATETIME for interpolated values   
+    experiment_start = pd.to_datetime(df['DATE_TIME'].iloc[0]) - pd.to_timedelta(df['TIME_NORM_GLOBAL[h]'].iloc[0], unit='h')
+    datetime_expanded = experiment_start + pd.to_timedelta(t_expanded, unit='h')
+
         
     # storeing expanded values within a dataframe structure
-    interpolated_df = pd.DataFrame({'TIME_NORM_GLOBAL[h]': t_expanded,'F[mg/h m2]': F_expanded,'F_STDEV[mg/h m2]': F_stdev_expanded})
+    interpolated_df = pd.DataFrame({'TIME_NORM_GLOBAL[h]': t_expanded,'F[mg/h m2]': F_expanded,'F_STDEV[mg/h m2]': F_stdev_expanded,"DATE_TIME":datetime_expanded , 'TREATMENT': treatment})
 
-    # defninning error for interpolated values
     return interpolated_df
 
 
-def merge_triplicates(sub_df_dict, treatment, tpts_per_h = 120):
+
+def merge_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFrame:
     '''
-    merging triplicates (plots sharing the same treatment with different valve IDs) from the sub_df_dict structure, by averaging the triplicates, also creating a collum for the related std-deviation
+    merge triplicates (plots sharing the same treatment with different valve IDs) from the sub_df_dict structure, by averaging the triplicates, also creating a collum for the related std-deviation.
+    Expects triplicates to be on the same time-axis
 
     Input:
         sub_df_dict: dictionary containing valve ID's as keys and sub_dfs as values, containing a treament collum
         treatment (str): str treament to me merged
 
     Output:
-        df containing data from all valves related to the specified treatment
+        df containing interpolated, averaged, error-accumulated, data from all valves related to the specified treatment
     '''
- 
     # To do:
     # extract dfs with the same treatment 
-    # interpolate these 
-    # determine common time axis - times for which all 3 triplicates have datapoints
+    # interpolate these
+    # determine common time axis - times for which all 3 triplicates have datapoints - is this too conservative?
     # remove heads - inital datapoints outside common time axis
-    # remove tails - final datapoints outside common time axis
-    # for each datapont, find avg and propagate std-deviation most likely need to use tolerance method as interpolation function
+    # remove tails - final datapoints outside common time axis 
+    # for each datapoint, find avg and propagate std-deviation most likely need to use tolerance method as interpolation function
     # return single averaged df, contaning same collums as 
-    
    
+    triplicates = []
     # 1. Extract and interpolate triplicates
-    for sub_df in sub_df_dict.values():
+    for valve_id, sub_df in sub_df_dict.items():
         if sub_df['TREATMENT'].iloc[0] == treatment:
-            continue
+            triplicates.append(sub_df.copy())
 
-    
+    concat = pd.concat(triplicates, ignore_index = True)
+    grouped = concat.groupby('TIME_NORM_GLOBAL[h]')
 
+    merged_df = grouped.agg(
+        F_MEAN=('F[mg/h m2]', 'mean'),
+        F_STDEV_TRIPLICATES=('F[mg/h m2]', lambda x: x.std(ddof=1) if len(x) >= 3 else np.nan),
+        N_REPLICATES=('F[mg/h m2]', 'count'),
+        F_STDEV_NOISE=('F_STDEV[mg/h m2]', 'mean'),
+        DATE_TIME=('DATE_TIME', 'first'),
+        TREATMENT=('TREATMENT', 'first')
+    )
 
-    return 'No error here...'
+    merged_df = merged_df.reset_index()
+
+    return merged_df
+
+    return grouped
     
 
 
@@ -278,16 +299,21 @@ add_tag(df_collum_drop,'measured','VALUE_TYPE') # add "meassured" tag before int
 sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
 sub_df_dict = time_normalization_valve_level(sub_df_dict)
 sub_df_dict = remove_nan_datapoints(sub_df_dict)
-#print(sub_df_dict)
 
 #print(sub_df_dict)
+
+
 bg_range = find_treatment_time_range( sub_df_dict,'BACKGROUND')
-print(bg_range, 'BACKGROUND')
+#print(bg_range, 'BACKGROUND')
 
 for id, sub_df in sub_df_dict.items():
-    interp_df = interpolation_df_linear(sub_df, bg_range, tpts_per_h=120)
-    print(interp_df)
-    continue
+    interp_df = interpolation_df_linear(sub_df, bg_range, tpts_per_h=7.5)
+    sub_df_dict[id] = interp_df
+
+
+print(merge_triplicates(sub_df_dict, 'BACKGROUND'))
+
+
 
 
 

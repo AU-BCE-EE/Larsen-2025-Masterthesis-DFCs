@@ -353,7 +353,7 @@ combined_df = TAN_normalization(combined_df, TAN_M2_dict, TaN_M2_stdev_dict)
 
 save_df_as_csv(combined_df, output_folder, output_file_name, overwrite = False)
 
-#preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
+preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
 #preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
 
 ### Print-tests ###

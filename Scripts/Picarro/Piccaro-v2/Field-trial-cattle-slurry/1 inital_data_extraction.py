@@ -339,7 +339,7 @@ treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
 ### Script Excecution ###
 if __name__ == "__main__":
     # copy the folderpath
-    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-experiments\Cattle trails\Raw-picarro-files")
+    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\Cattle trails\Raw-picarro-files")
     # copy the folderpath, add at least.csw
     output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
     output_file_name = Path('cattle-field-extracted-valve18')
