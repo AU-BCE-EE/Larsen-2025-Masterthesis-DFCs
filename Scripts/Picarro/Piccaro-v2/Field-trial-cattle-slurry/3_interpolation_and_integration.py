@@ -226,18 +226,17 @@ def interpolation_df_linear(df: pd.DataFrame, background_time_range: tuple[int],
     return interpolated_df
 
 
-
-def merge_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFrame:
+def merge_baseline_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFrame:
     '''
     merge triplicates (plots sharing the same treatment with different valve IDs) from the sub_df_dict structure, by averaging the triplicates, also creating a collum for the related std-deviation.
-    Expects triplicates to be on the same time-axis
+    Expects triplicates to be on the same time-axis, but not necesaily of the same length
 
     Input:
         sub_df_dict: dictionary containing valve ID's as keys and sub_dfs as values, containing a treament collum
         treatment (str): str treament to me merged
 
     Output:
-        df containing interpolated, averaged, error-accumulated, data from all valves related to the specified treatment
+        df containing interpolated, and averaged flux data with the related std-deviation f
     '''
     # To do:
     # extract dfs with the same treatment 
@@ -259,9 +258,8 @@ def merge_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFrame:
 
     merged_df = grouped.agg(
         F_MEAN=('F[mg/h m2]', 'mean'),
-        F_STDEV_TRIPLICATES=('F[mg/h m2]', lambda x: x.std(ddof=1) if len(x) >= 3 else np.nan),
+        F_STDEV_TRIPLICATES=('F[mg/h m2]', lambda x: x.std(ddof=1)  if len(x) >= 3 else np.nan),
         N_REPLICATES=('F[mg/h m2]', 'count'),
-        F_STDEV_NOISE=('F_STDEV[mg/h m2]', 'mean'),
         DATE_TIME=('DATE_TIME', 'first'),
         TREATMENT=('TREATMENT', 'first')
     )
@@ -294,13 +292,13 @@ input_df = load_csv_file_as_df(input_path) # load flux-data
 
 df_collum_drop = input_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]','TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', 'T_GROUND_10cm[DEGC]', 'P_ATMOSPHERE[hpa]', 'TIME_NORM_LOCAL[h]']).copy() # dropping collums unneeded data further calculations
 
-add_tag(df_collum_drop,'measured','VALUE_TYPE') # add "meassured" tag before interpolating
+#add_tag(df_collum_drop,'measured','VALUE_TYPE') # add "meassured" tag before interpolating
 
 sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
 sub_df_dict = time_normalization_valve_level(sub_df_dict)
 sub_df_dict = remove_nan_datapoints(sub_df_dict)
 
-#print(sub_df_dict)
+print(sub_df_dict)
 
 
 bg_range = find_treatment_time_range( sub_df_dict,'BACKGROUND')
@@ -311,7 +309,8 @@ for id, sub_df in sub_df_dict.items():
     sub_df_dict[id] = interp_df
 
 
-print(merge_triplicates(sub_df_dict, 'BACKGROUND'))
+baseline_df = merge_baseline_triplicates(sub_df_dict, 'BACKGROUND')
+#print(merge_baseline_triplicates(sub_df_dict, 'BACKGROUND'))
 
 
 
