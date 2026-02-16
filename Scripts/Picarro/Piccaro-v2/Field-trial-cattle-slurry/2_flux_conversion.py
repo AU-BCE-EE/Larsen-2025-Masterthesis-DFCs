@@ -119,11 +119,10 @@ def flux_conversion_nonconst_weather(df):
     df['F[mg/h m2]'] = (C_mass * Q) / A # ([mg/m3] [m3/h]) / [m2] = [mg / h m2]
     df['F_STDEV[mg/h m2]'] = (C_mass_stdev * Q) / A # ([mg/m3] [m3/h]) / [m2] = [mg / h m2]
 
-
     return df
 
 
-def preliminary_visualization(df, valve_lvl = False):
+def preliminary_visualization(df, valve_lvl = True):
     '''
     combines fluxes and related std-deviation from treatment-triplicates
     and plots these as a function of TIME_NORMALIZED GLOBAL

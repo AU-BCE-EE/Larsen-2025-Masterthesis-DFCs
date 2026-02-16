@@ -12,10 +12,17 @@
 # determine avg and stddev for each treatment, ie. combine triplicate triplicates - remove tails?
 # For now use linear interpolation
 
+
+# To do 
+# considering simplifying function structure, should use df's instead of dict with df's contained
+# potentially extend background range such that areas with only 1 and 2 plots are used, only for plotting
+# 
+
 ### Packages ###
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from scipy.integrate import cumulative_trapezoid
 
 ### Data treatment functions ###
 def load_csv_file_as_df(file_path):
@@ -30,28 +37,12 @@ def load_csv_file_as_df(file_path):
     return pd.read_csv(file_path)
     # Collums in the file are seperated with several empty spaces
 
-def add_tag(df, tag, colum_name):
-    '''
-    creates additional collom to "tag" the data
-
-    Input:
-        df: the dataframe to tag
-        tag (str): the information to insert into every vallue of the new collum
-        collum_name(str): name of the new collum-header
-
-    returns:
-        df with a tag-collum added
-    '''
-    # Might delete, doesn't make sense to specify after interpolation
-
-    df.loc[:, colum_name] = tag
-    return df
 
 def create_sub_dfs_per_valve(df, valve_ids=None):
     ''' 
    creating sub dfs, dfs with data from only a single valve, collectively stored in a dict for compactabilty
 
-   Args:
+   Input:
         df containing the collum VALVE_ID
         valve_ids (ints or BOOL): the valve-data to be extracted, all valves of none are specifid
 
@@ -268,17 +259,157 @@ def merge_baseline_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFram
 
     return merged_df
 
-    return grouped
+def baseline_correction(sub_df_dict:dict, baseline_df:pd.DataFrame) -> dict:
+    '''
+    subtracts baseline flux from individual plot data - all data alligned to same time-grid, but has indvidal lengths
+
+    Input:
+        sub_df_dict: dictionary containing valve ID's as keys and sub_dfs as values, containing a treament collum
+        baseline_df: dataframe containing averaged baseline flux
+
+    output:
+        sub_df_dict: same dictionary with corrected flux-data
+
+    '''
+    baseline_df['TIME_NORM_GLOBAL[h]'] = baseline_df['TIME_NORM_GLOBAL[h]'].round(3)
+    baseline_small = baseline_df[['TIME_NORM_GLOBAL[h]', 'F_MEAN']].copy()
+
+    for id, sub_df in sub_df_dict.items():
+        sub_df['TIME_NORM_GLOBAL[h]'] = sub_df['TIME_NORM_GLOBAL[h]'].round(3)
+        
+        if sub_df['TREATMENT'].iloc[0] == 'BACKGROUND':
+            continue
+
+        merged = pd.merge(sub_df, baseline_small, on='TIME_NORM_GLOBAL[h]', how='left')
+        merged['F_BC[mg/h m2]'] = merged['F[mg/h m2]'] - merged['F_MEAN'] # BC = baseline corrected
+        merged = merged.drop(columns=['F_MEAN'])
+        sub_df_dict[id] = merged
+
+    return sub_df_dict
+
+
+def TAN_normalization(sub_df_dict: dict, TAN_M2_dict : dict):
+    '''
+    normalizes interpolated baselinecorected flux-values [mg/ h m2] against TAN applied in slurry [mg/m2]
+
+    input: 
+        sub_df_dict: dictionary containing valve ID's as keys and sub_dfs as values, containing a treament collum
+        TAN_M2: dictionary containing treatments(str) as keys, and applied TAN[mg/m2] as values
+        TAN_M2_stdev_dict: dictionary, same structure as TAN_M2 with related std-deviation
+
+    output:
+        in the sub_df_dict, 
+    '''
+    for valve_id, sub_df in sub_df_dict.items():
+        treatment = sub_df['TREATMENT'].iloc[0]
+
+        if treatment == 'BACKGROUND':
+            continue
+
+        TAN_value = TAN_M2_dict[treatment]
+
+        # Normalized flux [%/h]
+        sub_df['F_TAN[%/h]'] = sub_df['F_BC[mg/h m2]'] / TAN_value * 100
+
+
+        sub_df_dict[valve_id] = sub_df
+
+    return sub_df_dict
+
+
+def integration(sub_df_dict: dict, TAN_m2: dict):
+    '''
+   integrates individual plotdata
+   input: dictionary containing valve ID's as keys and sub_dfs as values, containing a treament collum
+
+   output: dictionary, for each non-background dataframe the following collums are added
+        %tan [1/h], flux[mg/m2 h] normalized against TAN added from slurry [mg/m2]
+        acumulated emission, integral result of emissions [mg/m2]
+        %acumulated emission, integral result normalized against TAN added from slurry [mg/m2]
+    '''
+    for valve_id, sub_df in sub_df_dict.items():
+        treatment = sub_df['TREATMENT'].iloc[0]
+
+        if treatment == 'BACKGROUND':
+            continue
+
+        t = sub_df['TIME_NORM_GLOBAL[h]'].to_numpy()
+        F = sub_df['F_BC[mg/h m2]'].to_numpy()
+
+        # cumulative integral using trapezoidal rule
+        cumulative_emission = cumulative_trapezoid(F, t, initial=0)  # mg/m2
+
+        sub_df['EMISSION_cum[mg/m2]'] = cumulative_emission
+        sub_df['EMISSION_cum[%TAN]'] = cumulative_emission / TAN_M2_dict[treatment] * 100
+
+        sub_df_dict[valve_id] = sub_df
+
+    return sub_df_dict
+        
+
+def merge_treatment_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFrame:
+    '''
+    merge triplicates (plots sharing the same treatment with different valve IDs) from the sub_df_dict structure, by averaging the triplicates, also creating a collum for the related std-deviation.
+    Expects triplicates to be on the same time-axis, but not necesaily of the same length
+
+    Input:
+        sub_df_dict: dictionary containing valve ID's as keys and sub_dfs as values, containing a treament collum
+        treatment (str): str treament to me merged
+
+    Output:
+        df containing interpolated, and averaged flux data with the related std-deviation f
+    '''
+    # To do:
+    # extract dfs with the same treatment 
+    # interpolate these
+    # determine common time axis - times for which all 3 triplicates have datapoints - is this too conservative?
+    # remove heads - inital datapoints outside common time axis
+    # remove tails - final datapoints outside common time axis 
+    # for each datapoint, find avg and propagate std-deviation most likely need to use tolerance method as interpolation function
+    # return single averaged df, contaning same collums as 
+   
+   # ectract df's related to specific treatment 
+    treatment_dfs = [df.copy() for df in sub_df_dict.values()
+        if df['TREATMENT'].iloc[0] == treatment]
     
+    # determine common time range
+    starts = [df['TIME_NORM_GLOBAL[h]'].iloc[0] for df in treatment_dfs]
+    ends   = [df['TIME_NORM_GLOBAL[h]'].iloc[-1] for df in treatment_dfs]
 
+    t_start = max(starts)
+    t_end   = min(ends)
 
+    trimmed = []
+    for df in treatment_dfs:
+        mask = ((df['TIME_NORM_GLOBAL[h]'] >= t_start) & (df['TIME_NORM_GLOBAL[h]'] <= t_end))
+        trimmed.append(df.loc[mask])
 
-    
+    # merge
+    concat = pd.concat(trimmed, ignore_index=True)
 
+    grouped = concat.groupby('TIME_NORM_GLOBAL[h]')
 
+    merged_df = grouped.agg(
+        F_BC_mean=('F_BC[mg/h m2]', 'mean'),
+        F_BC_std=('F_BC[mg/h m2]', lambda x: x.std(ddof=1)),
 
+        F_TAN_mean=('F_TAN[%/h]', 'mean'),
+        F_TAN_std=('F_TAN[%/h]', lambda x: x.std(ddof=1)),
 
- 
+        EMISSION_cum_mean=('EMISSION_cum[mg/m2]', 'mean'),
+        EMISSION_cum_std=('EMISSION_cum[mg/m2]', lambda x: x.std(ddof=1)),
+
+        EMISSION_cum_TAN_mean=('EMISSION_cum[%TAN]', 'mean'),
+        EMISSION_cum_TAN_std=('EMISSION_cum[%TAN]', lambda x: x.std(ddof=1)),
+
+        N_REPLICATES=('F_BC[mg/h m2]', 'count'),
+
+        DATE_TIME=('DATE_TIME', 'first'),
+        TREATMENT=('TREATMENT', 'first'))
+
+    merged_df = merged_df.reset_index()
+
+    return merged_df
 
 ### Input folder and Files ###
 input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\2-flux-data\cattle-slurry-field-flux.csv")
@@ -286,19 +417,18 @@ input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mastert
 ### Output folder and files ###
 
 ### Constants ###
+TAN_M2_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2} # [mg/m2]
+TaN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2]
 
 ### Script excecution ###
 input_df = load_csv_file_as_df(input_path) # load flux-data
 
 df_collum_drop = input_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]','TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', 'T_GROUND_10cm[DEGC]', 'P_ATMOSPHERE[hpa]', 'TIME_NORM_LOCAL[h]']).copy() # dropping collums unneeded data further calculations
 
-#add_tag(df_collum_drop,'measured','VALUE_TYPE') # add "meassured" tag before interpolating
-
 sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
 sub_df_dict = time_normalization_valve_level(sub_df_dict)
 sub_df_dict = remove_nan_datapoints(sub_df_dict)
-
-print(sub_df_dict)
+#print(sub_df_dict)
 
 
 bg_range = find_treatment_time_range( sub_df_dict,'BACKGROUND')
@@ -307,13 +437,22 @@ bg_range = find_treatment_time_range( sub_df_dict,'BACKGROUND')
 for id, sub_df in sub_df_dict.items():
     interp_df = interpolation_df_linear(sub_df, bg_range, tpts_per_h=7.5)
     sub_df_dict[id] = interp_df
-
+#print(sub_df_dict)
 
 baseline_df = merge_baseline_triplicates(sub_df_dict, 'BACKGROUND')
 #print(merge_baseline_triplicates(sub_df_dict, 'BACKGROUND'))
 
+sub_df_dict = baseline_correction(sub_df_dict, baseline_df)
+sub_df_dict = TAN_normalization(sub_df_dict, TAN_M2_dict)
+sub_df_dict = integration(sub_df_dict, TAN_M2_dict)
+#print(sub_df_dict)
 
-
+raw_df = merge_treatment_triplicates(sub_df_dict, 'RAW')
+H2SO4_df = merge_treatment_triplicates(sub_df_dict, 'H2SO4')
+AA_df = merge_treatment_triplicates(sub_df_dict, 'AA')
+print(raw_df)
+print(H2SO4_df)
+print(AA_df)
 
 
 ### Code references ###
