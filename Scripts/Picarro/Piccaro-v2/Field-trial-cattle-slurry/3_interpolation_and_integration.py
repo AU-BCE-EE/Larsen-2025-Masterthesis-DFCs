@@ -60,26 +60,6 @@ def create_sub_dfs_per_valve(df, valve_ids=None):
 
     return output_dict
 
-def time_normalization_valve_level(sub_df_dict):
-    '''
-   normalizes each sub df agianst first meassuremnt
-
-   Input:
-        sub_df: dictionay, valve IDs are keys, sub DFs for each valve ID are values
-
-    Output
-        sub_df: same dictionay, each sub_df with added row, Time_norm_valve
-
-    '''
-    for valve_id, sub_df in sub_df_dict.items(): # iterating over the dataframes
-        first_time = sub_df['TIME_NORM_GLOBAL[h]'].iloc[0] # extracting first timevalue from current sub_df
-
-        sub_df['TIME_NORM_VALVE[h]'] = sub_df['TIME_NORM_GLOBAL[h]'] - first_time # locally normalizing agianst first valve-specific measurement
-
-        sub_df_dict[valve_id] = sub_df # updating the dictionary
-    
-    return sub_df_dict
-    
 
 def remove_nan_datapoints(sub_df_dict):
     '''
@@ -288,6 +268,26 @@ def baseline_correction(sub_df_dict:dict, baseline_df:pd.DataFrame) -> dict:
     return sub_df_dict
 
 
+def time_shift(sub_df_dict: dict, application_time_dict: dict) -> dict:
+    '''
+   shift from a global time-axis to ones normalized at time of aplication for each respective valve
+
+    '''
+    for valve_id, sub_df in sub_df_dict.items():
+
+        treatment = sub_df['TREATMENT'].iloc[0]
+
+        if treatment == 'BACKGROUND':
+            continue
+
+        t_app = application_time_dict[valve_id]
+
+        sub_df['TIME_SINCE_APP[h]'] = (sub_df['TIME_NORM_GLOBAL[h]'] - t_app)
+
+        sub_df_dict[valve_id] = sub_df
+
+    return sub_df_dict 
+
 def TAN_normalization(sub_df_dict: dict, TAN_M2_dict : dict):
     '''
     normalizes interpolated baselinecorected flux-values [mg/ h m2] against TAN applied in slurry [mg/m2]
@@ -345,8 +345,8 @@ def integration(sub_df_dict: dict, TAN_m2: dict):
         sub_df_dict[valve_id] = sub_df
 
     return sub_df_dict
-        
 
+   
 def merge_treatment_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFrame:
     '''
     merge triplicates (plots sharing the same treatment with different valve IDs) from the sub_df_dict structure, by averaging the triplicates, also creating a collum for the related std-deviation.
@@ -387,7 +387,7 @@ def merge_treatment_triplicates(sub_df_dict: dict, treatment: str) -> pd.DataFra
     # merge
     concat = pd.concat(trimmed, ignore_index=True)
 
-    grouped = concat.groupby('TIME_NORM_GLOBAL[h]')
+    grouped = concat.groupby('TIME_SINCE_APP[h]')
 
     merged_df = grouped.agg(
         F_BC_mean=('F_BC[mg/h m2]', 'mean'),
@@ -419,6 +419,7 @@ input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mastert
 ### Constants ###
 TAN_M2_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2} # [mg/m2]
 TaN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2]
+Aplication_time_dict = {4 : 0, 5 : 0.13, 8 : 0.27, 9: 0.40, 11: 0.53, 12 : 0.67, 13: 0.80, 14: 0.93, 15: 1.07, 16: 1.20, 17: 1.33, 18: 1.47} # [h] time of application as
 
 ### Script excecution ###
 input_df = load_csv_file_as_df(input_path) # load flux-data
@@ -426,7 +427,6 @@ input_df = load_csv_file_as_df(input_path) # load flux-data
 df_collum_drop = input_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]','TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', 'T_GROUND_10cm[DEGC]', 'P_ATMOSPHERE[hpa]', 'TIME_NORM_LOCAL[h]']).copy() # dropping collums unneeded data further calculations
 
 sub_df_dict = create_sub_dfs_per_valve(df_collum_drop)
-sub_df_dict = time_normalization_valve_level(sub_df_dict)
 sub_df_dict = remove_nan_datapoints(sub_df_dict)
 #print(sub_df_dict)
 
@@ -444,15 +444,17 @@ baseline_df = merge_baseline_triplicates(sub_df_dict, 'BACKGROUND')
 
 sub_df_dict = baseline_correction(sub_df_dict, baseline_df)
 sub_df_dict = TAN_normalization(sub_df_dict, TAN_M2_dict)
-sub_df_dict = integration(sub_df_dict, TAN_M2_dict)
 #print(sub_df_dict)
+sub_df_dict = time_shift(sub_df_dict, Aplication_time_dict)
+sub_df_dict = integration(sub_df_dict, TAN_M2_dict)
+print (sub_df_dict)
 
-raw_df = merge_treatment_triplicates(sub_df_dict, 'RAW')
-H2SO4_df = merge_treatment_triplicates(sub_df_dict, 'H2SO4')
-AA_df = merge_treatment_triplicates(sub_df_dict, 'AA')
-print(raw_df)
-print(H2SO4_df)
-print(AA_df)
+#raw_df = merge_treatment_triplicates(sub_df_dict, 'RAW')
+#H2SO4_df = merge_treatment_triplicates(sub_df_dict, 'H2SO4')
+#AA_df = merge_treatment_triplicates(sub_df_dict, 'AA')
+#print(raw_df)
+#print(H2SO4_df)
+#print(AA_df)
 
 
 ### Code references ###
