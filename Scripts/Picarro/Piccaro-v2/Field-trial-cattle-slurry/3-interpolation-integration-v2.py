@@ -31,7 +31,7 @@ def load_csv_file_as_df(file_path:Path)-> pd.DataFrame:
 
 def time_normalization_application(raw_df:pd.DataFrame, valve_start_dict:dict)-> pd.DataFrame:
     '''
-   Creating new time-axis based of starting time of each experiment, instead staring time for entire experiment
+   Creating new time-axis based of slurry aplication and plot measurement start, instead staring time for entire experiment
 
    Input:
         raw_df: dataframe contaning raw datapoints from all valves, following collum are expected: TIME_NORM_GLOBAL[h] and VALVE_ID
@@ -51,6 +51,7 @@ def time_normalization_application(raw_df:pd.DataFrame, valve_start_dict:dict)->
     return df_copy
 
 def remove_nan_rows(raw_df:pd.DataFrame) -> pd.DataFrame:
+    # Might not need to be a function
     '''
     remove rows containing nan from a df - present due to valve error
 
@@ -62,16 +63,28 @@ def remove_nan_rows(raw_df:pd.DataFrame) -> pd.DataFrame:
     '''
     copy_df = raw_df.copy() # creating a copy to avid changing raw df
     filtered_df = copy_df.dropna(axis = 0, how = 'any') # dropping any rows contaning nan
-
     return filtered_df
 
-def determine_smallest_timerange(filtered_df):
+def background_correction(filtered_df):
     return 'not done'
+
+def determine_smallest_timerange(BC_df) -> np.ndarray:
+    '''
+    Finds the treatment whose triplicates have the smallest time-range (range which are within known data from all trilicates).
+
+
+    Input:
+        BC_df: dataframe containing background-corrected datapoints of actual treatments
+
+    output
+        time-values of smallest timerange as a numpy-array, on the "time of aplication" axis. also a print-statement to 
+         
+    '''
+
+    return 'not done'
+
 
 def interpolation(filtered_df, smallest_timerange):
-    return 'not done'
-
-def background_correction(interp_df):
     return 'not done'
 
 def TAN_normalization(BC_interp_df):
