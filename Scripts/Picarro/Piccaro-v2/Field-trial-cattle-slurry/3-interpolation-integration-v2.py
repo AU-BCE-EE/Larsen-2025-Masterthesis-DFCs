@@ -96,15 +96,16 @@ def background_correction(filtered_df:pd.DataFrame, power:int = 2) -> pd.DataFra
 
         # find the 3 closest backgrounds
         background_df['time_diff'] = np.abs(background_df['TIME_NORM_GLOBAL[h]'] - current_time)
-        closest_background = background_df.nsmallest(3, 'time_diff')
+        closest_background = background_df.nsmallest(3, 'time_diff') #nsmallest returns a df
 
         # determine weights (inverse distance weigting)
-        distances = closest_background['time_diff'].values
-        weights = 1 / (distances ** power)
+        distances = closest_background['time_diff'].to_numpy(dtype=float)
+        weights = 1 / (distances ** power) 
         weights = weights / np.sum(weights)  # Normalize weights
 
         # Calculate the weighted average
-        weighted_avg = np.sum(weights * closest_background['F[mg/h m2]'].values)
+        flux_values = closest_background['F[mg/h m2]'].to_numpy(dtype=float)
+        weighted_avg = np.sum(weights * flux_values)
 
         # correct the treatment flux and add it to the results-list
         corrected_flux_value = row['F[mg/h m2]'] - weighted_avg
@@ -243,7 +244,7 @@ def integration(interp_df: pd.DataFrame):
 
     return copy_df
 
-def TAN_normalization(interp_df: pd.DataFrame, TAN_dict: dict):
+def TAN_normalization(interp_df: pd.DataFrame, TAN_dict: dict) -> pd.DataFrame:
     '''
     normalizes flux-values [mg/ h m2] and accumulated emissions [mg/m2] against slurry applied TAN [mg/m2].
     Assumes background data has been removed.
@@ -271,7 +272,7 @@ def TAN_normalization(interp_df: pd.DataFrame, TAN_dict: dict):
 
     return copy_df
 
-def merge_triplicates(integrated_df):
+def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
     '''
     Merge triplicate-data, finding average values and the related std-deviation. After interpolation triplicate datapoints are assumed to have been alligned.
 
@@ -281,10 +282,32 @@ def merge_triplicates(integrated_df):
     output:
         merged_df: dataframe with same averaged parameters as integrated df, therefore smaller in therms of rows by a factor of 3
     '''
-    copy_df = integrated_df.copy()
-    #treatments =   identify unique treatment in the input-df
+    df_copy = integrated_df.copy()
+    grouped = df_copy.groupby(['TREATMENT', 'TIME_SINCE_APP[h]'])
 
-    return 'not done'
+    # initalyze return dataframe
+    merged_df = pd.DataFrame()
+
+    # Averaging emission data and finding variance
+    merged_df['F_INTERP_MEAN'] = grouped['F_INTERP'].mean()
+    merged_df['F_INTERP_STD'] = grouped['F_INTERP'].std()
+
+    merged_df['ACUM_EMIS_MEAN'] = grouped['ACUM_EMIS'].mean()
+    merged_df['ACUM_EMIS_STD'] = grouped['ACUM_EMIS'].std()
+
+    merged_df['%REL_F_MEAN'] = grouped['%REL_F'].mean()
+    merged_df['%REL_F_STD'] = grouped['%REL_F'].std()
+    
+    merged_df['%REL_ACUM_EMIS_MEAN'] = grouped['%REL_ACUM_EMIS'].mean()
+    merged_df['%REL_ACUM_EMIS_STD'] = grouped['%REL_ACUM_EMIS'].std()
+
+    # meta-data
+    merged_df['DATE_TIME'] = grouped['DATE_TIME'].first()
+    merged_df['TIME_NORM_GLOBAL[h]'] = grouped['TIME_NORM_GLOBAL[h]'].first()
+
+    # reset such that treatment and TIME_SINCE_APP beceomes actual collums
+    merged_df.reset_index(inplace=True)
+    return merged_df
 
 ##### Input folder and Files #####
 input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\2-flux-data\cattle-slurry-field-flux.csv")
@@ -294,9 +317,10 @@ treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to t
 Aplication_time_dict = {4.0 : 0, 5.0 : 0.13, 8.0 : 0.27, 9.0: 0.40, 11.0: 0.53, 12.0 : 0.67, 13.0: 0.80, 14.0: 0.93, 15.0: 1.07, 16.0: 1.20, 17.0: 1.33, 18.0: 1.47} # [h] 
 TAN_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2} # [mg/m2]
 #TAN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2] # not currently used
+treatments = ['AA','RAW','H2SO4']
 
 ##### Script excecution #####
-Create_plots = True
+Create_plots = False
 raw_df = load_csv_file_as_df(input_path) # load flux-data
 
 # dropping collums not needed for down-stream
@@ -312,7 +336,7 @@ times = determine_smallest_timerange(filtered_df)
 #print(len(times))
 
 treatment_df = background_correction(filtered_df, power=2) 
-#print(treatment_df)
+print(treatment_df)
 
 interp_df = interpolation_linear(treatment_df, times)
 #print(interp_df)
@@ -321,37 +345,84 @@ integrated_df = integration(interp_df)
 #print(integrated_df)
 
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-print(TAN_df)
+#print(TAN_df)
+
+merged_df = merge_triplicates(TAN_df)
+#print(merged_df)
+
+### Rename collums before saving as csv-files
+renamed_df = merged_df.rename(columns={'F_INTERP_MEAN' : 'flux [mg/m2 h]', 'F_INTERP_STD': 'flux_std_dev[mg/m2 h]', '%_REL_F': 'relative_flux','%REL_F_STD': 'relative_flux_std_dev',
+'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions', '%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
+'ACUM_EMIS_MEAN ':'accumulated emissions [mg/m2]','ACUM_EMIS_STD': 'accumulated_emissions_std_dev[mg/m2]'
+,'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'})
+print(renamed_df)
 
 ##### Plot creation ##### 
 if Create_plots == True:
     ### Check of interpolation vs raw data for random valve ###
-    test_id = random.choice(treatment_valve_ids)
+    interptest_valveid = random.choice(treatment_valve_ids)
 
     # extract raw data
-    raw_valve_df =  treatment_df[treatment_df['VALVE_ID'] == test_id]
+    raw_valve_df =  treatment_df[treatment_df['VALVE_ID'] == interptest_valveid]
     t_raw = raw_valve_df['TIME_SINCE_APP[h]'].to_numpy()
-    F_raw = raw_valve_df['F_BC'].to_numpy()
+    F = raw_valve_df['F_BC'].to_numpy()
 
     # extract interpolation data
-    interp_valve_df = interp_df[interp_df['VALVE_ID'] == test_id]
+    interp_valve_df = interp_df[interp_df['VALVE_ID'] == interptest_valveid]
     t_interp = interp_valve_df['TIME_SINCE_APP[h]'].to_numpy()
     F_interp = interp_valve_df['F_INTERP'].to_numpy()
 
     # modyfying plt
-    plt.plot(t_raw, F_raw, 'o-', label='Raw Data', color='blue')
+    plt.plot(t_raw, F, 'o-', label='Raw Data', color='blue')
     plt.plot(t_interp, F_interp, 'x-', label='Interpolated Data', color='red')
     plt.xlabel('Time Since Application [h]')
     plt.ylabel('Flux [mg/h m2]')
-    plt.title(f'Raw vs. Interpolated Data for Valve {test_id}')
+    plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
     plt.legend()
     plt.show()
+
+    ### Visual test of merging function ###
+    mtest_treatment = random.choice(treatments)
+
+    # extract treatment-relevant data, merged and original
+    original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]
+    
+    merged_treatment_df = merged_df[merged_df['TREATMENT'] == mtest_treatment]
+    merged_treatment_df = merged_treatment_df.sort_values(by='TIME_SINCE_APP[h]')
+
+    for valve_id in original_treatment_df['VALVE_ID'].unique():
+        valve_data = original_treatment_df[original_treatment_df['VALVE_ID'] == valve_id]
+        F_valve = valve_data['F_BC']
+        t_valve = valve_data['TIME_SINCE_APP[h]']
+        plt.plot(t_valve, F_valve, 'o-', label=f'Valve {valve_id}', alpha=0.5)
+
+    # Plot merged mean line
+    F_merged = merged_treatment_df['F_INTERP_MEAN']
+    F_merged_err = merged_treatment_df['F_INTERP_STD']
+    t_merged = merged_treatment_df['TIME_SINCE_APP[h]']
+    plt.plot(t_merged, F_merged, 'x-', label='Merged (Mean)', color='black', linewidth=2, markersize=6)
+
+    # error as shading effect
+    plt.fill_between(t_merged,F_merged - F_merged_err, F_merged + F_merged_err, color='gray', alpha=0.3, label='±1 Std Dev')
+
+    plt.xlabel('Time Since Application [h]')
+    plt.ylabel('Flux [mg/ m2 h]')
+    plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    ### Plot with all merged treatments
+     
+ 
 
 
 ##### Code References #####
 # https://www.geeksforgeeks.org/python/add-zero-columns-to-pandas-dataframe/ 
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.cumulative_trapezoid.html
 # https://en.wikipedia.org/wiki/Trapezoidal_rule 
+# https://www.geeksforgeeks.org/pandas/python-pandas-dataframe-groupby/
+# https://www.geeksforgeeks.org/pandas/how-to-rename-columns-in-pandas-dataframe/ 
 
 
 
