@@ -219,7 +219,7 @@ def interpolation_linear(treatment_df: pd.DataFrame, shortest_time_range_values:
     return interpolated_df
 
 
-def integration(interp_df: pd.DataFrame):
+def integration(interp_df: pd.DataFrame)-> pd.DataFrame:
     '''
     Performs trapezoidal integration on flux-values related to a single valve, providing accumulated emissions [mg/m2] 
 
@@ -233,14 +233,16 @@ def integration(interp_df: pd.DataFrame):
     copy_df['ACUM_EMIS'] = 0.0 # accumulated emissions[mg/m2], initalizing new collum with 0's, notice as a float not an int
     
     for valve_id in copy_df['VALVE_ID'].unique():
-        valve_data = copy_df[copy_df['VALVE_ID'] == valve_id].sort_values(by='TIME_SINCE_APP[h]')
+        mask = copy_df['VALVE_ID'] == valve_id
+        valve_data = copy_df.loc[mask].sort_values(by='TIME_SINCE_APP[h]')
 
         t = valve_data['TIME_SINCE_APP[h]'].to_numpy() # [h]
         F = valve_data['F_INTERP'].to_numpy() # [mg/m2 h]
+
         acum_emis = cumulative_trapezoid(F, t, initial = 0.0) # [mg / h m2] * [h] = [mg/ h], notice inital is a float not an int
 
         # storing integral-values
-        copy_df.loc[copy_df['VALVE_ID'] == valve_id, 'ACUM_EMIS'] = acum_emis
+        copy_df.loc[valve_data.index, 'ACUM_EMIS'] = acum_emis
 
     return copy_df
 
@@ -309,8 +311,34 @@ def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
     merged_df.reset_index(inplace=True)
     return merged_df
 
+
+def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : str, overwrite: bool = True):
+    '''
+    saves a df as a csv-file in a designated outputfolder
+
+    Input:
+        df: the dataframe to be saved
+        outputfolder(path object): the file-path of the output folder
+        output_file_name(str): wanted name of the created file
+        overwrite(BOOl): designate whether the function should overwrite an existing file with the same name
+
+    output:
+        a csv-file saved in the designated folder with the designated name.
+    '''
+    output_file = output_folder / f"{output_file_name}.csv"
+
+    if output_file.exists() and not overwrite:
+        print(f"The file with the following name already exist: {output_file.name}")
+        return
+
+    df.to_csv(output_file, index=False)
+    print(f" output_file saved as: {output_file}")
+
 ##### Input folder and Files #####
 input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\2-flux-data\cattle-slurry-field-flux.csv")
+
+##### Output folder and files #####
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\3-intregated-data")
 
 ##### Constants #####
 treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to treamtents, bkgs excluded
@@ -320,7 +348,7 @@ TAN_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2} # [mg/m2]
 treatments = ['AA','RAW','H2SO4']
 
 ##### Script excecution #####
-Create_plots = False
+
 raw_df = load_csv_file_as_df(input_path) # load flux-data
 
 # dropping collums not needed for down-stream
@@ -336,7 +364,7 @@ times = determine_smallest_timerange(filtered_df)
 #print(len(times))
 
 treatment_df = background_correction(filtered_df, power=2) 
-print(treatment_df)
+#print(treatment_df)
 
 interp_df = interpolation_linear(treatment_df, times)
 #print(interp_df)
@@ -348,18 +376,29 @@ TAN_df = TAN_normalization(integrated_df, TAN_dict)
 #print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-#print(merged_df)
+print(merged_df)
 
 ### Rename collums before saving as csv-files
-renamed_df = merged_df.rename(columns={'F_INTERP_MEAN' : 'flux [mg/m2 h]', 'F_INTERP_STD': 'flux_std_dev[mg/m2 h]', '%_REL_F': 'relative_flux','%REL_F_STD': 'relative_flux_std_dev',
-'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions', '%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
-'ACUM_EMIS_MEAN ':'accumulated emissions [mg/m2]','ACUM_EMIS_STD': 'accumulated_emissions_std_dev[mg/m2]'
-,'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'})
-print(renamed_df)
+renamed_df = merged_df.rename(columns={
+'F_INTERP_MEAN' : 'flux [mg/m2 h]',
+'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
+'%REL_F_MEAN': 'relative_flux',
+'%REL_F_STD': 'relative_flux_std_dev',
+'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
+'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
+'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
+'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
+'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'})
+#print(renamed_df)
+
+save_df_as_csv(renamed_df, output_folder, 'field-cattle-slurry-integrated-v2-2026-02-25', overwrite = True)
 
 ##### Plot creation ##### 
+Create_plots = True
+
 if Create_plots == True:
-    ### Check of interpolation vs raw data for random valve ###
+    ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
 
     # extract raw data
@@ -381,7 +420,7 @@ if Create_plots == True:
     plt.legend()
     plt.show()
 
-    ### Visual test of merging function ###
+    ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
 
     # extract treatment-relevant data, merged and original
@@ -403,16 +442,22 @@ if Create_plots == True:
     plt.plot(t_merged, F_merged, 'x-', label='Merged (Mean)', color='black', linewidth=2, markersize=6)
 
     # error as shading effect
-    plt.fill_between(t_merged,F_merged - F_merged_err, F_merged + F_merged_err, color='gray', alpha=0.3, label='±1 Std Dev')
+    plt.fill_between(t_merged,F_merged - F_merged_err, F_merged + F_merged_err, color='gray', alpha=0.3, label='± Std Dev')
 
     plt.xlabel('Time Since Application [h]')
     plt.ylabel('Flux [mg/ m2 h]')
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
     plt.legend()
-    plt.grid(True)
     plt.show()
 
-    ### Plot with all merged treatments
+    ##### Plot of relative flux for all merged treatments #####
+    # determine unique treatments in merged df
+    for treatment in merged_df['TREATMENT'].unique():
+        treatment_df = original_treatment_df[original_treatment_df['TREATMENT'] == treatment]
+        t = treatment_df['TIME_SINCE_APP[h]']
+        Rel_F = True
+
+
      
  
 
