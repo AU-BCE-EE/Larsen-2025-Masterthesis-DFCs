@@ -1,0 +1,2 @@
+pH = 8.50 
+Measured at a temperature of 27 degrees celsius 

@@ -31,7 +31,7 @@ def time_normalization_global(df, global_start = None):
     Returns: the df the collums DATE_TIME and TIME_NORM_GLOBAL[h] collums
     '''
     
-    if 'DATE_TIME' not in df.columns:
+    if 'DATE_TIME' not in df.columns: # check wheter the collum already exists
         df['DATE_TIME'] = df['DATE'] + ' ' + df['TIME'] # combines the time and date id's in a single new collum
         df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'], format="%Y-%m-%d %H:%M:%S.%f") # convert into a pd.datetime object
         df = df.drop(columns=['DATE', 'TIME']) # remmoving individual time and date collums
@@ -56,49 +56,6 @@ def time_normalization_global(df, global_start = None):
     return df
 
 
-def time_normalization_local(df, local_starts=None):
-    '''
-   Creates a collum with with time normalized [h] for each valve
-   
-   Input:
-        df contaning DATE and TIME collums or DATE_TIME
-        local_starts (dict), with starts (str) as items for each valve (ints) as keys. I this is not provided, the first measurement of each valve is used
-
-    Returns: a df with the DATE_TIME collum and TIME_NORM_LOCAL [h]
-    '''
-    if 'DATE_TIME' not in df.columns:
-        df['DATE_TIME'] = pd.to_datetime(df['DATE'] + ' ' + df['TIME'], format="%Y-%m-%d %H:%M:%S.%f") #  combining DATE and TIME collum, conversion into pd.datetime object
-        df = df.drop(columns=['DATE', 'TIME']) # removing old collums
-
-    df = df.sort_values('DATE_TIME').reset_index(drop=True) # sorting the df using time (earliest first)
-    # identifying valve_ids:
-    df['VALVE_ID'] = df['VALVE_ID'].round(5)
-    valve_ids = df['VALVE_ID'].unique()
-
-    # unpacking local_starts for each valve
-    if local_starts is not None:
-        local_starts = {float(k): v for k, v in local_starts.items()}
-
-    # initializing collum
-    df['TIME_NORM_LOCAL[h]'] = np.nan
-
-    for valve_id in valve_ids:
-        # creating sub_dfs for each valve id
-        valve_df = df['VALVE_ID'] == valve_id
-        valve_times = df.loc[valve_df, 'DATE_TIME']
-
-       # Finding start-time with either method
-        if local_starts is not None and valve_id in local_starts:
-            start_time = pd.to_datetime(local_starts[valve_id])
-            
-        else:
-            start_time = valve_times.min()
-
-        # normalizing
-        df.loc[valve_df, 'TIME_NORM_LOCAL[h]'] = (valve_times - start_time).dt.total_seconds() / 3600
-
-    print('time-normalization performed per valve')
-    return df
    
 def visualize_raw_data_per_day(file_path):
     
@@ -382,15 +339,13 @@ treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
 ### Script Excecution ###
 if __name__ == "__main__":
     # copy the folderpath
-    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-experiments\Cattle trails\Raw-picarro-files")
+    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\Cattle trails\Raw-picarro-files")
     # copy the folderpath, add at least.csw
     output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
-
     output_file_name = Path('cattle-field-extracted-valve18')
 
     combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
     combined_df = time_normalization_global(combined_df)
-    combined_df = time_normalization_local(combined_df)
 
     combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
     combined_df = remove_data(combined_df, end_of_experiment_removal_dict, drop_rows= True)
