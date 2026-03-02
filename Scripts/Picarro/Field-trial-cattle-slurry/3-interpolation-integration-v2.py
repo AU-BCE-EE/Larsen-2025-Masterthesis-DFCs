@@ -10,6 +10,11 @@
 # integrate all proper plots, normalize cumulated emissions
 # merge triplicates and determine biological deviation
 
+
+##### To do #####
+# create prints of final accumulated emissions in function
+# create plot of all merged treatments
+
 ##### Packages #####
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +22,6 @@ import pandas as pd
 import random
 from scipy.integrate import cumulative_trapezoid
 from pathlib import Path
-
 
 ### functions ###
 def load_csv_file_as_df(file_path:Path)-> pd.DataFrame:
@@ -31,7 +35,6 @@ def load_csv_file_as_df(file_path:Path)-> pd.DataFrame:
     '''
     return pd.read_csv(file_path)
     # Collums in the file are seperated with several empty spaces
-
 
 def time_normalization_application(raw_df:pd.DataFrame, valve_start_dict:dict)-> pd.DataFrame:
     '''
@@ -55,7 +58,7 @@ def time_normalization_application(raw_df:pd.DataFrame, valve_start_dict:dict)->
     return df_copy
 
 def remove_nan_rows(raw_df:pd.DataFrame) -> pd.DataFrame:
-    # Might not need to be a function
+    # might delete this function and simply use dropna directly
     '''
     remove rows containing nan from a df - present due to valve error
 
@@ -71,11 +74,11 @@ def remove_nan_rows(raw_df:pd.DataFrame) -> pd.DataFrame:
 
 def background_correction(filtered_df:pd.DataFrame, power:int = 2) -> pd.DataFrame:
     '''
-    Finds bacground-corrected flux (F_BC) via a time-weigted average of the 3 closest background-measurements global time-scale
+    Finds bacground-corrected flux (F_BC) via inverse distance weiging of the 3 closest background-measurements, global time-scale
 
     Input: 
         filtered_df: dataframe contaning data from all valves
-        power: int chosen power for the time-weighted average, 2 is typically used. Higer power-values disregards points futher away
+        power: int chosen power for the time-weighted average, 2 is typically used. Higer power-values ensures closer points are given higher weigths
 
     output: 
         datframe with a new collum FC for all actual treatments - background data removed 
@@ -83,20 +86,20 @@ def background_correction(filtered_df:pd.DataFrame, power:int = 2) -> pd.DataFra
     # extract background data from filtered df - remove background data from 
     df_copy = filtered_df.copy()
 
+    # isolate treatment and background data
     background_df = df_copy[df_copy['TREATMENT'] == 'BACKGROUND'].copy()
     treatment_df = df_copy[df_copy['TREATMENT'] != 'BACKGROUND'].copy()
 
-    # Ensure background data is sorted by time
-    background_df = background_df.sort_values(by='TIME_NORM_GLOBAL[h]')
-   
+    background_df = background_df.sort_values(by='TIME_NORM_GLOBAL[h]') # Ensure background data is sorted by time (safety-line, this should already be the case)
 
-    F_BC = []
-    for idx, row in treatment_df.iterrows():
-        current_time = row['TIME_NORM_GLOBAL[h]']
+    F_BC = [] # prepare object to store corrected flux-values within
+
+    for idx, row in treatment_df.iterrows(): # looping over the dataframe-rows (vertically)
+        current_time = row['TIME_NORM_GLOBAL[h]'] # extracting time-values of the current row
 
         # find the 3 closest backgrounds
-        background_df['time_diff'] = np.abs(background_df['TIME_NORM_GLOBAL[h]'] - current_time)
-        closest_background = background_df.nsmallest(3, 'time_diff') #nsmallest returns a df
+        background_df['time_diff'] = np.abs(background_df['TIME_NORM_GLOBAL[h]'] - current_time) # determine background data time-distance for current row
+        closest_background = background_df.nsmallest(3, 'time_diff') #nsmallest returns a df with the 3 closest background-times
 
         # determine weights (inverse distance weigting)
         distances = closest_background['time_diff'].to_numpy(dtype=float)
@@ -129,18 +132,14 @@ def determine_smallest_timerange(filtered_df: pd.DataFrame) -> np.ndarray:
         time-values of smallest timerange as a numpy-array, on the "time of aplication" axis.
          
     '''
-    # determine all unique treatments-types (plus background) contained in the treatment df
-    # determine which treatment have the smallest time-range (smallest distance between latest triplicate start and earliest tripiicate end)
-    # from this treatment, extract all datapoint timestamps. This will be the time grid for downstream interpolation - is this smart? better than suddenly increasing resulution by determining a new grid imo?
-    
-    # identify treatments
+    # identify all unique treatments
     treatments = filtered_df['TREATMENT'].unique()
     treatment_time_ranges = {}
 
     # extract start and end-times for the treatment
     for treatment in treatments:
         treatment_data = filtered_df[filtered_df['TREATMENT'] == treatment]
-        valve_ids = treatment_data['VALVE_ID'].unique()
+        valve_ids = treatment_data['VALVE_ID'].unique() # determine unique valve-data for the respective treatment
 
         start_times = []
         end_times = []
@@ -155,7 +154,7 @@ def determine_smallest_timerange(filtered_df: pd.DataFrame) -> np.ndarray:
         treatment_time_ranges[treatment] = (treatment_start, treatment_end) # saved in the dict, notice the times are stored as a tuble
  
     # Find the treatment with the smallest time range
-    smallest_range_treatment = min(treatment_time_ranges.items(), key=lambda x: x[1][1] - x[1][0]) # subtracts the tuble-values
+    smallest_range_treatment = min(treatment_time_ranges.items(), key=lambda x: x[1][1] - x[1][0]) # subtracts starts and ends
     smallest_range = smallest_range_treatment[1] # graps the tuble with the smallest range
 
     # Extract time values for the treatment with the smallest time range
@@ -168,7 +167,6 @@ def determine_smallest_timerange(filtered_df: pd.DataFrame) -> np.ndarray:
     print(f"Time range: {smallest_range[0]} to {smallest_range[1]}")
 
     return time_values
-
 
 def interpolation_linear(treatment_df: pd.DataFrame, shortest_time_range_values: np.ndarray) -> pd.DataFrame:
     # potentially create more points to better capture peaks? One flux-peak for a single valve is sligtly off 
@@ -191,15 +189,15 @@ def interpolation_linear(treatment_df: pd.DataFrame, shortest_time_range_values:
 
     # extract relevant data from each valve
     for valve_id in valve_ids:
+        # extracting valve data
         valve_df = copy_df[copy_df['VALVE_ID'] == valve_id]
         valve_df = valve_df.sort_values(by='TIME_SINCE_APP[h]')
 
+        # extracting collums
         F_BC = valve_df['F_BC'].to_numpy()
         t_raw_app = valve_df['TIME_SINCE_APP[h]'].to_numpy()
-
         treatment = valve_df['TREATMENT'].iloc[0]
         
-
         # actual interpolation
         F_interp = np.interp(shortest_time_range_values, t_raw_app, F_BC)
 
@@ -309,8 +307,16 @@ def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
 
     # reset such that treatment and TIME_SINCE_APP beceomes actual collums
     merged_df.reset_index(inplace=True)
-    return merged_df
 
+    # print of final accumulated emissions
+    treatments = merged_df['TREATMENT'].unique()
+    for treatment in treatments:
+        treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
+        final_emis = treatment_df['%REL_ACUM_EMIS_MEAN'].iloc[-1]
+        final_emis_stdev = treatment_df['%REL_ACUM_EMIS_STD'].iloc[-1]
+        print(f'final accumated relative emissions for treatment {treatment} is {final_emis} ± {final_emis_stdev} %')
+
+    return merged_df
 
 def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : str, overwrite: bool = True):
     '''
@@ -392,7 +398,7 @@ renamed_df = merged_df.rename(columns={
 'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'})
 #print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, 'field-cattle-slurry-integrated-v2-2026-02-25', overwrite = True)
+save_df_as_csv(renamed_df, output_folder, 'field-cattle-slurry-integrated-v2-2026-02-25', overwrite = False)
 
 ##### Plot creation ##### 
 Create_plots = True
@@ -445,7 +451,9 @@ if Create_plots == True:
     plt.fill_between(t_merged,F_merged - F_merged_err, F_merged + F_merged_err, color='gray', alpha=0.3, label='± Std Dev')
 
     plt.xlabel('Time Since Application [h]')
+    plt.xlim(0, 24)
     plt.ylabel('Flux [mg/ m2 h]')
+    plt.ylim(0, 30)
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
     plt.legend()
     plt.show()
@@ -453,10 +461,18 @@ if Create_plots == True:
     ##### Plot of relative flux for all merged treatments #####
     # determine unique treatments in merged df
     for treatment in merged_df['TREATMENT'].unique():
-        treatment_df = original_treatment_df[original_treatment_df['TREATMENT'] == treatment]
-        t = treatment_df['TIME_SINCE_APP[h]']
-        Rel_F = True
+        treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
+        t_treatment = treatment_df['TIME_SINCE_APP[h]']
+        Rel_F = treatment_df['%REL_F_MEAN']
+        Rel_F_stdev = treatment_df['%REL_F_STD']
+        plt.plot(t_treatment, Rel_F, 'x-', label=f'{treatment}', linewidth=2, markersize=6)
+        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3, label=f'{treatment} ± Std Dev')
 
+    plt.xlabel('Time Since Application [h]')
+    plt.xlim(0, 170)
+    plt.ylabel('percent relative flux [1/h]')
+    plt.legend()
+    plt.show()
 
      
  
