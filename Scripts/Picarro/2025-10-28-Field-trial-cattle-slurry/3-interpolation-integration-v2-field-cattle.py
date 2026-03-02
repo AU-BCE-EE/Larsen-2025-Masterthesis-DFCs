@@ -382,7 +382,7 @@ TAN_df = TAN_normalization(integrated_df, TAN_dict)
 #print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-print(merged_df)
+#print(merged_df)
 
 ### Rename collums before saving as csv-files
 renamed_df = merged_df.rename(columns={
@@ -470,7 +470,7 @@ if Create_plots == True:
 
     plt.xlabel('Time Since Application [h]')
     plt.xlim(0, 170)
-    plt.ylabel('percent relative flux [1/h]')
+    plt.ylabel('percentage relative flux [1/h]')
     plt.legend()
     plt.show()
 
