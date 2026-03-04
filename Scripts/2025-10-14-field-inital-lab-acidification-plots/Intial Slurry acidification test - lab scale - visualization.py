@@ -20,7 +20,7 @@ def load_data(input_folder,input_file_name):
 
 ### defining constants ###
 # folder and filename
-input_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Lab-acidification-test-before-lab-field-trails") # copy the filepath
+input_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-14-inital-lab-acidification") # copy the filepath
 input_file_name_pig = '2025-10-14-titration-pig-2nd.csv' # copy the name as a string, don't forget .csv
 input_file_name_cattle = '2025-11-11-Titration-cattle-3rd.csv'
 
@@ -57,13 +57,13 @@ plt.errorbar(xs1_cattle, pH_cattle_AA, yerr=pH_stdev_cattle_AA, fmt='o',
              color='#2b8cbe', label='Cattle AA', capsize=2)
 
 plt.errorbar(xs1_cattle, pH_cattle_H2SO4, yerr=pH_stdev_cattle_H2SO4, fmt='o',
-             color='#a6bddb', label='Cattle H2SO4', capsize=2)
+             color='#a6bddb', label='Cattle H₂SO₄', capsize=2)
 
 # Pig
 plt.errorbar(xs1_pig, pH_pig_AA, yerr = pH_stdev_pig_AA, fmt='o',
-             color="#8e5107", label='Pig H2SO4', capsize=2)
+             color="#EB0D0D", label='Pig H₂SO₄', capsize=2)
 plt.errorbar(xs1_pig, pH_pig_H2SO4, yerr = pH_stdev_pig_H2SO4, fmt='o',
-             color='#d8b365', label='Pig AA', capsize=2)
+             color="#fa7305", label='Pig AA', capsize=2)
 
 
 # legend
@@ -71,8 +71,8 @@ plt.legend(fontsize=12, prop={'family': 'Times New Roman'},frameon=False) # lege
 
 # removing non-axis sides
 ax = plt.gca() 
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+#ax.spines['top'].set_visible(False)
+#ax.spines['right'].set_visible(False)
 
 # Manual axis limits
 #plt.xlim(0, 12)
@@ -81,10 +81,6 @@ ax.spines['right'].set_visible(False)
 plt.xlabel('V(acid) / m(slurry) [L / ton]', fontsize=14, fontname='Times New Roman')
 plt.ylabel('pH', fontsize=14, fontname='Times New Roman')
 
-# Manual axis ticks
-#plt.tick_params(axis='both', labelsize=12)
-#plt.xticks(range(0, 4400, 400), fontname='Times New Roman')
-#plt.yticks(range(1500, 3500, 200), fontname='Times New Roman')
 
 # show the graph
 plt.show()

@@ -341,10 +341,10 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\2-flux-data\cattle-slurry-field-flux.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-28-cattle-slurry\Piccaro-data\2-flux-data\cattle-slurry-field-flux.csv")
 
 ##### Output folder and files #####
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\3-intregated-data")
+output_folder = Path(r"c:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-28-cattle-slurry\Piccaro-data\3-intregated-data")
 
 ##### Constants #####
 treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to treamtents, bkgs excluded
@@ -382,7 +382,7 @@ TAN_df = TAN_normalization(integrated_df, TAN_dict)
 #print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-#print(merged_df)
+print(merged_df)
 
 ### Rename collums before saving as csv-files
 renamed_df = merged_df.rename(columns={
@@ -398,7 +398,7 @@ renamed_df = merged_df.rename(columns={
 'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'})
 #print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, 'field-cattle-slurry-integrated-v2-2026-02-25', overwrite = False)
+save_df_as_csv(renamed_df, output_folder, '2026-03-02-field-cattle-slurry-integrated-v112', overwrite = False)
 
 ##### Plot creation ##### 
 Create_plots = True
@@ -459,19 +459,26 @@ if Create_plots == True:
     plt.show()
 
     ##### Plot of relative flux for all merged treatments #####
+    # rename treatments for plotting
+    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
+    
     # determine unique treatments in merged df
     for treatment in merged_df['TREATMENT'].unique():
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
+        # extract relevant data
         t_treatment = treatment_df['TIME_SINCE_APP[h]']
         Rel_F = treatment_df['%REL_F_MEAN']
         Rel_F_stdev = treatment_df['%REL_F_STD']
-        plt.plot(t_treatment, Rel_F, 'x-', label=f'{treatment}', linewidth=2, markersize=6)
-        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3, label=f'{treatment} ± Std Dev')
 
-    plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 170)
-    plt.ylabel('percentage relative flux [1/h]')
-    plt.legend()
+        label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
+        plt.plot(t_treatment, Rel_F, '.-', label=label, linewidth=2, markersize=6)
+        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3)
+
+    # graph visuals
+    plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
+    plt.xlim(0, 165)
+    plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
+    plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
     plt.show()
 
      
