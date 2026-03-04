@@ -62,11 +62,11 @@ def add_weather_conditions(picarro_input_df: pd.DataFrame, weather_input_df: pd.
     weather_df = weather_df.sort_values('DATE_TIME')
 
     # Select relevant weather columns
-    weather_selected = weather_df[['DATE_TIME', 'mesotp10', 'pres']]
+    weather_selected = weather_df[['DATE_TIME', 'megrtp', 'pres']]
 
     # merging the weather_data into the data_df
     merged_df = pd.merge_asof(picarro_df, weather_selected, on='DATE_TIME', direction='nearest')  # use last known weather before measurement
-    merged_df = merged_df.rename(columns={"mesotp10": "T_GROUND_10cm[DEGC]","pres": "P_ATMOSPHERE[hpa]"})
+    merged_df = merged_df.rename(columns={"megrtp": "T[degc]","pres": "P_ATMOS[hpa]"})
     return merged_df
 
 
@@ -113,8 +113,8 @@ def flux_conversion_nonconst_weather(input_df: pd.DataFrame) -> pd.DataFrame:
     # Gathering needed collums from df:
     C_PPB = df['C[PPB]']
     C_PPB_stdev = df['C_STDEV[PPB]']
-    T = df['T_GROUND_10cm[DEGC]'] + 273.15 # degrees celsius to kelvin
-    P = df['P_ATMOSPHERE[hpa]'] * 0.000987 # hpa to atm
+    T = df['T[degc]'] + 273.15 # degrees celsius to kelvin
+    P = df['P_ATMOS[hpa]'] * 0.000987 # hpa to atm
     dP = df['P_DROP[pa]']
 
     # Intermediary mass/volume [mg/m3] calcualtion using ideal gas equaton
@@ -147,26 +147,26 @@ def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: Path
         print(f"The file with the following name already exist: {output_file.name}")
         return
 
+    elif output_file.exists():
+        print('previous file overwritten')
+
     df.to_csv(output_file, index=False)
     print(f" output_file saved as: {output_file}")
 
 
 ##### Input folders and files #####
-### Weather data ###
-input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv")
-
-### picarro data ###
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Pig-Slurry 2025-11-05\picarro-data-field-pig\1 extracted\2026-02-03-field-pig-extracted-v1.csv")
+input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv") #Weather data
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-04-field-pig-extracted-v2.csv") # picarro data
 
 ### Output folders and files ###
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Pig-Slurry 2025-11-05\picarro-data-field-pig\1 extracted\2026-02-03-field-pig-extracted-v1.csv")
-output_file_name = Path('cattle-slurry-field-flux')
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
+output_file_name = Path('2026-03-04-field-pig-flux-v22')
 
 ##### Constants #####
-preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6} # pa
+preasure_drop_dict = {1: 132.8, 2: 123.1, 3: 122.6, 4: 122.7, 5: 122.7, 6: 125.5, 7: 128.8, 8: 126.9, 9: 126.9,
+10: 129.4, 11: 121.4, 12: 124.3, 13: 125.0, 14: 126.5, 15: 143.1, 15: 143.1, 16: 141.1, 17: 135.3, 18: 125.4, 19: 129.3} # delta pa
 
 ##### Script Excecution #####
-
 weather_df = load_csv_file_as_df(input_path_weather)
 #print(weather_df)
 
@@ -179,14 +179,12 @@ print(picarro_df)
 combined_df = add_weather_conditions(picarro_df, weather_df)
 print(combined_df)
 
-#combined_df = add_presure_drop(combined_df, preasure_drop_dict)
+combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
-#flux_conversion_nonconst_weather(combined_df)
+flux_df = flux_conversion_nonconst_weather(combined_df)
+print(flux_df)
 
-
-#save_df_as_csv(combined_df, output_folder, output_file_name, overwrite = False)
-
-
+save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = True)
 
 ##### Visuals ##### 
 ### Temperature comparision ###
