@@ -339,7 +339,7 @@ treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
 ### Script Excecution ###
 if __name__ == "__main__":
     # copy the folderpath
-    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\Cattle trails\Raw-picarro-files")
+    input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-10-28-field-cattle\Raw-picarro-files")
     # copy the folderpath, add at least.csw
     output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
     output_file_name = Path('cattle-field-extracted-valve18')
@@ -352,8 +352,9 @@ if __name__ == "__main__":
     combined_df = remove_data(combined_df, dummy_valve_removal_dict, drop_rows=True)
 
     combined_df = add_method(combined_df, treatment_method_dict)
+    print(combined_df.head(50))
 
-    save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=False)
+    #save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=False)
     
 ### Print tests ### 
 #print(combined_df)

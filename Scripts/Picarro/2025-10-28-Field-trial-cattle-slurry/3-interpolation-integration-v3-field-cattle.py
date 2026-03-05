@@ -68,14 +68,8 @@ def remove_nan_rows(raw_df:pd.DataFrame) -> pd.DataFrame:
     output:
         filtered df: df with nan-containing rows removed
     '''
-    copy_df = raw_df.copy()  # Create a copy to avoid changing the raw DataFrame
-    initial_rows = len(copy_df)
-    
-    filtered_df = copy_df.dropna(axis=0, how='any')  # Drop any rows containing NaN
-    
-    removed_rows = initial_rows - len(filtered_df)
-    print(f'{removed_rows} of nan rows removed' )
-
+    copy_df = raw_df.copy() # creating a copy to avid changing raw df
+    filtered_df = copy_df.dropna(axis = 0, how = 'any') # dropping any rows contaning nan
     return filtered_df
 
 def background_correction(filtered_df:pd.DataFrame, power:int = 2) -> pd.DataFrame:
@@ -336,54 +330,47 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-04-field-pig-flux-v22.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-05-field-cattle-flux-v22.csv")
 
 ##### Output folder and files #####
 output_folder = Path(r"c:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-28-cattle-slurry\Piccaro-data\3-intregated-data")
 
 ##### Constants #####
 treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to treamtents, bkgs excluded
-
-Aplication_time_dict = {1 : 0.0 , 2 : 0.0 , 3 : 0.0, 4 : 0.40 , 5: 0.53, 6: 0.40 , 7: 0.40 , 8: 2.20, 9: 2.05,
- 10: 2.35, 11: 2.48, 12: 2.62, 13: 2.75, 14: 2.88, 15: 3.02, 16: 3.15, 17: 3.28, 18: 3.42, 19: 3.55} 
-# delta h since experimental start 
-# no data "lost" for this experiment, aplication times manually corrected to first datapoint - 7.5 min (0.125 h)
-# notice, for the order was valves are switched (backgr-times changed to fit lunch hours)
-
-
-TAN_dict = {'AA' : 4393, 'RAW': 4650, 'H2SO4': 4867, 'OSI': 4867, 'TH': 4867} # [mg/m2]
+Aplication_time_dict = {4.0 : 0, 5.0 : 0.13, 8.0 : 0.27, 9.0: 0.40, 11.0: 0.53, 12.0 : 0.67, 13.0: 0.80, 14.0: 0.93, 15.0: 1.07, 16.0: 1.20, 17.0: 1.33, 18.0: 1.47} # [h] 
+TAN_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2} # [mg/m2]
 #TAN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2] # not currently used
-treatments = ['AA','RAW','H2SO4', 'OSI', 'TH']
+treatments = ['AA','RAW','H2SO4']
 
 ##### Script excecution #####
+
 raw_df = load_csv_file_as_df(input_path) # load flux-data
-#print(raw_df.head(50))
+print(raw_df)
 
 # dropping collums not needed for down-stream
-raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_ATMOS[hpa]', 'T[degc]']).copy() ; #print(raw_df_small)
-#print(raw_df_small.head(26))
+raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_ATMOS[hpa]', 'TIME_NORM_LOCAL[h]','T[degc]' ]).copy()
+print(raw_df_small)
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
-#print(raw_df_new_time.head(50))
-#print(raw_df_new_time.tail(50))
+#print(raw_df_new_time)
 
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print(filtered_df)
 
 times = determine_smallest_timerange_valve(filtered_df)
-#print(times)
 #print(len(times))
+
 treatment_df = background_correction(filtered_df, power=2) 
-print(treatment_df)
+#print(treatment_df)
 
 interp_df = interpolation_linear(treatment_df, times)
-print(interp_df.head(50))
+#print(interp_df)
 
 integrated_df = integration(interp_df)
-print(integrated_df)
+#print(integrated_df)
 
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-print(TAN_df)
+#print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
 print(merged_df)
@@ -432,7 +419,6 @@ if Create_plots == True:
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
-    #mtest_treatment = 'TH'
 
     # extract treatment-relevant data, merged and original
     original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]
@@ -458,14 +444,14 @@ if Create_plots == True:
     plt.xlabel('Time Since Application [h]')
     plt.xlim(0, 24)
     plt.ylabel('Flux [mg/ m2 h]')
-    #plt.ylim(0, 30)
+    plt.ylim(0, 30)
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
     plt.legend()
     plt.show()
 
     ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry (hand applied)','H2SO4': 'H₂SO₄', 'TH': 'Trailing Hose', 'OSI': 'Open Slot Injection'}
+    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
     
     # determine unique treatments in merged df
     for treatment in merged_df['TREATMENT'].unique():
@@ -481,10 +467,13 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
-    #plt.xlim(0, 165)
+    plt.xlim(0, 165)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
     plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
     plt.show()
+
+     
+ 
 
 
 ##### Code References #####

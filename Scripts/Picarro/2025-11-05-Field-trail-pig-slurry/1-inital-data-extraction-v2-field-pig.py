@@ -325,7 +325,7 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 
     
 ### Constants ### 
-start_of_experiment_removal_dict = {('2025-11-05 00:00.000', '2025-11-05 11:45:00.000') : []} # remove data before DFC's were moved in position
+start_of_experiment_removal_dict = {('2025-11-05 00:00.000', '2025-11-05 11:40:00.000') : []} # remove data before DFC's were moved in position
 
 treatment_method_dict = {1: 'TH', 2: 'TH', 3: 'TH', 4: 'OSI', 5: 'BACKGROUND', 6: 'OSI', 7: 'OSI', 8: 'H2SO4', 9: 'BACKGROUND', 10: 'RAW', 11:'AA', 12:'AA', 13:'H2SO4',
                          14: 'RAW', 15:'RAW', 16: 'BACKGROUND', 17: 'AA', 18: 'H2SO4', 19: 'BACKGROUND'}
@@ -349,7 +349,7 @@ combined_df = remove_data(combined_df, start_of_experiment_removal_dict, drop_ro
 combined_df = add_method(combined_df, treatment_method_dict)
 print(combined_df)
 
-save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=True)
+#save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=True)
     
 
 ##### Visual of extracted data #####
