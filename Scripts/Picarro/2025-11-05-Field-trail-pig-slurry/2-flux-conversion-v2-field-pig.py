@@ -156,11 +156,11 @@ def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: Path
 
 ##### Input folders and files #####
 input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv") #Weather data
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-04-field-pig-extracted-v2.csv") # picarro data
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-08-field-pig-extracted-v3.csv") # picarro data
 
 ### Output folders and files ###
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
-output_file_name = Path('2026-03-04-field-pig-flux-v22')
+output_file_name = Path('2026-03-08-field-pig-flux-v32')
 
 ##### Constants #####
 preasure_drop_dict = {1: 132.8, 2: 123.1, 3: 122.6, 4: 122.7, 5: 122.7, 6: 125.5, 7: 128.8, 8: 126.9, 9: 126.9,
@@ -171,23 +171,28 @@ weather_df = load_csv_file_as_df(input_path_weather)
 #print(weather_df)
 
 weather_df = make_datetime_weather(weather_df)
-print(weather_df)
+#print(weather_df)
 
 picarro_df = load_csv_file_as_df(input_path_picarro)
-print(picarro_df)
+#print(picarro_df)
 
 combined_df = add_weather_conditions(picarro_df, weather_df)
-print(combined_df)
+#print(combined_df)
 
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
-print(flux_df)
+#print(flux_df)
 
 save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = True)
 
 ##### Visuals ##### 
 ### Temperature comparision ###
+T = flux_df['T[degc]']
+T_min = round(T.min(), 1)
+T_mean = round(T.mean(), 1)
+T_max = round(T.max() , 1) 
+print(f'Temperature during the experiment was (min, mean, max): ({T_min}, {T_mean}, {T_max}) degrees celsius')
 
 ### Flux data ###
 def preliminary_visualization2(df: pd.DataFrame, y_col: str, yerr_col: str, valve_lvl=False):

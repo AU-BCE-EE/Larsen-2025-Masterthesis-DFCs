@@ -4,6 +4,9 @@
 # v2:
     Changed the "find" shifts algoritm to apply absolute differences, thereby properly chatching the shifts between final valve and valve 1
 
+# v3:
+    Changed the midnigt expeption, now use cycles down to 10 s
+
 ##### Script2: flux conversion #####
     Applies weather and equipment data to convert PPB into flux [mg/m2 h]
 
@@ -19,6 +22,7 @@
 
 # v3:
     changed logic for defining shared time domain
+    changed TAN analysis method from tveskaeg to spectral kit - same as used in lab experiments
 
 
 ##### Naming convention #####

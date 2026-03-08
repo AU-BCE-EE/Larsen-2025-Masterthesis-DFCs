@@ -173,7 +173,15 @@ combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
 
-save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
+#save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
+
+##### Check #####
+# extract temperatures
+T = flux_df['T[degc]']
+T_min = round(T.min(), 1)
+T_mean = round(T.mean(), 1)
+T_max = round(T.max() , 1) 
+print(f'Temperature during the experiment was (min, mean, max): ({T_min}, {T_mean}, {T_max}) degrees celsius')
 
 ##### Visuals ##### 
 def preliminary_visualization(df, valve_lvl = True):

@@ -136,6 +136,7 @@ def determine_smallest_timerange_valve(filtered_df: pd.DataFrame, pts_per_h = 2)
 
     Input:
         BC_df: dataframe containing background-corrected datapoints of actual treatments
+        pts_per_h: int, number of points to be interpolated per hour
 
     output:
         time-values of smallest timerange as a numpy-array, on the "time of aplication" axis.
@@ -309,7 +310,7 @@ def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
         final_emis = treatment_df['%REL_ACUM_EMIS_MEAN'].iloc[-1]
         final_emis_stdev = treatment_df['%REL_ACUM_EMIS_STD'].iloc[-1]
-        print(f'final accumated relative emissions for treatment {treatment} is {final_emis} ± {final_emis_stdev} %')
+        print(f'final accumated relative emissions for treatment {treatment} is {round(final_emis, 2)} ± {round(final_emis_stdev, 2)} %')
 
     return merged_df
 
@@ -336,7 +337,7 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-04-field-pig-flux-v22.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-08-field-pig-flux-v32.csv")
 
 ##### Output folder and files #####
 output_folder = Path(r"c:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-28-cattle-slurry\Piccaro-data\3-intregated-data")
@@ -351,7 +352,7 @@ Aplication_time_dict = {1 : 0.0 , 2 : 0.0 , 3 : 0.0, 4 : 0.40 , 5: 0.53, 6: 0.40
 # notice, for the order was valves are switched (backgr-times changed to fit lunch hours)
 
 
-TAN_dict = {'AA' : 4393, 'RAW': 4650, 'H2SO4': 4867, 'OSI': 4867, 'TH': 4867} # [mg/m2]
+TAN_dict = {'AA' : 6228, 'RAW': 6249, 'H2SO4': 6115, 'OSI': 6215, 'TH': 6212} # [mg/m2] spec kit
 #TAN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2] # not currently used
 treatments = ['AA','RAW','H2SO4', 'OSI', 'TH']
 
@@ -370,23 +371,24 @@ raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_d
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print(filtered_df)
 
-times = determine_smallest_timerange_valve(filtered_df)
+pts_per_h = 2
+times = determine_smallest_timerange_valve(filtered_df, pts_per_h = pts_per_h)
 #print(times)
 #print(len(times))
 treatment_df = background_correction(filtered_df, power=2) 
-print(treatment_df)
+#print(treatment_df)
 
 interp_df = interpolation_linear(treatment_df, times)
-print(interp_df.head(50))
+#print(interp_df.head(50))
 
 integrated_df = integration(interp_df)
-print(integrated_df)
+#print(integrated_df)
 
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-print(TAN_df)
+#print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-print(merged_df)
+#print(merged_df)
 
 ### Rename collums before saving as csv-files
 renamed_df = merged_df.rename(columns={
@@ -410,6 +412,7 @@ Create_plots = True
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
+    interptest_valveid = 11
 
     # extract raw data
     raw_valve_df =  treatment_df[treatment_df['VALVE_ID'] == interptest_valveid]
@@ -426,7 +429,7 @@ if Create_plots == True:
     plt.plot(t_interp, F_interp, 'x-', label='Interpolated Data', color='red')
     plt.xlabel('Time Since Application [h]')
     plt.ylabel('Flux [mg/h m2]')
-    plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
+    plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}, interpolated points per hour was {pts_per_h}')
     plt.legend()
     plt.show()
 

@@ -303,7 +303,7 @@ def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
         final_emis = treatment_df['%REL_ACUM_EMIS_MEAN'].iloc[-1]
         final_emis_stdev = treatment_df['%REL_ACUM_EMIS_STD'].iloc[-1]
-        print(f'final accumated relative emissions for treatment {treatment} is {final_emis} ± {final_emis_stdev} %')
+        print(f'final accumated relative emissions for treatment {treatment} is {round(final_emis, 2)} ± {round(final_emis_stdev, 2)} %, ')
 
     return merged_df
 
@@ -338,18 +338,18 @@ output_folder = Path(r"c:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 ##### Constants #####
 treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to treamtents, bkgs excluded
 Aplication_time_dict = {4.0 : 0, 5.0 : 0.13, 8.0 : 0.27, 9.0: 0.40, 11.0: 0.53, 12.0 : 0.67, 13.0: 0.80, 14.0: 0.93, 15.0: 1.07, 16.0: 1.20, 17.0: 1.33, 18.0: 1.47} # [h] 
-TAN_dict = {'AA' : 5371.0, 'RAW': 5218.4, 'H2SO4': 5466.2} # [mg/m2]
+TAN_dict = {'AA' : 6167, 'RAW': 6258, 'H2SO4': 6253} # [mg/m2], spec kit
 #TAN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2] # not currently used
 treatments = ['AA','RAW','H2SO4']
 
 ##### Script excecution #####
 
 raw_df = load_csv_file_as_df(input_path) # load flux-data
-print(raw_df)
+#print(raw_df)
 
 # dropping collums not needed for down-stream
 raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_ATMOS[hpa]', 'TIME_NORM_LOCAL[h]','T[degc]' ]).copy()
-print(raw_df_small)
+#print(raw_df_small)
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
 #print(raw_df_new_time)
@@ -373,7 +373,7 @@ TAN_df = TAN_normalization(integrated_df, TAN_dict)
 #print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-print(merged_df)
+#print(merged_df)
 
 ### Rename collums before saving as csv-files
 renamed_df = merged_df.rename(columns={

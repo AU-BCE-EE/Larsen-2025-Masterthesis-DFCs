@@ -339,7 +339,7 @@ treatment_method_dict = {1: 'TH', 2: 'TH', 3: 'TH', 4: 'OSI', 5: 'BACKGROUND', 6
 ### Script Excecution ###
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-11-05-Pig-trails\Raw-picarro-files")
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
-output_file_name = Path('2026-03-04-field-pig-extracted-v2')
+output_file_name = Path('2026-03-08-field-pig-extracted-v3')
 
 combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
 combined_df = time_normalization_global(combined_df, '2025-11-05 11:40:00.000')
@@ -349,7 +349,7 @@ combined_df = remove_data(combined_df, start_of_experiment_removal_dict, drop_ro
 combined_df = add_method(combined_df, treatment_method_dict)
 print(combined_df)
 
-#save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=True)
+save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=True)
 
 ###### Checks #####
 ### quick analysis PPB values for each treatment ###
