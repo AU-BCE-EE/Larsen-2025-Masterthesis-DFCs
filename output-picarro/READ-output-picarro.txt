@@ -3,6 +3,7 @@
 
 # v2:
     Changed the "find" shifts algoritm to apply absolute differences, thereby properly chatching the shifts between final valve and valve 1
+           2026-03-04 PiG field: changed the start of the experiment to 11:40 (actual start of DAT-file), instead of 11:48 (first extracted point point)
 
 # v3:
     Changed the midnigt expeption, now use cycles down to 10 s
@@ -12,7 +13,6 @@
 
 # v2: 
     changed the used temperature sensor, previously used temperature 10 cm bellow ground, now use 20 cm above
-         2026-03-04 PiG field: changed the start of the experiment to 11:40 (actual start of DAT-file), instead of 11:48 (first extracted point point)
 
 ##### Script 3 interpolation and integration #####
     Integrates on a valve-level to determine accumulated emissions [mg/ m2]. Normalizes agianst slurry TAN to find relative emissions. Finds treatment-level avg and stdev  
