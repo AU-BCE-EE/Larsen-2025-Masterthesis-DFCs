@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 ### Functions ###
-def load_picarro_file_as_df(file_path):
+def load_picarro_file_as_df(file_path: Path)-> pd.DataFrame:
     '''
     Loads the raw picarro-files
     Helper-function to avoid repating code
@@ -20,7 +20,7 @@ def load_picarro_file_as_df(file_path):
     return pd.read_csv(file_path, sep=r'\s+', engine='python')
     # Collums in the file are seperated with several empty spaces
 
-def time_normalization_global(df, global_start = None):
+def time_normalization_global(df: pd.DataFrame, global_start: None | str = None) -> pd.DataFrame:
     '''
     Creates a collum with time normalized [h] from the experimental start
 
@@ -57,7 +57,7 @@ def time_normalization_global(df, global_start = None):
 
 
    
-def visualize_raw_data_per_day(file_path):
+def visualize_raw_data_per_day(file_path: Path):
     
     df = load_picarro_file_as_df(file_path)
     '''
@@ -95,7 +95,7 @@ def visualize_raw_data_per_day(file_path):
     # show the graph
     plt.show()
     
-def extract_data_from_picarro_file(file_path, cycle_min=7):
+def extract_data_from_picarro_file(file_path: Path, cycle_min = 7) -> pd.DataFrame:
     df = load_picarro_file_as_df(file_path)
     '''
     extracts data from raw-piccaro file. 
@@ -124,7 +124,7 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
     in_shift = False
     last_valve_shift_index = 0
 
-    def record_cycle_data(df_segment):
+    def record_cycle_data(df_segment:pd.DataFrame):
         '''
         Helper-function to extract collum from a valve-cycle (avoiding repeated code).
         
@@ -187,13 +187,13 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
     # Convert to DataFrame
     result_df = pd.DataFrame(extracted_data)
 
-    # Remove duplicates based on both time and valve
+    # Safety, remove duplicates based on both time and valve
     result_df = result_df.drop_duplicates(subset=["VALVE_ID", "DATE_TIME"], keep="first").reset_index(drop=True)
 
     return result_df
 
 
-def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualization = False):
+def combine_folder_txts_into_single_df(input_folder: Path, cycle_min = 7, visualization = False):
     '''
     Function handles overall logic of loading multiple data from a folder.
  
@@ -242,7 +242,7 @@ def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualizatio
 
     return sorted_df
 
-def remove_data(df, removal_dict, drop_rows = False):
+def remove_data(df: pd.DataFrame, removal_dict: dict[tuple[str, str], list[int]], drop_rows = False) -> pd.DataFrame:
     '''
     Removes or replaces PPB-measurments and the related std-deviation with nan for unreliable data due to known field-errors.
     
@@ -263,35 +263,34 @@ def remove_data(df, removal_dict, drop_rows = False):
     '''
     cleaned_df = df.copy() # creating a copy of the df for added safety
 
-    if not np.issubdtype(cleaned_df['DATE_TIME'].dtype, np.datetime64): # check and potential conversion of DATE_TIME collum, if this hasn't intor a date_time object if this hasn't been done
+    if not np.issubdtype(cleaned_df['DATE_TIME'].dtype, np.datetime64): # check and potentially converts of DATE_TIME collum
         cleaned_df['DATE_TIME'] = pd.to_datetime(cleaned_df['DATE_TIME'])
 
     for (start_str, end_str), valve_ids in removal_dict.items():  # extracting time-values from the remmoval dict
-        # converting string into pd.datetime object
-        start = pd.to_datetime(start_str)
+        start = pd.to_datetime(start_str) # converting string into pd.datetime object
         end = pd.to_datetime(end_str)
 
-        if len(valve_ids) > 0: # creating sub-df within the remmoval parameters
+        if len(valve_ids) > 0: # creating sub-df with only the specified valves within the time-range
             removal_range = (cleaned_df['DATE_TIME'].between(start, end) & cleaned_df['VALVE_ID'].isin(valve_ids))
 
-        else:
+        else: # removes all date within the timerange
             removal_range = cleaned_df['DATE_TIME'].between(start, end)
 
-        if drop_rows == False:
+        if drop_rows == False: # sets PPB data to nan, if the rows should not be dropped (still part of experiment, data simply missing)
             cleaned_df.loc[removal_range, ['C[PPB]', 'C_STDEV[PPB]']] = np.nan # replacing concentration and stdev using the sub.df 
             # print-confimation
             print(f"Set {removal_range.sum()} rows to NaN between {start}-{end} "
               f"{'for valves ' + str(valve_ids) if valve_ids else '(all valves)'}.")
 
-        elif drop_rows == True:
+        elif drop_rows == True: # dropping the rows if so specified
             cleaned_df = cleaned_df.loc[~removal_range].reset_index(drop=True)
-            # print-confimation
+
             print(f"Dropped {removal_range.sum()} rows between {start}-{end} "
-                  f"{'for valves ' + str(valve_ids) if valve_ids else '(all valves)'}.")
+                  f"{'for valves ' + str(valve_ids) if valve_ids else '(all valves)'}.") # print-confimations
 
     return cleaned_df
 
-def add_method(df, method_dict):
+def add_method(df: pd.DataFrame, method_dict: dict[int, str]):
     '''
     Add and addtional collum with slurry treatment id using .map().
 
@@ -312,7 +311,7 @@ def add_method(df, method_dict):
         return df
 
 
-def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
+def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: str, overwrite = True):
     '''
     
     '''
@@ -328,10 +327,12 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 
     
 ### Constants ### 
-faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000') : [11, 12, 13, 14, 15, 16, 18, 17]}
-end_of_experiment_removal_dict= {('2025-11-04 13:51:0.000', '2025-11-04 14:11:35.808') : []} 
-dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [1, 2, 3, 6, 7, 10, 19]}
+#faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000') : [11, 12, 13, 14, 15, 16, 18, 17]}
+#end_of_experiment_removal_dict= {('2025-11-04 13:51:0.000', '2025-11-04 14:11:35.808') : []} 
+#dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [1, 2, 3, 6, 7, 10, 19]}
 #dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [18]}
+
+before_exp_dict = {}
 
 treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
 11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
@@ -343,7 +344,7 @@ input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester -
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
 output_file_name = Path('cattle-field-extracted-valve18')
 
-combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
+combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=14, visualization = False)
 combined_df = time_normalization_global(combined_df)
 
 combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
