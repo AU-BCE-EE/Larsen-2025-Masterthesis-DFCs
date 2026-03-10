@@ -1,5 +1,4 @@
 ### Script Description ###
-# ....
 
 ### Packages ###
 from pathlib import Path
@@ -25,10 +24,11 @@ def time_normalization_global(df: pd.DataFrame, global_start: None | str = None)
     Creates a collum with time normalized [h] from the experimental start
 
     Input:
-        df with DATE and TIME collums (found in the raw picarro files), or DATE_TIME
-        global_start (str) ex 2025-11-11 11:02.22, if global_start is not provided first measurement will be used
-    
-    Returns: the df the collums DATE_TIME and TIME_NORM_GLOBAL[h] collums
+        df with DATE and TIME collums (found in the raw picarro files), or DATE_TIME.
+        global_start (str) ex 2025-11-11 11:02.22, if global_start is not provided first measurement will be used.
+
+    output: 
+        the df the collums DATE_TIME and TIME_NORM_GLOBAL[h] collums
     '''
     
     if 'DATE_TIME' not in df.columns: # check wheter the collum already exists
@@ -55,17 +55,14 @@ def time_normalization_global(df: pd.DataFrame, global_start: None | str = None)
     print('global time-normalization performed')
     return df
 
-
-   
+  
 def visualize_raw_data_per_day(file_path: Path):
     
     df = load_picarro_file_as_df(file_path)
     '''
     Helper-function to visualize raw picarro data
-
     input: file_path, path-object of the specific picarro-file
     '''
-
     # normalizing the time and extracting concentration-measurements
     time_normalized_df = time_normalization_global(df)
     times = time_normalized_df['TIME_NORM_GLOBAL[h]'] 
@@ -102,7 +99,7 @@ def extract_data_from_picarro_file(file_path: Path, cycle_min = 7) -> pd.DataFra
 
     inputs:
         file_path, path object, file path of the specific picarro file
-        cycle_min [min], check to remove short valve cycles (due to manual change)
+        cycle_min (int), check to remove short valve cycles (due to manual change)
 
     Returns:
         df with the following collums
@@ -135,8 +132,8 @@ def extract_data_from_picarro_file(file_path: Path, cycle_min = 7) -> pd.DataFra
         middle_row = df_segment.iloc[len(df_segment) // 2]
         time_val = middle_row['DATE_TIME']
         valve_ID = middle_row['MPVPosition']
-        NH3_concentration = df_segment['NH3'].mean()
-        NH3_stdev = df_segment['NH3'].std()
+        NH3_concentration = df_segment['NH3_Raw'].mean()
+        NH3_stdev = df_segment['NH3_Raw'].std()
 
         extracted_data['C[PPB]'].append(NH3_concentration)
         extracted_data['C_STDEV[PPB]'].append(NH3_stdev)
@@ -172,10 +169,10 @@ def extract_data_from_picarro_file(file_path: Path, cycle_min = 7) -> pd.DataFra
                     start_index = max(0, index - 30)
                     data_window = df.loc[start_index:index - 1]
                     record_cycle_data(data_window)
-                    print(f"Accepted short cycle near midnight ({cycle_time:.0f}s) at {current_time}.")
+                    print(f"Accepted short cycle near midnight ({cycle_time:.0f}s) at {current_time}, valve position was {valve_pos}")
 
                 else:  # skipping over other short cycles
-                    print(f"Skipped short valve cycle ({cycle_time / 60:.1f} min) at {current_time}.")
+                    print(f"Skipped short valve cycle ({cycle_time / 60:.1f} min) at {current_time}, valve postion was {valve_pos}.")
 
                 last_valve_shift_index = index
 
@@ -311,9 +308,15 @@ def add_method(df: pd.DataFrame, method_dict: dict[int, str]):
         return df
 
 
-def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: str, overwrite = True):
+def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: Path, overwrite = True):
     '''
-    
+    saves a dataframe as a csv-file with added saftety around overwritting existing files
+
+    Input
+        df: the dataframe to be saved
+        output_folder: the folder to save the file withing
+        output_file_name: the name of the produced csv-file
+        overwrite: whether to overwrite an existing file at the same location with the same name
     '''
     output_file = output_folder / f"{output_file_name}.csv"
 
@@ -327,51 +330,56 @@ def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: str,
 
     
 ### Constants ### 
-#faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000') : [11, 12, 13, 14, 15, 16, 18, 17]}
-#end_of_experiment_removal_dict= {('2025-11-04 13:51:0.000', '2025-11-04 14:11:35.808') : []} 
-#dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [1, 2, 3, 6, 7, 10, 19]}
-#dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [18]}
+before_exp_dict = {('2026-01-06 00:00:0.00' , '2026-01-06 09:17:0.00' ): []}
+# in therms of the end, the DAT-file seems to have been refreshed - no need for added filtration
 
-before_exp_dict = {}
+treatment_method_dict = {1: 'PU', 2: 'FH2SO4', 3: 'STD', 4: 'PH2SO4', 5: 'PAA', 11: 'BACKGROUND',
+6: 'FAA', 7: 'FU', 8: 'FH2SO4', 9: 'PU', 10: 'FAA', 12: 'BACKGROUND',
+17: 'FH2SO4', 18: 'FU', 19: 'PAA', 20: 'STD', 21: 'PH2SO4', 27: 'BACKGROUND',
+22: 'FAA', 23: 'FU', 24: 'PU', 25: 'PH2SO4', 26: 'PAA', 28: 'BACKGROUND'}
+# F = Field
+# P = packced
+# U = untreated  
+# AA = Acetic acid
+# H2SO4 = sulphuric acid
 
-treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
-11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
+exp_start = '2026-01-06 09:17:0.00'
 
-### Script Excecution ###
-# copy the folderpath
-input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-10-28-field-cattle\Raw-picarro-files")
-# copy the folderpath, add at least.csw
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\Cattle-Slurry 2025-10-28\Piccaro-data\1-extracted-data")
-output_file_name = Path('cattle-field-extracted-valve18')
+### Folders and files ###
+input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\lab-trails\2026-01-06-cattle-slurry-raw-picarro-files")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
+output_file_name = Path('2026-03-10-cattle-lab-extracted-v3')
 
+##### Script excecution #####
 combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=14, visualization = False)
-combined_df = time_normalization_global(combined_df)
+print(combined_df)
 
-combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
-combined_df = remove_data(combined_df, end_of_experiment_removal_dict, drop_rows= True)
-combined_df = remove_data(combined_df, dummy_valve_removal_dict, drop_rows=True)
+combined_df_normtime = time_normalization_global(combined_df, exp_start)
+print(combined_df_normtime)
 
-combined_df = add_method(combined_df, treatment_method_dict)
-#print(combined_df.head(50))
+combined_df_filtered = remove_data(combined_df_normtime, before_exp_dict, drop_rows= True) 
+print(combined_df_filtered)
 
-#save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=False)
+combined_df_method_added = add_method(combined_df_filtered, treatment_method_dict)
+print(combined_df_method_added)
+
+save_df_as_csv(combined_df_method_added, output_folder, output_file_name, overwrite = False)
 
 ###### Checks #####
 ### quick analysis of PPB values for each treatment ###
-treatments = combined_df['TREATMENT'].unique()
+treatments = combined_df_method_added['TREATMENT'].unique()
 
 for treatment in treatments:
-    treatment_data = combined_df[combined_df['TREATMENT'] == treatment]
+    treatment_data = combined_df_method_added[combined_df_method_added['TREATMENT'] == treatment]
     PPB = treatment_data['C[PPB]']
     PPB_mean = round(PPB.mean(), 2)
+    PPB_median = round(PPB.median(), 2)
     PPB_spread = round(PPB.std(), 2)
     PPB_min = round(PPB.min(), 2)
     PPB_max = round(PPB.max(), 2)
     PPB_CV = round(((PPB.std() / PPB.mean()) * 100), 2)  # coeficient of variation, as a percentage
 
-    print(f'{treatment} PPB avg is {PPB_mean}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')
-
-    
+    print(f'{treatment} PPB median is {PPB_mean}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')
 
 
 ### Coding references ###

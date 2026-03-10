@@ -6,7 +6,9 @@
            2026-03-04 PiG field: changed the start of the experiment to 11:40 (actual start of DAT-file), instead of 11:48 (first extracted point point)
 
 # v3:
-    Changed the midnigt expeption, now use cycles down to 10 s
+    Changed the midnigt expeption - filtering off points based on cyckle-time doesn't work around midnigt as a new file created at 00:00 artificially shortening the duration, now use cycles down to 10 s
+        XXXX-XX-XX Pig field: OSI had been switched around (as the original field plan was not completely followed), corrected this
+
 
 ##### Script2: flux conversion #####
     Applies weather and equipment data to convert PPB into flux [mg/m2 h]
@@ -14,14 +16,14 @@
 # v2: 
     changed the used temperature sensor, previously used temperature 10 cm bellow ground, now use 20 cm above
 
+
 ##### Script 3 interpolation and integration #####
     Integrates on a valve-level to determine accumulated emissions [mg/ m2]. Normalizes agianst slurry TAN to find relative emissions. Finds treatment-level avg and stdev  
-
 # v2:
-    changed interpolation to use lower resolution and use "time of aplication" to simplify downstream merging and avoid "inventing" points
+    changed interpolation to use lower resolution and use "time of aplication" to simplify downstream merging
 
 # v3:
-    changed logic for defining shared time domain
+    changed logic for defining shared time domain, now uses latest start and earliest end instead of comparing distances
     changed TAN analysis method from tveskaeg to spectral kit - same as used in lab experiments
 
 

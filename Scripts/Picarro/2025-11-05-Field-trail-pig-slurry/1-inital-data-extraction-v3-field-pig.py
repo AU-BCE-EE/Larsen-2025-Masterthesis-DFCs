@@ -327,7 +327,7 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 ### Constants ### 
 start_of_experiment_removal_dict = {('2025-11-05 00:00.000', '2025-11-05 11:40:00.000') : []} # remove data before DFC's were moved in position
 
-treatment_method_dict = {1: 'TH', 2: 'TH', 3: 'TH', 4: 'OSI', 5: 'BACKGROUND', 6: 'OSI', 7: 'OSI', 8: 'H2SO4', 9: 'BACKGROUND', 10: 'RAW', 11:'AA', 12:'AA', 13:'H2SO4',
+treatment_method_dict = {1: 'OSI', 2: 'OSI', 3: 'OSI', 4: 'TH', 5: 'BACKGROUND', 6: 'TH', 7: 'TH', 8: 'H2SO4', 9: 'BACKGROUND', 10: 'RAW', 11:'AA', 12:'AA', 13:'H2SO4',
                          14: 'RAW', 15:'RAW', 16: 'BACKGROUND', 17: 'AA', 18: 'H2SO4', 19: 'BACKGROUND'}
 # TH: Raw slurry applied via trailing hose (machine teqnique)
 # OSI RAW slurry applied by open slot injection (machine technique)
@@ -335,6 +335,7 @@ treatment_method_dict = {1: 'TH', 2: 'TH', 3: 'TH', 4: 'OSI', 5: 'BACKGROUND', 6
 # H2SO4: slurry treated with sulphuric acid, applied by hand
 # Raw: raw slurry, applied by hand
 # Background: no slurry applied on plot
+# Notice TH and OSI was switched compared to original plan
 
 ### Script Excecution ###
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-11-05-Pig-trails\Raw-picarro-files")
@@ -360,12 +361,13 @@ for treatment in treatments:
     treatment_data = combined_df[combined_df['TREATMENT'] == treatment]
     PPB = treatment_data['C[PPB]']
     PPB_mean = round(PPB.mean(), 2)
+    PPB_median = round(PPB.median(), 2)
     PPB_spread = round(PPB.std(), 2)
     PPB_min = round(PPB.min(), 2)
     PPB_max = round(PPB.max(), 2)
     PPB_CV = round(((PPB.std() / PPB.mean()) * 100), 2)  # coeficient of variation, as a percentage
 
-    print(f'{treatment} PPB avg is {PPB_mean}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')    
+    print(f'{treatment} PPB avg is {PPB_median}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')    
 
 ##### Visual of extracted data #####
 create_plots = False
