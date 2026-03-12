@@ -379,7 +379,7 @@ for treatment in treatments:
     PPB_max = round(PPB.max(), 2)
     PPB_CV = round(((PPB.std() / PPB.mean()) * 100), 2)  # coeficient of variation, as a percentage
 
-    print(f'{treatment} PPB median is {PPB_mean}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')
+    print(f'{treatment} PPB median is {PPB_median}, PPB mean is {PPB_mean}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')
 
 
 ### Coding references ###

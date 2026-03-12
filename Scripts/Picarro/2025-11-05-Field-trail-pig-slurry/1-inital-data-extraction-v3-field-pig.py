@@ -340,7 +340,7 @@ treatment_method_dict = {1: 'OSI', 2: 'OSI', 3: 'OSI', 4: 'TH', 5: 'BACKGROUND',
 ### Script Excecution ###
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-11-05-Pig-trails\Raw-picarro-files")
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
-output_file_name = Path('2026-03-08-field-pig-extracted-v3')
+output_file_name = Path('2026-03-12-field-pig-extracted-v3')
 
 combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
 combined_df = time_normalization_global(combined_df, '2025-11-05 11:40:00.000')
@@ -350,7 +350,7 @@ combined_df = remove_data(combined_df, start_of_experiment_removal_dict, drop_ro
 combined_df = add_method(combined_df, treatment_method_dict)
 print(combined_df)
 
-save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=True)
+save_df_as_csv(combined_df, output_folder, output_file_name, overwrite= False)
 
 ###### Checks #####
 ### quick analysis PPB values for each treatment ###
@@ -367,7 +367,7 @@ for treatment in treatments:
     PPB_max = round(PPB.max(), 2)
     PPB_CV = round(((PPB.std() / PPB.mean()) * 100), 2)  # coeficient of variation, as a percentage
 
-    print(f'{treatment} PPB avg is {PPB_median}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')    
+    print(f'{treatment} PPB avg is {PPB_mean}, median is {PPB_median}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')    
 
 ##### Visual of extracted data #####
 create_plots = False

@@ -156,11 +156,11 @@ def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: Path
 
 ##### Input folders and files #####
 input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv") #Weather data
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-08-field-pig-extracted-v3.csv") # picarro data
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-12-field-pig-extracted-v3.csv") # picarro data
 
 ### Output folders and files ###
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
-output_file_name = Path('2026-03-08-field-pig-flux-v32')
+output_file_name = Path('2026-03-12-field-pig-flux-v32')
 
 ##### Constants #####
 preasure_drop_dict = {1: 132.8, 2: 123.1, 3: 122.6, 4: 122.7, 5: 122.7, 6: 125.5, 7: 128.8, 8: 126.9, 9: 126.9,
@@ -192,7 +192,8 @@ T = flux_df['T[degc]']
 T_min = round(T.min(), 1)
 T_mean = round(T.mean(), 1)
 T_max = round(T.max() , 1) 
-print(f'Temperature during the experiment was (min, mean, max): ({T_min}, {T_mean}, {T_max}) degrees celsius')
+T_median = round(T.median() , 1) 
+print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}, {T_median}, {T_mean}, {T_max}) degrees celsius')
 
 ### Flux data ###
 def preliminary_visualization2(df: pd.DataFrame, y_col: str, yerr_col: str, valve_lvl=False):

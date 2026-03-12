@@ -152,11 +152,11 @@ input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-N
 weather_df = load_csv_file_as_df(input_path_weather)
 weather_df = date_time_object_conversion(weather_df)
 # picarro data:
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\cattle-field-extracted-v2.csv")
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-12-cattle-field-extracted-v3.csv")
 
 ### Output folders and files ###
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
-output_file_name = Path('2026-03-05-field-cattle-flux-v22')
+output_file_name = Path('2026-03-12-field-cattle-flux-v32')
 
 ### Constants ###
 preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6} # pa
@@ -171,7 +171,7 @@ combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
 
-#save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
+save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
 
 ##### Check #####
 # extract temperatures
@@ -179,7 +179,8 @@ T = flux_df['T[degc]']
 T_min = round(T.min(), 1)
 T_mean = round(T.mean(), 1)
 T_max = round(T.max() , 1) 
-print(f'Temperature during the experiment was (min, mean, max): ({T_min}, {T_mean}, {T_max}) degrees celsius')
+T_median = round(T.median() , 1) 
+print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}, {T_median}, {T_mean}, {T_max}) degrees celsius')
 
 ##### Visuals ##### 
 def preliminary_visualization(df, valve_lvl = True):

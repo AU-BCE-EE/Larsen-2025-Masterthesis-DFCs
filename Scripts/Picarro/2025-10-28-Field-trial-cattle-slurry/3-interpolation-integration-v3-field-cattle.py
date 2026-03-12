@@ -330,10 +330,10 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-05-field-cattle-flux-v22.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-12-field-cattle-flux-v32.csv")
 
 ##### Output folder and files #####
-output_folder = Path(r"c:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-28-cattle-slurry\Piccaro-data\3-intregated-data")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
 
 ##### Constants #####
 treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to treamtents, bkgs excluded
@@ -348,7 +348,7 @@ raw_df = load_csv_file_as_df(input_path) # load flux-data
 #print(raw_df)
 
 # dropping collums not needed for down-stream
-raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_ATMOS[hpa]', 'TIME_NORM_LOCAL[h]','T[degc]' ]).copy()
+raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_ATMOS[hpa]','T[degc]' ]).copy()
 #print(raw_df_small)
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
@@ -389,7 +389,7 @@ renamed_df = merged_df.rename(columns={
 'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'})
 #print(renamed_df)
 
-#save_df_as_csv(renamed_df, output_folder, '2026-03-02-field-cattle-slurry-integrated-v112', overwrite = False)
+save_df_as_csv(renamed_df, output_folder, '2026-03-12-field-cattle-integrated-v323', overwrite = False)
 
 ##### Plot creation ##### 
 Create_plots = True
