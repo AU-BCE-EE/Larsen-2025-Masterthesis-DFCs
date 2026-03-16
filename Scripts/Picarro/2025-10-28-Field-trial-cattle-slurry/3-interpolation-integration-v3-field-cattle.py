@@ -370,26 +370,38 @@ integrated_df = integration(interp_df)
 #print(integrated_df)
 
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-#print(TAN_df)
+print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
 #print(merged_df)
 
 ### Rename collums before saving as csv-files
-renamed_df = merged_df.rename(columns={
-'F_INTERP_MEAN' : 'flux [mg/m2 h]',
-'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
-'%REL_F_MEAN': 'relative_flux',
-'%REL_F_STD': 'relative_flux_std_dev',
-'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
-'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
-'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
-'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
-'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'})
+# Treatment level
+#renamed_df = merged_df.rename(columns={treatment df
+#'F_INTERP_MEAN' : 'flux [mg/m2 h]',
+#'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
+#'%REL_F_MEAN': 'relative_flux',
+#'%REL_F_STD': 'relative_flux_std_dev',
+#'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
+#'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
+#'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
+#'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
+#'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
 #print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, '2026-03-12-field-cattle-integrated-v323', overwrite = False)
+# valve level
+renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
+'F_INTERP' : 'flux [mg/m2 h]',
+'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
+'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+'%REL_F': '%relative_flux',
+'ACUM_EMIS':'accumulated_emission [mg/m2]',
+'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'
+})
+print(renamed_df)
+
+save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
 
 ##### Plot creation ##### 
 Create_plots = True
