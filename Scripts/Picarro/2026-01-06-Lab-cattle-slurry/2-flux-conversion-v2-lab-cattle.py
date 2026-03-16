@@ -74,8 +74,7 @@ def flux_conversion_const_weather(df: pd.DataFrame, P:float, T: float):
     # Local constants
     R = 8.205736 * 10**(-5) # Ideal gas constant [m3 atm / K mol]
     MW_N = 14 * 10**3 # molecular weight of elementary nitrogen [mg/mol]
-    D = 0.7 # chamber diameter [m]
-    A = (D/2)**2 * pi # area enclosed by single chamber
+    A = 28.27 * 10**(-4) # [cm2] to [m2] total soil surface 
     
     # Gathering needed collums from df:
     C_PPB = df['C[PPB]']
@@ -87,8 +86,8 @@ def flux_conversion_const_weather(df: pd.DataFrame, P:float, T: float):
     C_mass_stdev = C_PPB_stdev * (P / (R * T)) * MW_N * 10**(-9) # [mg/m3]
 
     # flux_calculation
-    Q = Q * 3600 # [L/h]
-    Q = Q / 1000 # [m3 / h]
+    Q = Q * 60 # [L/ min] to [L/h]
+    Q = Q / 1000 # [L/h] to [m3 / h]
     df['F[mg/h m2]'] = (C_mass * Q) / A # ([mg/m3] [m3/h]) / [m2] = [mg / h m2]
     df['F_STDEV[mg/h m2]'] = (C_mass_stdev * Q) / A # ([mg/m3] [m3/h]) / [m2] = [mg / h m2]
 
@@ -122,7 +121,7 @@ input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025
 
 ### Output folders and files ###
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
-output_file_name = Path('2026-03-12-field-cattle-flux-v32')
+output_file_name = Path('2026-03-12-lab-cattle-flux-v32')
 
 ##### Constants #####
 #treatment_method_dict = {1: 'PU', 2: 'FH2SO4', 3: 'STD', 4: 'PH2SO4', 5: 'PAA', 11: 'BACKGROUND',
@@ -135,8 +134,8 @@ flow_dict = {1: 1.179, 2: 1.180, 3: 1.180, 4: 1.182, 5: 1.188, 11: 1.186,
 17: 1.177, 18: 1.181, 19: 1.182, 20: 1.181, 21: 1.179, 27: 1.187,
 22: 1.181, 23: 1.182, 24: 1.182, 25: 1.182, 26: 1.181, 28: 1.188} # SL/ min
 
-P = 1.01325 # [bar]
-T = 22 # [deg c]
+Pres = 1.01325 # [bar]
+Temp = 22 # [deg c]
 
 ##### Script Excecution #####
 # importing file
@@ -146,14 +145,15 @@ picarro_df = load_csv_file_as_df(input_path_picarro)
 # conversion from SL to liters at actual conditons
 converted_flow_dict = {}
 for Valve_id, SL_flow in flow_dict.items():
-    L_flow = SL_to_L(SL_flow, T, P)
+    L_flow = SL_to_L(SL_flow, Temp, Pres)
     converted_flow_dict[Valve_id] = L_flow
-print(converted_flow_dict)
+#print(converted_flow_dict)
 
 df_flow_added = add_flow(picarro_df, converted_flow_dict)
-print(df_flow_added)
+#print(df_flow_added)
 
-flux_df = flux_conversion_const_weather
+flux_df = flux_conversion_const_weather(df_flow_added, Pres, Temp)
+print(flux_df)
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
 
@@ -276,7 +276,6 @@ def preliminary_visualization2(df, y_col, yerr_col, valve_lvl=False):
     fig.supylabel(y_col)
     plt.show()
 
-#preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
-#preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
+#preliminary_visualization2(flux_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = False)
 
 ### Code references ###
