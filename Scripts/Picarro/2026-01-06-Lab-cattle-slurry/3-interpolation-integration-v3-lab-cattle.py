@@ -68,14 +68,8 @@ def remove_nan_rows(raw_df:pd.DataFrame) -> pd.DataFrame:
     output:
         filtered df: df with nan-containing rows removed
     '''
-    copy_df = raw_df.copy()  # Create a copy to avoid changing the raw DataFrame
-    initial_rows = len(copy_df)
-    
-    filtered_df = copy_df.dropna(axis=0, how='any')  # Drop any rows containing NaN
-    
-    removed_rows = initial_rows - len(filtered_df)
-    print(f'{removed_rows} of nan rows removed' )
-
+    copy_df = raw_df.copy() # creating a copy to avid changing raw df
+    filtered_df = copy_df.dropna(axis = 0, how = 'any') # dropping any rows contaning nan
     return filtered_df
 
 def background_correction(filtered_df:pd.DataFrame, power:int = 2) -> pd.DataFrame:
@@ -131,12 +125,10 @@ def determine_smallest_timerange_valve(filtered_df: pd.DataFrame, pts_per_h = 2)
     Determines a common time-interval for all valves for the downstream interpolation. Time of aplication used.
     1) Identifies the valve with the latest start
     2) Identifies the earliest end for all valves
-    3) extracts time-stamps from the valve with the latest start
-    4) filter the timestamps to be within the earliest end
+    3) creates new time-stamps within the common timerange with the specified resulution
 
     Input:
         BC_df: dataframe containing background-corrected datapoints of actual treatments
-        pts_per_h: int, number of points to be interpolated per hour
 
     output:
         time-values of smallest timerange as a numpy-array, on the "time of aplication" axis.
@@ -240,33 +232,66 @@ def integration(interp_df: pd.DataFrame)-> pd.DataFrame:
 
     return copy_df
 
+def prepare_TAN_dict(slurry_application_dict: dict, TAN_concentration_dict: dict, data_df: pd.DataFrame) -> dict:
+    '''
+    Determines valve-level TAN-amount [mg/m2]. Assumes slurry density is similar to water.
+
+    input:
+        slurry_application_dict: valves(int) as keys, slurry volumes [mL] as items
+        TAN_concentration_dict: treatments(str) as keys, concentrations [g/L] as items
+        data_df: dataframe containing all treatments and valves used
+
+    output: dictionary with valves as keys and TAN-amounts [mg/m2] as values
+    '''
+    # Function specific constants:
+    A = 28.27 * 10**(-4)  # [cm2] to [m2] total soil surface
+
+    copy_df = data_df.copy()
+    tan_dict = {}
+    valves = copy_df['VALVE_ID'].unique()
+
+    for valve in valves:
+        valve_data = copy_df[copy_df['VALVE_ID'] == valve]
+        treatment = valve_data['TREATMENT'].iloc[0]  # Grab treatment tag from first row
+
+        slurry_app = slurry_application_dict[valve]  # [mL]
+        slurry_app = slurry_app * 10**(-3)  # [mL] to [L]
+        slurry_app = slurry_app / A  # [L/m2]
+
+        TAN_C = TAN_concentration_dict[treatment]  # [g/L]
+        TAN_C = TAN_C * 10**3  # [g/L] to [mg/L]
+
+        TAN_m2 = slurry_app * TAN_C  # [L/m2] * [mg/L] = [mg/m2]
+        tan_dict[valve] = TAN_m2
+
+    return tan_dict
+
 def TAN_normalization(interp_df: pd.DataFrame, TAN_dict: dict) -> pd.DataFrame:
     '''
-    normalizes flux-values [mg/ h m2] and accumulated emissions [mg/m2] against slurry applied TAN [mg/m2].
+    Normalizes flux-values [mg/h m2] and accumulated emissions [mg/m2] against slurry applied TAN [mg/m2] per valve.
     Assumes background data has been removed.
 
-    input: 
-        interp_df: dataframe containing flux-values
-        TAN_M2: dictionary containing treatments(str) as keys, and applied TAN(floats) as values
+    input:
+        interp_df: dataframe containing flux-values and a 'VALVE_ID' column
+        TAN_dict: dictionary containing valve IDs (int) as keys, and applied TAN (float) as values
 
     output:
-        interp_df with relative flux rates, %TAN [1 / h] and relative accumulated emissions added
-        
+        interp_df with relative flux rates, %TAN [1/h] and relative accumulated emissions added
     '''
     copy_df = interp_df.copy()
-    copy_df['%REL_F'] = 0.0 # initalizing new collum with 0's
+    copy_df['%REL_F'] = 0.0  # Initialize new columns with 0's
     copy_df['%REL_ACUM_EMIS'] = 0.0
-    
-    for treatment in copy_df['TREATMENT'].unique():
-        TAN_value = TAN_dict[treatment] # extract tanvalue for the current treatment
 
-        # Calculate the normalized flux for the current treatment
-        mask = copy_df['TREATMENT'] == treatment
-        copy_df.loc[mask, '%REL_F'] = (copy_df.loc[mask,'F_INTERP'] / TAN_value) * 100  # [mg/h m2] / [mg/m2] = [1/h]
-        copy_df.loc[mask, '%REL_ACUM_EMIS'] = (copy_df.loc[mask,'ACUM_EMIS'] / TAN_value) * 100  # [mg/m2] / [mg/m2] = [-]
-        
+    for valve in copy_df['VALVE_ID'].unique():
+        TAN_value = TAN_dict[valve]  # Extract TAN value for the current valve from the dict
+
+        # Calculate the normalized flux for the current valve
+        mask = copy_df['VALVE_ID'] == valve
+        copy_df.loc[mask, '%REL_F'] = (copy_df.loc[mask, 'F_INTERP'] / TAN_value) * 100  # [mg/h m2] / [mg/m2] = [1/h]
+        copy_df.loc[mask, '%REL_ACUM_EMIS'] = (copy_df.loc[mask, 'ACUM_EMIS'] / TAN_value) * 100  # [mg/m2] / [mg/m2] = [-]
 
     return copy_df
+
 
 def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
     '''
@@ -310,7 +335,7 @@ def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
         final_emis = treatment_df['%REL_ACUM_EMIS_MEAN'].iloc[-1]
         final_emis_stdev = treatment_df['%REL_ACUM_EMIS_STD'].iloc[-1]
-        print(f'final accumated relative emissions for treatment {treatment} is {round(final_emis, 2)} ± {round(final_emis_stdev, 2)} %')
+        print(f'final accumated relative emissions for treatment {treatment} is {round(final_emis, 2)} ± {round(final_emis_stdev, 2)} %, coeficient of variation is {round((final_emis_stdev / final_emis) * 100, 2)}%')
 
     return merged_df
 
@@ -337,89 +362,94 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-12-field-pig-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-12-lab-cattle-flux-v32.csv")
 
 ##### Output folder and files #####
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
 
 ##### Constants #####
-treatment_valve_ids = [1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 18]
+Aplication_time_dict = {1: 0.0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1.0, 11: 1.5,
+6: 1.75, 7: 2.0, 8: 2.25, 9: 2.75, 10: 3.0, 12: 3.25,
+17: 3.5, 18: 3.75, 19: 4.0, 20: 4.25, 21: 4.5, 27: 5,
+22: 5.25, 23: 5.5, 24: 5.75, 25: 6, 26: 6.25, 28: 6.75} # [delta h]
 
-Aplication_time_dict = {1 : 0.0 , 2 : 0.0 , 3 : 0.0, 4 : 0.40 , 5: 0.53, 6: 0.40 , 7: 0.40 , 8: 2.20, 9: 2.05,
- 10: 2.35, 11: 2.48, 12: 2.62, 13: 2.75, 14: 2.88, 15: 3.02, 16: 3.15, 17: 3.28, 18: 3.42, 19: 3.55} 
-# delta h since experimental start 
-# no data "lost" for this experiment, aplication times manually corrected to first datapoint - 7.5 min (0.125 h)
-# notice, for the order was valves are switched (backgr-times changed to fit lunch hours)
+slurry_aplication_dict = {1: 2.040, 2: 2.135, 3: 2.022, 4: 2.050, 5: 2.097,
+6: 2.071, 7: 2.082, 8: 2.020, 9: 2.080, 10: 2.030,
+17: 2.030, 18: 2.107, 19: 2.042, 20: 2.020, 21: 2.065,
+22: 2.087, 23: 2.039, 24: 2.090, 25: 2.098, 26: 2.086} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
 
+treatment_TAN_conentration = {'PAA' : 1.86, 'FAA': 1.86, 'PU': 1.96, 'FU': 1.96, 'PH2SO4': 1.83, 'FH2SO4': 1.83, 'STD': 3.13} # concentration [g/L] of NH4-N (TAN) in the sample  
+#TAN_M2_stdev_dict = ... # curently not used (not significant compared to variance between triplicates)
+# P = Packed soil
+# F = field soil
+# U = untreated
+# AA = acetic acid
+# H2SO4 = sulphuric acid
 
-TAN_dict = {'AA' : 6228, 'RAW': 6249, 'H2SO4': 6115, 'OSI': 6215, 'TH': 6212} # [mg/m2] spec kit
-#TAN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2] # not currently used
-treatments = ['AA','RAW','H2SO4', 'OSI', 'TH']
+treatments = ['PAA', 'FAA','PU', 'FU','PH2SO4', 'FH2SO4', 'STD'] # Name of all treatments, only used in plots
+treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used in plots
 
 ##### Script excecution #####
 raw_df = load_csv_file_as_df(input_path) # load flux-data
-#print(raw_df.head(50))
+#print('inital data \n', raw_df)
 
 # dropping collums not needed for down-stream
-raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_ATMOS[hpa]', 'T[degc]']).copy() ; #print(raw_df_small)
-#print(raw_df_small.head(26))
+raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]','Q[L/min]']).copy()
+#print('collums dropped \n', raw_df_small)
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
-#print(raw_df_new_time.head(50))
-#print(raw_df_new_time.tail(50))
+#print('time normalized  agianst application time \n', raw_df_new_time)
 
 filtered_df = remove_nan_rows(raw_df_new_time)
-#print(filtered_df)
+#print('rows with missing data removed \n', filtered_df)
 
-pts_per_h = 2
-times = determine_smallest_timerange_valve(filtered_df, pts_per_h = pts_per_h)
-#print(times)
+times = determine_smallest_timerange_valve(filtered_df, pts_per_h = 2)
 #print(len(times))
+
 treatment_df = background_correction(filtered_df, power=2) 
-#print(treatment_df)
+#print('background corrected data \n', treatment_df)
 
 interp_df = interpolation_linear(treatment_df, times)
-#print(interp_df.head(50))
+#print('interpolated data', interp_df)
 
 integrated_df = integration(interp_df)
-#print(integrated_df)
 
+#print('intergrated_data \n', integrated_df)
+
+TAN_dict = prepare_TAN_dict(slurry_aplication_dict, treatment_TAN_conentration, integrated_df)
+print(TAN_dict)
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-#print(TAN_df)
+print('data normalized agianst slurry TAN \n', TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-#print(merged_df)
+#print('triplicates averaged \n', merged_df)
 
 ### Rename collums before saving as csv-files
 # Treatment level
-#renamed_df = merged_df.rename(columns={
-#'F_INTERP_MEAN' : 'flux [mg/m2 h]',
-#'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
-#'%REL_F_MEAN': 'relative_flux',
-#'%REL_F_STD': 'relative_flux_std_dev',
-#'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
-#'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
-#'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
-#'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
-#'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
+renamed_df = merged_df.rename(columns={
+'F_INTERP_MEAN' : 'flux [mg/m2 h]',
+'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
+'%REL_F_MEAN': 'relative_flux',
+'%REL_F_STD': 'relative_flux_std_dev',
+'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
+'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
+'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
+'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
+'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
 #print(renamed_df)
 
 # valve level
-renamed_df = TAN_df.rename(columns={
-'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
-'F_INTERP' : 'flux [mg/m2 h]',
-'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
-'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-'%REL_F': '%relative_flux',
-'ACUM_EMIS':'accumulated_emission [mg/m2]',
-'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'
-})
-print(renamed_df)
+#renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
+#'F_INTERP' : 'flux [mg/m2 h]',
+#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
+#'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+#'%REL_F': '%relative_flux',
+#'ACUM_EMIS':'accumulated_emission [mg/m2]',
+#'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
+#print(renamed_df)
 
-
-### Save data as csv ###
-#save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-pig-integrated-valve-lvl-v323', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
 
 ##### Plot creation ##### 
 Create_plots = True
@@ -443,13 +473,13 @@ if Create_plots == True:
     plt.plot(t_interp, F_interp, 'x-', label='Interpolated Data', color='red')
     plt.xlabel('Time Since Application [h]')
     plt.ylabel('Flux [mg/h m2]')
-    plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}, interpolated points per hour was {pts_per_h}')
+    plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
     plt.legend()
     plt.show()
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
-    #mtest_treatment = 'TH'
+    mtest_treatment = 'STD'
 
     # extract treatment-relevant data, merged and original
     original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]
@@ -473,7 +503,7 @@ if Create_plots == True:
     plt.fill_between(t_merged,F_merged - F_merged_err, F_merged + F_merged_err, color='gray', alpha=0.3, label='± Std Dev')
 
     plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 24)
+    #plt.xlim(0, 24)
     plt.ylabel('Flux [mg/ m2 h]')
     #plt.ylim(0, 30)
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
@@ -482,7 +512,7 @@ if Create_plots == True:
 
     ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry (hand applied)','H2SO4': 'H₂SO₄', 'TH': 'Trailing Hose', 'OSI': 'Open Slot Injection'}
+    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
     
     # determine unique treatments in merged df
     for treatment in merged_df['TREATMENT'].unique():
@@ -498,7 +528,7 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
-    #plt.xlim(0, 165)
+    plt.xlim(0, 150)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
     plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
     plt.show()
