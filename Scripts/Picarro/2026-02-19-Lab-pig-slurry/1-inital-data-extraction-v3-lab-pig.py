@@ -162,7 +162,7 @@ def extract_data_from_picarro_file(file_path: Path, cycle_min = 7) -> pd.DataFra
                 # exception to keep stable data around in the range 00:00-00:10
                 # Cyckles are stable, but the creation of a new file at midnight makes them too short 
                 elif (current_time.time() >= pd.to_datetime("00:00:00").time() 
-                      and current_time.time() <= pd.to_datetime("00:10:00").time()
+                      and current_time.time() <= pd.to_datetime("00:30:00").time()
                       and cycle_time >= 10):
 
                     # data-gathering
@@ -170,6 +170,18 @@ def extract_data_from_picarro_file(file_path: Path, cycle_min = 7) -> pd.DataFra
                     data_window = df.loc[start_index:index - 1]
                     record_cycle_data(data_window)
                     print(f"Accepted short cycle near midnight ({cycle_time:.0f}s) at {current_time}, valve position was {valve_pos}")
+
+                # special case ONLY for this experiment - new dat-file was created in the middle of the first valve meassurement
+                elif (current_time.time() >= pd.to_datetime('2026-02-19 09:29:0.00').time() 
+                      and current_time.time() <= pd.to_datetime('2026-02-19 10:00:0.00').time()
+                      and cycle_time >= 100):
+
+                    # data-gathering
+                    start_index = max(0, index - 30)
+                    data_window = df.loc[start_index:index - 1]
+                    record_cycle_data(data_window)
+                    print(f"Accepted short cycle at start of the experiment ({cycle_time:.0f}s) at {current_time}, valve position was {valve_pos}")
+
 
                 else:  # skipping over other short cycles
                     print(f"Skipped short valve cycle ({cycle_time / 60:.1f} min) at {current_time}, valve postion was {valve_pos}.")
@@ -330,25 +342,25 @@ def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: Path
 
     
 ### Constants ### 
-before_exp_dict = {('2026-01-06 00:00:0.00' , '2026-01-06 09:17:0.00' ): []}
+before_exp_dict = {('2026-02-19 00:00:0.00' , '2026-02-19 09:30:0.00' ): []}
 # in therms of the end, the DAT-file seems to have been refreshed - no need for added filtration
 
-treatment_method_dict = {1: 'PU', 2: 'FH2SO4', 3: 'STD', 4: 'PH2SO4', 5: 'PAA', 11: 'BACKGROUND',
-6: 'FAA', 7: 'FU', 8: 'FH2SO4', 9: 'PU', 10: 'FAA', 12: 'BACKGROUND',
-17: 'FH2SO4', 18: 'FU', 19: 'PAA', 20: 'STD', 21: 'PH2SO4', 27: 'BACKGROUND',
-22: 'FAA', 23: 'FU', 24: 'PU', 25: 'PH2SO4', 26: 'PAA', 28: 'BACKGROUND'}
+treatment_method_dict = {1: 'PH2SO4', 2: 'FH2SO4', 3: 'FU', 4: 'PU', 5: 'PAA', 11: 'BACKGROUND',
+6: 'STD', 7: 'FAA', 8: 'FH2SO4', 9: 'FAA', 10: 'PU', 12: 'BACKGROUND',
+17: 'FU', 18: 'PAA', 19: 'PH2SO4', 20: 'STD', 21: 'FAA', 27: 'BACKGROUND',
+22: 'PH2SO4', 23: 'PU', 24: 'FH2SO4', 25: 'FU', 26: 'PAA', 28: 'BACKGROUND'} 
 # F = Field
 # P = packced
 # U = untreated  
 # AA = Acetic acid
 # H2SO4 = sulphuric acid
 
-exp_start = '2026-01-06 09:17:0.00'
+exp_start = '2026-02-19 09:30:0.00'
 
 ### Folders and files ###
-input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\lab-trails\2026-01-06-cattle-slurry-raw-picarro-files")
+input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\lab-trails\2026-02-19-lab-pig-slurry-raw-picarro-files")
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
-output_file_name = Path('2026-03-10-cattle-lab-extracted-v3')
+output_file_name = Path('2026-03-17-pig-lab-extracted-v3')
 
 ##### Script excecution #####
 combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=14, visualization = False)
@@ -363,7 +375,7 @@ print(combined_df_filtered)
 combined_df_method_added = add_method(combined_df_filtered, treatment_method_dict)
 print(combined_df_method_added)
 
-save_df_as_csv(combined_df_method_added, output_folder, output_file_name, overwrite = False)
+save_df_as_csv(combined_df_method_added, output_folder, output_file_name, overwrite = True)
 
 ###### Checks #####
 ### quick analysis of PPB values for each treatment ###

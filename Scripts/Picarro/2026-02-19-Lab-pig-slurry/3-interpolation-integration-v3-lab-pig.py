@@ -362,23 +362,28 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-16-lab-cattle-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-17-lab-pig-flux-v32.csv")
 
 ##### Output folder and files #####
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
 
 ##### Constants #####
-Aplication_time_dict = {1: 0.0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1.0, 11: 1.75,
-6: 1.75, 7: 2.0, 8: 2.25, 9: 2.75, 10: 3.0, 12: 3.50,
-17: 3.5, 18: 3.75, 19: 4.0, 20: 4.25, 21: 4.5, 27: 5.25,
-22: 5.25, 23: 5.5, 24: 5.75, 25: 6, 26: 6.25, 28: 7.00} # [delta h], backgrounds corrected such that they are simply set to 0
+#treatment_method_dict = {1: 'PH2SO4', 2: 'FH2SO4', 3: 'FU', 4: 'PU', 5: 'PAA', 11: 'BACKGROUND',
+#6: 'STD', 7: 'FAA', 8: 'FH2SO4', 9: 'FAA', 10: 'PU', 12: 'BACKGROUND',
+#17: 'FU', 18: 'PAA', 19: 'PH2SO4', 20: 'STD', 21: 'FAA', 27: 'BACKGROUND',
+#22: 'PH2SO4', 23: 'PU', 24: 'FH2SO4', 25: 'FU', 26: 'PAA', 28: 'BACKGROUND'} # not used, simply here to provide an overview
 
-slurry_aplication_dict = {1: 2.040, 2: 2.135, 3: 2.022, 4: 2.050, 5: 2.097,
-6: 2.071, 7: 2.082, 8: 2.020, 9: 2.080, 10: 2.030,
-17: 2.030, 18: 2.107, 19: 2.042, 20: 2.020, 21: 2.065,
-22: 2.087, 23: 2.039, 24: 2.090, 25: 2.098, 26: 2.086} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
+Aplication_time_dict = {1: 0.0, 2: 0.23, 3: 0.75, 4: 1.00, 5: 1.25, 11: 1.99,
+6: 0.48, 7: 2.00, 8: 2.25, 9: 2.50, 10: 2.75, 12: 3.49,
+17: 3.5, 18: 3.75, 19: 4.0, 20: 4.25, 21: 4.5, 27: 5.24,
+22: 5.25, 23: 5.50, 24: 5.75, 25: 6.00, 26: 6.25, 28: 6.99} # [delta h] backgrounds simply set to 0
 
-treatment_TAN_conentration = {'PAA' : 1.86, 'FAA': 1.86, 'PU': 1.96, 'FU': 1.96, 'PH2SO4': 1.83, 'FH2SO4': 1.83, 'STD': 3.13} # concentration [g/L] of NH4-N (TAN) in the sample  
+slurry_aplication_dict = {1: 2.061, 2: 2.031, 3: 2.010, 4: 2.015, 5: 2.103,
+6: 2.172, 7: 2.061, 8: 2.026, 9: 2.026, 10: 2.050,
+17: 2.050, 18: 2.052, 19: 2.120, 20: 2.046, 21: 2.045,
+22: 2.034, 23: 2.044, 24: 2.014, 25: 2.055, 26: 2.024} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
+
+treatment_TAN_conentration = {'PAA' : 3.39, 'FAA': 3.39, 'PU': 3.45, 'FU': 3.45, 'PH2SO4': 3.40, 'FH2SO4': 3.40, 'STD': 3.55} # concentration [g/L] of NH4-N (TAN) in the sample  
 #TAN_M2_stdev_dict = ... # curently not used (not significant compared to variance between triplicates)
 # P = Packed soil
 # F = field soil
@@ -386,12 +391,13 @@ treatment_TAN_conentration = {'PAA' : 1.86, 'FAA': 1.86, 'PU': 1.96, 'FU': 1.96,
 # AA = acetic acid
 # H2SO4 = sulphuric acid
 
-treatments = ['PAA', 'FAA','PU', 'FU','PH2SO4', 'FH2SO4', 'STD'] # Name of all treatments, only used in plots
-treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used in plots
+treatments = ['PAA', 'FAA','PU', 'FU','PH2SO4', 'FH2SO4', 'STD'] # Name of all treatments, only used for visuals
+treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used for visuals
 
 ##### Script excecution #####
 raw_df = load_csv_file_as_df(input_path) # load flux-data
-#print('inital data \n', raw_df)
+#print('inital data \n', raw_df.head(50))
+#print(raw_df.tail(50))
 
 # dropping collums not needed for down-stream
 raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]','Q[L/min]']).copy()

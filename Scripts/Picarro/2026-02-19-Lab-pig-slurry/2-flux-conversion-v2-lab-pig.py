@@ -117,22 +117,22 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 ##### Files and folders #####
 ### Input folders and files ###
 # picarro data:
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-10-cattle-lab-extracted-v3.csv")
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-17-pig-lab-extracted-v3.csv")
 
 ### Output folders and files ###
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
-output_file_name = Path('2026-03-16-lab-cattle-flux-v32')
+output_file_name = Path('2026-03-17-lab-pig-flux-v32')
 
 ##### Constants #####
-#treatment_method_dict = {1: 'PU', 2: 'FH2SO4', 3: 'STD', 4: 'PH2SO4', 5: 'PAA', 11: 'BACKGROUND',
-#6: 'FAA', 7: 'FU', 8: 'FH2SO4', 9: 'PU', 10: 'FAA', 12: 'BACKGROUND',
-#17: 'FH2SO4', 18: 'FU', 19: 'PAA', 20: 'STD', 21: 'PH2SO4', 27: 'BACKGROUND',
-#22: 'FAA', 23: 'FU', 24: 'PU', 25: 'PH2SO4', 26: 'PAA', 28: 'BACKGROUND'} not used simply here to provide an overview
+#treatment_method_dict = {1: 'PH2SO4', 2: 'FH2SO4', 3: 'FU', 4: 'PU', 5: 'PAA', 11: 'BACKGROUND',
+#6: 'STD', 7: 'FAA', 8: 'FH2SO4', 9: 'FAA', 10: 'PU', 12: 'BACKGROUND',
+#17: 'FU', 18: 'PAA', 19: 'PH2SO4', 20: 'STD', 21: 'FAA', 27: 'BACKGROUND',
+#22: 'PH2SO4', 23: 'PU', 24: 'FH2SO4', 25: 'FU', 26: 'PAA', 28: 'BACKGROUND'}  not used simply here to provide an overview
 
-flow_dict = {1: 1.167, 2: 1.170, 3: 1.168, 4: 1.171, 5: 1.173, 11: 1.177,
-6: 1.171, 7: 1.170, 8: 1.172, 9: 1.171, 10: 1.170, 12: 1.176,
-17: 1.172, 18: 1.168, 19: 1.171, 20: 1.170, 21: 1.171, 27: 1.177,
-22: 1.195, 23: 1.170, 24: 1.169, 25: 1.169, 26: 1.169, 28: 1.177} # SL/ min
+flow_dict = {1: 1.179, 2: 1.180, 3: 1.180, 4: 1.182, 5: 1.188, 11: 1.186,
+6: 1.180, 7: 1.182, 8: 1.180, 9: 1.181, 10: 1.182, 12: 1.187,
+17: 1.177, 18: 1.181, 19: 1.182, 20: 1.181, 21: 1.179, 27: 1.187,
+22: 1.181, 23: 1.182, 24: 1.182, 25: 1.182, 26: 1.181, 28: 1.188} # SL/ min
 
 Pres = 1.01325 # atmospheric pressure [bar]
 Temp = 22 # [deg c]
@@ -155,7 +155,7 @@ df_flow_added = add_flow(picarro_df, converted_flow_dict)
 flux_df = flux_conversion_const_weather(df_flow_added, Pres, Temp)
 print(flux_df)
 
-save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
+save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = True)
 
 ##### Checks #####
 #... 

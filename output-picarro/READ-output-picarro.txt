@@ -4,6 +4,7 @@
 # v2:
     Changed the "find" shifts algoritm to apply absolute differences, thereby properly chatching the shifts between final valve and valve 1
            2026-03-04 PiG field: changed the start of the experiment to 11:40 (actual start of DAT-file), instead of 11:48 (first extracted point point)
+           2026-03-17 Pig lab: changed midnigt expection from 00:00-00:10 to 00:00-00:30 to account for the larger cycles. The creation of a new DAT-file in the middle of meassureing valve 1 resulted in this meassurement being filtered off, created experiment-specific if-statement to accept this anyway
 
 
 # v3:
@@ -16,6 +17,7 @@
 
 # v2: 
     changed the used temperature sensor, previously used temperature 10 cm bellow ground, now use 20 cm above
+    2026-03-12 Cattle lab: Had used flows from pig experiment by mistacke, fixed this
 
 
 ##### Script 3 interpolation and integration #####
