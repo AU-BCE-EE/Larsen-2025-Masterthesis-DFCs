@@ -303,7 +303,7 @@ def merge_triplicates(integrated_df: pd.DataFrame) -> pd.DataFrame:
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
         final_emis = treatment_df['%REL_ACUM_EMIS_MEAN'].iloc[-1]
         final_emis_stdev = treatment_df['%REL_ACUM_EMIS_STD'].iloc[-1]
-        print(f'final accumated relative emissions for treatment {treatment} is {round(final_emis, 2)} ± {round(final_emis_stdev, 2)} %, ')
+        print(f'final accumated relative emissions for treatment {treatment} is {round(final_emis, 2)} ± {round(final_emis_stdev, 2)} %, coeficient of variation is {round((final_emis_stdev / final_emis) * 100, 2)}%')
 
     return merged_df
 
@@ -370,7 +370,7 @@ integrated_df = integration(interp_df)
 #print(integrated_df)
 
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-print(TAN_df)
+#print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
 #print(merged_df)
@@ -399,12 +399,21 @@ renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_apli
 'ACUM_EMIS':'accumulated_emission [mg/m2]',
 '%REL_ACUM_EMIS': '%_relative_accumulated_emissions'
 })
-print(renamed_df)
+#print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+
+
+##### TEST and stats #####
+### Relative reductions ###
+for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission from each treatment:
+    valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
+    final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
+    treatment = valve_df['TREATMENT'].iloc[0]
+    print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
 
 ##### Plot creation ##### 
-Create_plots = True
+Create_plots = False
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####

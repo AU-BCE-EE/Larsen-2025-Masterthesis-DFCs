@@ -404,7 +404,7 @@ raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]','Q[L/min]']).copy()
 #print('collums dropped \n', raw_df_small)
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
-print('time normalized  agianst application time \n', raw_df_new_time.head(30))
+#print('time normalized  agianst application time \n', raw_df_new_time.head(30))
 
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print('rows with missing data removed \n', filtered_df)
@@ -412,8 +412,8 @@ filtered_df = remove_nan_rows(raw_df_new_time)
 times = determine_smallest_timerange_valve(filtered_df, pts_per_h = 2)
 #print(len(times))
 
-treatment_df = background_correction(filtered_df, power=2) 
-#print('background corrected data \n', treatment_df)
+treatment_df = background_correction(filtered_df, power=3) 
+#print('background corrected data \n', treatment_df.head(50))
 
 interp_df = interpolation_linear(treatment_df, times)
 #print('interpolated data', interp_df)
@@ -456,6 +456,15 @@ renamed_df = merged_df.rename(columns={
 #print(renamed_df)
 
 #save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+
+##### Tests and stats #####
+### Data for relative differences ####
+for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission from each treatment:
+    valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
+    final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
+    treatment = valve_df['TREATMENT'].iloc[0]
+    #print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
+
 
 ##### Plot creation ##### 
 Create_plots = False

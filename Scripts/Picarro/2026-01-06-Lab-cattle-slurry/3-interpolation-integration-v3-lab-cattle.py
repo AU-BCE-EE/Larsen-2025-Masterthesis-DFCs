@@ -451,6 +451,15 @@ renamed_df = merged_df.rename(columns={
 
 #save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
 
+##### Tests and stats #####
+### Data for relative differences ####
+for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission from each treatment:
+    valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
+    final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
+    treatment = valve_df['TREATMENT'].iloc[0]
+    print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
+
+
 ##### Plot creation ##### 
 Create_plots = False
 
