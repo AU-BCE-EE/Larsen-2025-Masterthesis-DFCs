@@ -413,7 +413,7 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
     print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
 
 ##### Plot creation ##### 
-Create_plots = False
+Create_plots = True
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
@@ -471,11 +471,13 @@ if Create_plots == True:
     plt.show()
 
     ##### Plot of relative flux for all merged treatments #####
+    treatment_colors = {'AA': 'blue','RAW': 'orange','H2SO4': 'green'}
+
     # rename treatments for plotting
     treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
     
     # determine unique treatments in merged df
-    for treatment in merged_df['TREATMENT'].unique():
+    for treatment in sorted(merged_df['TREATMENT'].unique()):
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
         # extract relevant data
         t_treatment = treatment_df['TIME_SINCE_APP[h]']
@@ -483,12 +485,13 @@ if Create_plots == True:
         Rel_F_stdev = treatment_df['%REL_F_STD']
 
         label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
-        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth=2, markersize=6)
-        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3)
+        color = treatment_colors.get(treatment, 'gray')  # Default to gray if treatment not in mapping
+        plt.plot(t_treatment, Rel_F, '.-', color = color, label = label, linewidth = 1, markersize = 3)
+        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha = 0.3, color = color)
 
     # graph visuals
     plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
-    plt.xlim(0, 165)
+    plt.xlim(0, 160)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
     plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
     plt.show()

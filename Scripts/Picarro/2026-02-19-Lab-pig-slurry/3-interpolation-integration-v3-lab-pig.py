@@ -467,7 +467,7 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
 
 
 ##### Plot creation ##### 
-Create_plots = False
+Create_plots = True
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
@@ -494,7 +494,7 @@ if Create_plots == True:
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
-    mtest_treatment = 'STD'
+    #mtest_treatment = 'STD'
 
     # extract treatment-relevant data, merged and original
     original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]
