@@ -186,15 +186,36 @@ flux_df = flux_conversion_nonconst_weather(combined_df)
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = True)
 
-##### Visuals ##### 
-### Temperature comparision ###
-T = flux_df['T[degc]']
+##### Stats #####
+### Temperature data ###
+# Filter the temperature dataframe, uisng the first and last DATE-TIME from the Ammonia data
+# do statistics on this instead, avoids double-dipping (same temperature datapoint is applied to several Ammonia datapoints due to difference in resolution)
+# Need:
+# - temperature data of soil and grass-level (also 2 m?), base statistics and a graph
+# - precipitation, total precipitation and a graph
+# wind most likely not requried
+
+start_dateTime = picarro_df["DATE_TIME"].iloc[0]
+end_dateTime = picarro_df["DATE_TIME"].iloc[-1]
+
+filtered_weather_df  = weather_df[(weather_df['DATE_TIME'] >= start_dateTime) & (weather_df['DATE_TIME'] <= end_dateTime)]
+print(filtered_weather_df)
+
+# Basic temperature stistics
+T = filtered_weather_df['megrtp']
 T_min = round(T.min(), 1)
 T_mean = round(T.mean(), 1)
 T_max = round(T.max() , 1) 
 T_median = round(T.median() , 1) 
 print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}, {T_median}, {T_mean}, {T_max}) degrees celsius')
 
+# more info on when the highest temperature occured
+max_temp_rows = flux_df[flux_df['T[degc]'] == T_max] # creating a bool
+print('additional info on the max temperature: \n', max_temp_rows[['TIME_NORM_GLOBAL[h]', 'F[mg/h m2]', 'T[degc]']])
+
+### Determine total rainfall ###
+
+##### Visuals ##### 
 ### Flux data ###
 def preliminary_visualization2(df: pd.DataFrame, y_col: str, yerr_col: str, valve_lvl=False):
     xcol = 'TIME_NORM_GLOBAL[h]'

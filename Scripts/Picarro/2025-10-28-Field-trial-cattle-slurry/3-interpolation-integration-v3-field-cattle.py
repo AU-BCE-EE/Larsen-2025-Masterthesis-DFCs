@@ -357,8 +357,8 @@ raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_d
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print(filtered_df)
 
-times = determine_smallest_timerange_valve(filtered_df)
-#print(len(times))
+times = determine_smallest_timerange_valve(filtered_df, pts_per_h=10)
+print(times)
 
 treatment_df = background_correction(filtered_df, power=2) 
 #print(treatment_df)
@@ -373,7 +373,7 @@ TAN_df = TAN_normalization(integrated_df, TAN_dict)
 #print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-#print(merged_df)
+print(merged_df)
 
 ### Rename collums before saving as csv-files
 # Treatment level
@@ -401,7 +401,7 @@ renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_apli
 })
 #print(renamed_df)
 
-#save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-04-01-field-cattle-integrated-valve-lvl-v323-highRes', overwrite = True)
 
 
 ##### TEST and stats #####

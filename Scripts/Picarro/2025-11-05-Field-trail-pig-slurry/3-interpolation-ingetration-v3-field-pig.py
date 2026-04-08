@@ -371,7 +371,7 @@ raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_d
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print(filtered_df)
 
-pts_per_h = 2
+pts_per_h = 60
 times = determine_smallest_timerange_valve(filtered_df, pts_per_h = pts_per_h)
 #print(times)
 #print(len(times))

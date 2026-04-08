@@ -195,7 +195,7 @@ df_picarro = background_correction(df_picarro)
 
 ### Convert flux-unit ###
 df_picarro = df_picarro.drop(columns=['F[mg/h m2]'])  # Step 3
-df_picarro['F_BC'] = df_picarro['F_BC'] * 10**(-6) * 10**(4)
+df_picarro['F_BC'] = df_picarro['F_BC'] * 10**(-6) * 10**(4) # mg to kg, and m2 to hectate
 #print('flux conversion \n', df.head(10))
 
 ### DFC-flow ###

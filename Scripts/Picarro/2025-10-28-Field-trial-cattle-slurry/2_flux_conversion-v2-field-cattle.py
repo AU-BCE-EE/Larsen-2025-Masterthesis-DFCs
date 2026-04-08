@@ -170,17 +170,24 @@ combined_df = add_weather_conditions(picarro_df, weather_df)
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
+print(flux_df)
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
 
 ##### Check #####
-# extract temperatures
+### extract temperature data ###
 T = flux_df['T[degc]']
 T_min = round(T.min(), 1)
 T_mean = round(T.mean(), 1)
 T_max = round(T.max() , 1) 
 T_median = round(T.median() , 1) 
 print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}, {T_median}, {T_mean}, {T_max}) degrees celsius')
+
+### Determine time and temperature for the max value
+max_temp_rows = flux_df[flux_df['T[degc]'] == T_max] # creating a bool
+print('additional info on the max temperature: \n', max_temp_rows[['TIME_NORM_GLOBAL[h]','F[mg/h m2]','T[degc]']])
+
+### Determine total rainfall ###
 
 ##### Visuals ##### 
 def preliminary_visualization(df, valve_lvl = True):
