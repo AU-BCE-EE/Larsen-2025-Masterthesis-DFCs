@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-### Functions ###
-def load_csv_file_as_df(file_path):
+##### Functions #####
+def load_csv_file_as_df(file_path: Path) -> pd.DataFrame:
     '''
     Loads the raw picarro-files
     Helper-function to avoid repating code
@@ -20,7 +20,7 @@ def load_csv_file_as_df(file_path):
     return pd.read_csv(file_path)
     # Collums in the file are seperated with several empty spaces
 
-def date_time_object_conversion(df):
+def make_datetime_weather(df: pd.DataFrame) -> pd.DataFrame:
     '''
     combines data and time collums found in weather_data, and convert these into a time object
     
@@ -28,16 +28,20 @@ def date_time_object_conversion(df):
 
     Returns: df contaning 'DATE_TIME' collum as a time object
     '''
+    copy_df = df.copy()
 
-    df['DATE_TIME'] = df['date'].astype(str) + ' ' + df['time'].astype(str) # combines the time and date id's in a single new collum
-    #df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'], format="%Y-%m-%d %H:%M:%S.%f")
-    df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'], format="%d/%m/%Y %H")
-    df = df.drop(columns=['date', 'time']) # remmoving individual time and date collums
+    if 'DATE_TIME' in copy_df.columns:
+        print('DATE_TIME collum already created')
+        return copy_df
 
-    return df
+    else:
+        copy_df['DATE_TIME'] = copy_df['date'].astype(str) + ' ' + copy_df['time'].astype(str) # combines the time and date id's in a single new collum
+        copy_df['DATE_TIME'] = pd.to_datetime(copy_df['DATE_TIME'], format="%d/%m/%Y %H")
+        copy_df = copy_df.drop(columns=['date', 'time']) # remmoving individual time and date collums
+        return copy_df
 
 
-def add_weather_conditions(picarro_input_df, weather_input_df):
+def add_weather_conditions(picarro_input_df: pd.DataFrame, weather_input_df: pd.DataFrame) -> pd.DataFrame:
     '''
     adds additional collums with weather-data to a dataframe with measurements extraced from the picarro-file, 
     matching via the DATA_TIME collums present in both dataframes
@@ -66,8 +70,7 @@ def add_weather_conditions(picarro_input_df, weather_input_df):
     return merged_df
 
 
-
-def add_presure_drop(df, preasure_drop_dict):
+def add_presure_drop(input_df: pd.DataFrame, preasure_drop_dict: dict) -> pd.DataFrame:
     '''
      Add and addtional collum with slurry preasure drop for each dfc using .map().
 
@@ -78,17 +81,17 @@ def add_presure_drop(df, preasure_drop_dict):
     Returns: 
         df with additional collum with presure drop
     '''
-    if "VALVE_ID" not in df.columns:
+    if "VALVE_ID" not in input_df.columns:
         raise ValueError("VALVE_ID column not present")
     
     else:
-        df = df.copy()
+        df = input_df.copy()
         df['P_DROP[pa]'] = df[f"VALVE_ID"].astype('Int64').map(preasure_drop_dict) # using .map() to add a new collum with method ID, using the valve id
        
     return df
 
 
-def flux_conversion_nonconst_weather(df):
+def flux_conversion_nonconst_weather(input_df: pd.DataFrame) -> pd.DataFrame:
     '''
     Converting concentration-measurements [PPB] and related std-deviation into fluxes [mg/m2 h], adding them as new collums in the df assuming constant weather conditons
     
@@ -98,6 +101,8 @@ def flux_conversion_nonconst_weather(df):
     returns:
         DF previusly mentioned, with flux-collums added
     '''
+    df = input_df.copy()
+
     # Initalization of constants
     R = 8.205736 * 10**(-5) # Ideal gas constant [m3 atm / K mol]
     MW_N = 14 * 10**3 # molecular weight of elementary nitrogen [mg/mol]
@@ -126,7 +131,7 @@ def flux_conversion_nonconst_weather(df):
     return df
 
 
-def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
+def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: Path, overwrite = True):
     '''
     saves a df as a csv-file in a designated outputfolder
 
@@ -142,123 +147,85 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
         print(f"The file with the following name already exist: {output_file.name}")
         return
 
+    elif output_file.exists():
+        print('previous file overwritten')
+
     df.to_csv(output_file, index=False)
     print(f" output_file saved as: {output_file}")
 
 
-### Input folders and files ###
-# Weather data:
-input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv")
-weather_df = load_csv_file_as_df(input_path_weather)
-weather_df = date_time_object_conversion(weather_df)
-# picarro data:
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-12-cattle-field-extracted-v3.csv")
+##### Input folders and files #####
+input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv") #Weather data
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction\2026-03-12-field-pig-extracted-v3.csv") # picarro data
 
 ### Output folders and files ###
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
-output_file_name = Path('2026-03-12-field-cattle-flux-v32')
+output_file_name = Path('2026-03-12-field-pig-flux-v32')
 
-### Constants ###
-preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6} # pa
+##### Constants #####
+preasure_drop_dict = {1: 132.8, 2: 123.1, 3: 122.6, 4: 122.7, 5: 122.7, 6: 125.5, 7: 128.8, 8: 126.9, 9: 126.9,
+10: 129.4, 11: 121.4, 12: 124.3, 13: 125.0, 14: 126.5, 15: 143.1, 15: 143.1, 16: 141.1, 17: 135.3, 18: 125.4, 19: 129.3} # delta pa
 
-### Script Excecution ###
+##### Script Excecution #####
+weather_df = load_csv_file_as_df(input_path_weather)
+#print(weather_df)
+
+weather_df = make_datetime_weather(weather_df)
+#print(weather_df)
 
 picarro_df = load_csv_file_as_df(input_path_picarro)
+#print(picarro_df)
 
 combined_df = add_weather_conditions(picarro_df, weather_df)
+#print(combined_df)
 
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
-print(flux_df)
+#print(flux_df)
 
-#save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
+#save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = True)
 
-##### Check #####
-### extract temperature data ###
-T = flux_df['T[degc]']
+##### Weather Data ######
+# Need:
+# - temperature data of soil and grass-level (also 2 m?), base statistics and a graph
+# - precipitation, total precipitation and a graph
+# wind, required for modelling
+
+# Filter weather based on experimental start and end
+start_dateTime = picarro_df["DATE_TIME"].iloc[0]
+end_dateTime = picarro_df["DATE_TIME"].iloc[-1]
+filtered_weather_df  = weather_df[(weather_df['DATE_TIME'] >= start_dateTime) & (weather_df['DATE_TIME'] <= end_dateTime)].copy()
+#print(filtered_weather_df)
+
+# Create delta-time column
+filtered_weather_df['delta-t'] = (
+    filtered_weather_df['DATE_TIME'] -
+    filtered_weather_df['DATE_TIME'].iloc[0]
+).dt.total_seconds() / 3600
+print(filtered_weather_df.head(50))
+
+# Basic temperature stistics
+T = filtered_weather_df['megrtp']
 T_min = round(T.min(), 1)
 T_mean = round(T.mean(), 1)
 T_max = round(T.max() , 1) 
 T_median = round(T.median() , 1) 
-print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}, {T_median}, {T_mean}, {T_max}) degrees celsius')
+print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}, {T_median}, {T_mean}, {T_max}) degrees celsius \n')
 
-### Determine time and temperature for the max value
-max_temp_rows = flux_df[flux_df['T[degc]'] == T_max] # creating a bool
-print('additional info on the max temperature: \n', max_temp_rows[['TIME_NORM_GLOBAL[h]','F[mg/h m2]','T[degc]']])
+# more info on when the highest temperature occured
+#max_temp_rows = flux_df[flux_df['T[degc]'] == T_max] # creating a bool
+#print('additional info on the max temperature: \n', max_temp_rows[['TIME_NORM_GLOBAL[h]', 'F[mg/h m2]', 'T[degc]']])
 
 ### Determine total rainfall ###
+cum_railfall = filtered_weather_df['prec'].sum()
+print(f'total rainfall was {cum_railfall} mm \n')
+
+
 
 ##### Visuals ##### 
-def preliminary_visualization(df, valve_lvl = True):
-    '''
-    combines fluxes and related std-deviation from treatment-triplicates
-    and plots these as a function of TIME_NORMALIZED GLOBAL
-
-    input:
-        df with the following collums:
-            TIME_NORM_GLOBAL[h]
-            TREATMENT
-            F[mg/h m2]
-            F_STDEV[mg/h m2]
-
-    '''
-    for treatment, treatment_data in df.groupby('TREATMENT'):
-        if valve_lvl == False:
-            treatment_data = treatment_data.sort_values('TIME_NORM_GLOBAL[h]')
-            times = treatment_data['TIME_NORM_GLOBAL[h]']
-            f = treatment_data['F[mg/h m2]']
-            f_stdev = treatment_data['F_STDEV[mg/h m2]']
-
-            plt.errorbar(times, f, yerr = f_stdev, fmt = '.', label=f'{treatment}', capsize=1)
-
-             # axis titles
-            plt.xlabel('Global time [h]', fontsize=14, fontname='Times New Roman')
-            plt.ylabel('flux [mg / m2 h]', fontsize=14, fontname='Times New Roman')
-    
-            # legend
-            plt.legend(fontsize=12, prop={'family': 'Times New Roman'},frameon=False) # legend font
-
-            # removing non-axis sides
-            ax = plt.gca() 
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-    
-            # show the graph
-            plt.show()
-            return
-
-        elif valve_lvl == True:
-            treatments = df['TREATMENT'].unique()
-            fig, axes = plt.subplots(len(treatments), 1, sharex=True, figsize=(10, 3 * len(treatments)))
-
-            # if only one treatment, axes won't be a list
-            if len(treatments) == 1:
-                axes = [axes]
-
-            # 2) loop through your normal groupby
-            for ax, (treatment, t_data) in zip(axes, df.groupby('TREATMENT')):
-
-            # valve level inside each subplot
-                for valve, v_data in t_data.groupby('VALVE_ID'):
-                    v_data = v_data.sort_values('TIME_NORM_GLOBAL[h]')
-                    x = v_data['TIME_NORM_GLOBAL[h]']
-                    y = v_data['F[mg/h m2]']
-                    s = v_data['F_STDEV[mg/h m2]']
-
-                    ax.errorbar(x, y, yerr=s, fmt='.', label=str(valve), capsize=1)
-
-                    ax.set_title(str(treatment))
-                    ax.legend(frameon=False)
-                    ax.legend(frameon=False, loc="center left", bbox_to_anchor=(1.0, 0.5))
-
-            plt.xlabel('Global time [h]')
-            fig.supylabel("flux [mg / m2 h]")
-            plt.show()
-            return
-
-
-def preliminary_visualization2(df, y_col, yerr_col, valve_lvl=False):
+### Flux data ###
+def preliminary_visualization2(df: pd.DataFrame, y_col: str, yerr_col: str, valve_lvl=False):
     xcol = 'TIME_NORM_GLOBAL[h]'
 
     if not valve_lvl:
@@ -308,5 +275,17 @@ def preliminary_visualization2(df, y_col, yerr_col, valve_lvl=False):
 
 #preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
 #preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
+
+### Weather data ###
+# Temperatures ###
+t = filtered_weather_df['delta-t']
+T_grass = filtered_weather_df['megrtp'] # y, T [degc] 20 cm above ground
+
+plt.plot(t, T_grass, 'o-', label='Raw Data', color='black')
+plt.xlabel('Time Since Application [h]')
+plt.ylabel('Temperature [°C]')
+plt.xlim(0, 160)
+plt.legend()
+plt.show()
 
 ### Code references ###

@@ -373,10 +373,10 @@ Aplication_time_dict = {1: 0.0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1.0, 11: 1.75,
 17: 3.5, 18: 3.75, 19: 4.0, 20: 4.25, 21: 4.5, 27: 5.25,
 22: 5.25, 23: 5.5, 24: 5.75, 25: 6, 26: 6.25, 28: 7.00} # [delta h], backgrounds corrected such that they are simply set to 0
 
-slurry_aplication_dict = {1: 2.040, 2: 2.135, 3: 2.022, 4: 2.050, 5: 2.097,
-6: 2.071, 7: 2.082, 8: 2.020, 9: 2.080, 10: 2.030,
-17: 2.030, 18: 2.107, 19: 2.042, 20: 2.020, 21: 2.065,
-22: 2.087, 23: 2.039, 24: 2.090, 25: 2.098, 26: 2.086} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
+slurry_aplication_dict = {1: 2.019, 2: 2.039, 3: 2.137, 4: 2.108, 5: 2.057,
+6: 2.009, 7: 2.039, 8: 2.291, 9: 2.070, 10: 2.183,
+17: 2.024, 18: 2.083, 19: 2.040, 20: 2.057, 21: 2.093,
+22: 2.086, 23: 2.119, 24: 2.036, 25: 2.055, 26: 2.077} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
 
 treatment_TAN_conentration = {'PAA' : 1.86, 'FAA': 1.86, 'PU': 1.96, 'FU': 1.96, 'PH2SO4': 1.83, 'FH2SO4': 1.83, 'STD': 3.13} # concentration [g/L] of NH4-N (TAN) in the sample  
 #TAN_M2_stdev_dict = ... # curently not used (not significant compared to variance between triplicates)
