@@ -337,10 +337,10 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-12-field-pig-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-03-12-field-pig-flux-v32.csv")
 
 ##### Output folder and files #####
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
 ##### Constants #####
 treatment_valve_ids = [1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 18]
@@ -371,7 +371,7 @@ raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_d
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print(filtered_df)
 
-pts_per_h = 60
+pts_per_h = 2
 times = determine_smallest_timerange_valve(filtered_df, pts_per_h = pts_per_h)
 #print(times)
 #print(len(times))
@@ -512,6 +512,7 @@ if Create_plots == True:
     plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
     plt.xlim(0, 160)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
+    plt.ylim(0, 0.5)
     plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
     plt.show()
 

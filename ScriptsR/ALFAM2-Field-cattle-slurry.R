@@ -1,38 +1,51 @@
-### Import ALFAM2 library ###
-library(ALFAM2) # calling the library, same as a package in PYT
-#?alfam2 # open the function help file
+library(ALFAM2) # calling the library, same as a package-call in Python
 
-### Importing data ###
-# weather data
-# specific alfam2 parameters, fitted only to DFC's
+### Change to DFC-specific function-parameters ####
+pars_df <- read.csv(file.choose())# the csv-file is in the same folder as the script, the name is Pars_AUDFC
+# head(pars_df)# prints the head of the df
+# str(pars_df) # shows structure of df
 
-### single scenario tests of function, only final ###
-# data for unacidified slurry
-# default parameters
-dat1_none <- data.frame(ctime = 160, TAN.app = 62,app.mthd = 'bc', 
-man.dm = 7.42, man.ph = 6.91, air.temp = 8.1)
+pars_AUDFC <- setNames(pars_df$pp, pars_df$X)# naming collum header is empty, function defaluts to X
+# row-wise mathcing of the paratmer-name in the 1st collum with the numercial value in the 2nd 
+# print(pars_AUDFC)
 
-pred1_none <- alfam2(dat1_none, app.name = 'TAN.app', time.name = 'ctime')
-print(pred1_none)
+### single scenarios ###
+# un-acidified
+#datU <- data.frame(ctime = 160, TAN.app = 62, app.mthd = 'bc',
+#man.dm = 7.42, man.ph = 6.91, air.temp = 8.6, rain.cum = 35.2, app.rate.ni = 29)
 
-# data for slurry acidified with AA
-dat1_A = dat1_none <- data.frame(ctime = 160, TAN.app = 62,app.mthd = 'bc',
-man.dm = 7.23,man.ph = 6.26, air.temp = 8.1)
+#predU <- alfam2(datU, app.name = 'TAN.app', time.name = 'ctime', pars = pars_AUDFC)
+#print(predU)
 
-pred1_A <- alfam2(dat1_A, app.name = 'TAN.app', time.name = 'ctime')
-print(pred1_A)
+# H2SO4
+#datH <- data.frame(ctime = 160, TAN.app = 62, app.mthd = 'bc',
+#man.dm = 7.24, man.ph = 6.25, air.temp = 8.6, rain.cum = 35.2, app.rate.ni = 29)
 
-# data for slurry acidified with H2SO4
-dat1_H = dat1_none <- data.frame(ctime = 160, TAN.app = 62,app.mthd = 'bc',
-man.dm = 7.23,man.ph = 6.25, air.temp = 8.1)
+#predH <- alfam2(datH, app.name = 'TAN.app', time.name = 'ctime', pars = pars_AUDFC)
+#print(predH)
 
-pred1_H <- alfam2(dat1_H, app.name = 'TAN.app', time.name = 'ctime')
-print(pred1_H)
+### Multiple scnearious, single call
+# un-acidified, H2SO4, AA
+datM <- data.frame(ctime = 160, 
+TAN.app = 62, 
+app.mthd = 'bc', 
+air.temp = 8.6, 
+rain.cum = 35.2, 
+app.rate.ni = 29,
+man.dm = 7.42, 
+man.ph = c(6.91, 6.25, 6.26))
+
+predM <- alfam2(datM, app.name = 'TAN.app', time.name = 'ctime', pars = pars_AUDFC)
+print(predM)
 
 
-### setting function variables ####
+### importing predictor-variables, hourly basis ###
+# Slurry chracteristics & weather data
 
-
-### Final documentation ###
+### Documentation and clearing variables ###
 packageVersion("ALFAM2") # call of the version, for documentation
 args(alfam2) # which argumments where used for modeeling getting these results
+
+### Other ###
+# ? alfam2 # documentation of the alfam2 function
+# rm(list = ls())# clears already defined varibles in the console 

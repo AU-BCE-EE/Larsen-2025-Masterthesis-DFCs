@@ -383,14 +383,12 @@ slurry_aplication_dict = {1: 2.061, 2: 2.031, 3: 2.010, 4: 2.015, 5: 2.103,
 17: 2.050, 18: 2.052, 19: 2.120, 20: 2.046, 21: 2.045,
 22: 2.034, 23: 2.044, 24: 2.014, 25: 2.055, 26: 2.024} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
 
-treatment_TAN_conentration = {'PAA' : 3.39, 'FAA': 3.39, 'PU': 3.45, 'FU': 3.45, 'PH2SO4': 3.40, 'FH2SO4': 3.40, 'STD': 3.55} # concentration [g/L] of NH4-N (TAN) in the sample  
-# P = Packed soil
+treatment_TAN_conentration = {'HD' : 2.180, 'LD': 2.180, 'F': 2.180, 'STD': 4.2} # concentration [g/L] of NH4-N (TAN) in the sample  
+# HD = High density packed
+# LD = Low density packed 
 # F = field soil
-# U = untreated
-# AA = acetic acid
-# H2SO4 = sulphuric acid
 
-treatments = ['PAA', 'FAA','PU', 'FU','PH2SO4', 'FH2SO4', 'STD'] # Name of all treatments, only used for visuals
+treatments = ['HD', 'LD','F', 'STD'] # Name of all treatments, only used for visuals
 treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used for visuals
 
 ##### Script excecution #####
