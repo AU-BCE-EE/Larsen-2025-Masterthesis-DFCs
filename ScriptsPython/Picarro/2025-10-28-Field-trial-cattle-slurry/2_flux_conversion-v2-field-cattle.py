@@ -155,8 +155,13 @@ weather_df = date_time_object_conversion(weather_df)
 input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction\2026-03-12-cattle-field-extracted-v3.csv")
 
 ### Output folders and files ###
+# flux
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
 output_file_name = Path('2026-03-12-field-cattle-flux-v32')
+
+# weather
+output_folder_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\ScriptsR")
+output_file_name_weather = Path('weather-data-field-cattle')
 
 ### Constants ###
 preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6} # pa
@@ -175,14 +180,17 @@ flux_df = flux_conversion_nonconst_weather(combined_df)
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
 
 ##### Weather Data ######
-# Need:
-
 # Filter weather based on experimental start and end
+picarro_df['DATE_TIME'] = pd.to_datetime(picarro_df['DATE_TIME'], errors='coerce')
 start_dateTime = picarro_df["DATE_TIME"].iloc[0]
-end_dateTime = picarro_df["DATE_TIME"].iloc[-1]
+end_dateTime   = picarro_df["DATE_TIME"].iloc[-1]
 
-filtered_weather_df  = weather_df[(weather_df['DATE_TIME'] >= start_dateTime) & (weather_df['DATE_TIME'] <= end_dateTime)]
-print(filtered_weather_df)
+end_dateTime = pd.to_datetime(end_dateTime)
+start_dateTime = pd.to_datetime(start_dateTime) # ensure starttime is a datetime object
+weather_df['DATE_TIME'] = pd.to_datetime(weather_df['DATE_TIME'])
+
+filtered_weather_df  = weather_df[(weather_df['DATE_TIME'] >= start_dateTime) & (weather_df['DATE_TIME'] <= end_dateTime)].copy()
+#print(filtered_weather_df)
 
 # Basic temperature stistics
 T = filtered_weather_df['megrtp']
@@ -199,6 +207,12 @@ print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}
 ### Determine total rainfall ###
 cum_railfall = filtered_weather_df['prec'].sum()
 print(f'total rainfall was {cum_railfall} mm \n')
+
+### Export temperature for ALFAM modelling ###
+filtered_weather_df['DATE_TIME'] = pd.to_datetime(filtered_weather_df['DATE_TIME'],errors='coerce')
+filtered_weather_df['delta_t'] = (filtered_weather_df['DATE_TIME'] - filtered_weather_df['DATE_TIME'].iloc[0]).dt.total_seconds() / 3600
+#print(filtered_weather_df)
+#save_df_as_csv(filtered_weather_df, output_folder_weather, output_file_name_weather)
 
 ##### Visuals ##### 
 def preliminary_visualization(df, valve_lvl = True):
