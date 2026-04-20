@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 ### Functions ###
-def load_picarro_file_as_df(file_path):
+def load_picarro_file_as_df(file_path: Path) -> pd.DataFrame:
     '''
     Loads the raw picarro-files
     Helper-function to avoid repating code
@@ -20,7 +20,7 @@ def load_picarro_file_as_df(file_path):
     return pd.read_csv(file_path, sep=r'\s+', engine='python')
     # Collums in the file are seperated with several empty spaces
 
-def time_normalization_global(df, global_start = None):
+def time_normalization_global(df: pd.DataFrame, global_start = None):
     '''
     Creates a collum with time normalized [h] from the experimental start
 
@@ -43,7 +43,7 @@ def time_normalization_global(df, global_start = None):
         start_time = df['DATE_TIME'].iloc[0] # .iloc takes the first value of the collum
 
     elif isinstance(global_start, str):
-        start_time = pd.to_datetime(global_start)
+        start_time = pd.to_datetime(global_start, format="%Y-%m-%d %H:%M:%S.%f")
         
     else:
         raise ValueError('global_start must be NONE or a string')
@@ -55,44 +55,48 @@ def time_normalization_global(df, global_start = None):
     print('global time-normalization performed')
     return df
 
-
-   
-def visualize_raw_data_per_day(file_path):
+def visualize_raw_with_extraction(file_path, extracted_windows, method_dict):
     
     df = load_picarro_file_as_df(file_path)
-    '''
-    Helper-function to visualize raw picarro data
+    df = time_normalization_global(df)
 
-    input: file_path, path-object of the specific picarro-file
-    '''
+    times = df['TIME_NORM_GLOBAL[h]']
+    cs = df['NH3']
 
-    # normalizing the time and extracting concentration-measurements
-    time_normalized_df = time_normalization_global(df)
-    times = time_normalized_df['TIME_NORM_GLOBAL[h]'] 
-    cs = time_normalized_df['NH3']
+    # raw signal
+    plt.plot(times, cs, '.k', markersize=1, label="Raw data")
 
-    # plot the stuff
-    plt.plot(times , cs, '.k', markersize = 1)
-    
-    # x-axis
-    plt.xlabel('time [h]', fontsize=12)
-    #plt.xlim([0, max(times)*1.1]) # automatic definition of the x-axis
-    plt.xlim([0, 24]) # manual definition of the x-axis
-    
-    # y-axis
-    plt.ylabel('concentration [ppb]', fontsize=12)
-    plt.ylim([0,max(cs)*1.1])
+    # plot extracted windows
+    for window in extracted_windows:
 
-    # removing non-axis sides
-    ax = plt.gca() 
+        idx = window["indices"]
+        valve_id = window["valve_id"]
+
+        treatment = method_dict.get(int(valve_id), "UNKNOWN")
+        color = TREATMENT_COLORS.get(treatment, "black")
+
+        window_times = df.loc[idx, 'TIME_NORM_GLOBAL[h]']
+        window_cs = df.loc[idx, 'NH3']
+
+        plt.plot(window_times, window_cs,'.', color=color, linewidth=1, markersize=6, alpha=0.85)
+
+    # legend (clean, no duplicates)
+    for key in TREATMENT_COLORS.keys():
+        if key in method_dict.values():
+            plt.plot([], [], color=TREATMENT_COLORS[key],
+                     label=LABEL_MAP.get(key, key))
+
+    plt.xlim([10, 12])
+    plt.xlabel("time since midnight [h]", fontsize=14, family="Times New Roman")
+    plt.ylabel("NH3 (ppb)", fontsize=14, family="Times New Roman")
+
+    ax = plt.gca()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
+    plt.xticks(fontsize=14, fontname="Times New Roman")
+    plt.yticks(fontsize=14, fontname="Times New Roman")
 
-    # axis titles
-    plt.xlabel('Time [h]', fontsize=14, fontname='Times New Roman')
-    plt.ylabel('concentration (ppb)', fontsize=14, fontname='Times New Roman')
-
-    # show the graph
+    plt.legend(fontsize=12,frameon=False,prop={"family": "Times New Roman", "size": 13})
     plt.show()
     
 def extract_data_from_picarro_file(file_path, cycle_min=7):
@@ -118,6 +122,7 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
 
     # Initialization of dict to extract data from piccaro-file
     extracted_data = {'C[PPB]': [], 'C_STDEV[PPB]': [], 'VALVE_ID': [], 'DATE_TIME': []}
+    extracted_windows = []
 
     # initialzation of extraction-checks
     previous_valve_pos = None
@@ -143,6 +148,8 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
         extracted_data['VALVE_ID'].append(valve_ID)
         extracted_data['DATE_TIME'].append(time_val)
 
+        extracted_windows.append({"indices": df_segment.index.to_numpy(),"valve_id": valve_ID})
+
     for index, row in df.iterrows():  # looping over the rows
         valve_pos = row['MPVPosition']  # valve-ID
 
@@ -152,18 +159,18 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
             if abs(valve_diff) > 0.5 and not in_shift:  # If a difference occurs a shift is happening
                 in_shift = True  # only first row in a shift is gathered
 
-                cycle_df = df.loc[last_valve_shift_index:index - 1]  # creating a smaller DF to determine time
+                cycle_df = df.loc[last_valve_shift_index: index - 1]  # creating a smaller DF to determine time
 
                 cycle_time = (cycle_df['DATE_TIME'].iloc[-1] - cycle_df['DATE_TIME'].iloc[0]).total_seconds()
                 current_time = df.loc[index, 'DATE_TIME']
 
                 if cycle_time > 60 * cycle_min:  # data is gathered if the cycle time is higher than 7 min
                     start_index = max(0, index - 30)
-                    data_window = df.loc[start_index:index - 1]
+                    data_window = df.loc[start_index: index - 1]
                     record_cycle_data(data_window)
 
                 # exception to keep stable data around in the range 00:00-00:10
-                # Cyckles are stable, but the creation of a new file at midnight makes them too short 
+                # Cycles are stable, but the creation of a new file at midnight makes them too short 
                 elif (current_time.time() >= pd.to_datetime("00:00:00").time() 
                       and current_time.time() <= pd.to_datetime("00:10:00").time()
                       and cycle_time >= 10):
@@ -172,10 +179,10 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
                     start_index = max(0, index - 30)
                     data_window = df.loc[start_index:index - 1]
                     record_cycle_data(data_window)
-                    print(f"Accepted short cycle near midnight ({cycle_time:.0f}s) at {current_time}.")
+                    print(f"Accepted short cycle near midnight ({cycle_time:.0f}s) at {current_time}, valve postion is {valve_pos}.")
 
                 else:  # skipping over other short cycles
-                    print(f"Skipped short valve cycle ({cycle_time / 60:.1f} min) at {current_time}.")
+                    print(f"Skipped short valve cycle ({cycle_time :.0f} s) at {current_time}, valve postion is {valve_pos}.")
 
                 last_valve_shift_index = index
 
@@ -187,10 +194,9 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
     # Convert to DataFrame
     result_df = pd.DataFrame(extracted_data)
 
-    # Remove duplicates based on both time and valve
+    # Remove duplicates based on both time and valve(safety)
     result_df = result_df.drop_duplicates(subset=["VALVE_ID", "DATE_TIME"], keep="first").reset_index(drop=True)
-
-    return result_df
+    return result_df, extracted_windows
 
 
 def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualization = False):
@@ -224,13 +230,13 @@ def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualizatio
     
     for file_path in data_files:
         print(f'Processing {file_path.name}') # .name provides the filename instead of the entire path
-        extracted_df = extract_data_from_picarro_file(file_path, cycle_min)
+        extracted_df, extracted_windows = extract_data_from_picarro_file(file_path, cycle_min)
 
         if not extracted_df.empty: # if not checks if the object is empty, extra precuation
             all_data.append(extracted_df)
 
         if visualization == True:
-            visualize_raw_data_per_day(file_path)
+             visualize_raw_with_extraction(file_path, extracted_windows, treatment_method_dict)
 
     if not all_data:
         print(f'No data was extracted from {file_path.name}, something is wrong')
@@ -328,35 +334,56 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 
     
 ### Constants ### 
-faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000') : [11, 12, 13, 14, 15, 16, 18, 17]}
-end_of_experiment_removal_dict= {('2025-11-04 13:51:0.000', '2025-11-04 14:11:35.808') : []} 
-dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [1, 2, 3, 6, 7, 10, 19]}
-#dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [18]}
+start_of_experiment_removal_dict = {('2025-11-05 00:00.000', '2025-11-05 11:40:00.000') : []} # remove data before DFC's were moved in position
 
-treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
-11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
+treatment_method_dict = {1: 'OSI', 2: 'OSI', 3: 'OSI', 4: 'TH', 5: 'BACKGROUND', 6: 'TH', 7: 'TH', 8: 'H2SO4', 9: 'BACKGROUND', 10: 'RAW', 11:'AA', 12:'AA', 13:'H2SO4',
+                         14: 'RAW', 15:'RAW', 16: 'BACKGROUND', 17: 'AA', 18: 'H2SO4', 19: 'BACKGROUND'}
+# TH: Raw slurry applied via trailing hose (machine teqnique)
+# OSI RAW slurry applied by open slot injection (machine technique)
+# AA: slurry treated with acetic acid, applied by hand
+# H2SO4: slurry treated with sulphuric acid, applied by hand
+# Raw: raw slurry, applied by hand
+# Background: no slurry applied on plot
+# Notice TH and OSI was switched compared to original plan
+
+TREATMENT_COLORS = {
+    "OSI": "#d11414",        # blue
+    "TH": "#bd0ff16c",         # orange
+    "AA": "#2615c0",         # green
+    "H2SO4": "#31d41b83",      # red
+    "RAW": "#d8690f",        # purple
+    "BACKGROUND": "#7f7f7f", # gray
+    "UNKNOWN": "black"
+}
+
+LABEL_MAP = {
+    "OSI": "OSI (injection)",
+    "TH": "TH (trailing hose)",
+    "AA": "Acetic acid",
+    "H2SO4": "Sulfuric acid",
+    "RAW": "Unacidified",
+    "BACKGROUND": "Background",
+    "UNKNOWN": "Unknown"
+}
 
 ### Script Excecution ###
-# copy the folderpath
-input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-10-28-field-cattle\Raw-picarro-files")
-# copy the folderpath, add at least.csw
+input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-11-05-Pig-trails\Raw-picarro-files")
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
-output_file_name = Path('2026-03-12-cattle-field-extracted-v3')
+output_file_name = Path('2026-03-12-field-pig-extracted-v3')
 
-combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
-combined_df = time_normalization_global(combined_df)
+combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = True)
+combined_df = time_normalization_global(combined_df, '2025-11-05 11:40:00.000')
 
-combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
-combined_df = remove_data(combined_df, end_of_experiment_removal_dict, drop_rows= True)
-combined_df = remove_data(combined_df, dummy_valve_removal_dict, drop_rows=True)
+combined_df = remove_data(combined_df, start_of_experiment_removal_dict, drop_rows= True)
 
 combined_df = add_method(combined_df, treatment_method_dict)
-#print(combined_df.head(50))
+print(combined_df)
 
-#save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=False)
+#save_df_as_csv(combined_df, output_folder, output_file_name, overwrite= False)
 
 ###### Checks #####
-### quick analysis of PPB values for each treatment ###
+### quick analysis PPB values for each treatment ###
+# nan-rows are automatically excluded
 treatments = combined_df['TREATMENT'].unique()
 
 for treatment in treatments:
@@ -369,9 +396,28 @@ for treatment in treatments:
     PPB_max = round(PPB.max(), 2)
     PPB_CV = round(((PPB.std() / PPB.mean()) * 100), 2)  # coeficient of variation, as a percentage
 
-    #print(f'{treatment} PPB avg is {PPB_mean}, median is {PPB_median}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')
+    print(f'{treatment} PPB avg is {PPB_mean}, median is {PPB_median}, coeficient of variation is {PPB_CV} %, (min, max) is ({PPB_min}, {PPB_max}) PPB')    
 
-    
+##### Visual of extracted data #####
+create_plots = False
+
+if create_plots == True:
+    ### Treatment level
+    treatments = combined_df['TREATMENT'].unique()
+    for treatment in treatments:
+        treatment_df = combined_df[combined_df['TREATMENT'] == treatment]
+        PPB = treatment_df['C[PPB]']
+        t = treatment_df['TIME_NORM_GLOBAL[h]']
+
+        plt.plot(t, PPB, 'x-', label=f'{treatment}', linewidth=2, markersize=6)
+        plt.xlabel('Time Since experimental start [h]')
+        plt.xlim(55, 65)
+        plt.ylim(0, 100)
+        plt.ylabel('PPB Ammonia')
+        plt.legend()
+        plt.show()
+
+   
 
 ### Coding references ###
 # https://www.geeksforgeeks.org/python/python-os-mkdir-method/ 

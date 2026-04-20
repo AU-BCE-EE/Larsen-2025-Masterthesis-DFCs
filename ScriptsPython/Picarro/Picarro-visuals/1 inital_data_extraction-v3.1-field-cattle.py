@@ -57,7 +57,7 @@ def time_normalization_global(df, global_start = None):
 
 
    
-def visualize_raw_data_per_day(file_path):
+def visualize_raw_data_per_day(file_path, extracted_df = None, extracted_windows = None):
     
     df = load_picarro_file_as_df(file_path)
     '''
@@ -75,13 +75,10 @@ def visualize_raw_data_per_day(file_path):
     plt.plot(times , cs, '.k', markersize = 1)
     
     # x-axis
-    plt.xlabel('time [h]', fontsize=12)
-    #plt.xlim([0, max(times)*1.1]) # automatic definition of the x-axis
-    plt.xlim([0, 24]) # manual definition of the x-axis
+    plt.xlim([10, 14]) # manual definition of the x-axis
     
     # y-axis
-    plt.ylabel('concentration [ppb]', fontsize=12)
-    plt.ylim([0,max(cs)*1.1])
+    plt.ylim([0, max(cs)])
 
     # removing non-axis sides
     ax = plt.gca() 
@@ -89,10 +86,31 @@ def visualize_raw_data_per_day(file_path):
     ax.spines['right'].set_visible(False)
 
     # axis titles
-    plt.xlabel('Time [h]', fontsize=14, fontname='Times New Roman')
-    plt.ylabel('concentration (ppb)', fontsize=14, fontname='Times New Roman')
+    plt.xlabel('Time since midnigt [h]', fontsize=14, fontname='Times New Roman')
+    plt.ylabel('concentration (PPB)', fontsize=14, fontname='Times New Roman')
+
+    if extracted_windows is not None:
+
+        for window in extracted_windows:
+
+            idx = window["indices"]
+            valve_id = window["valve_id"]
+
+            treatment = treatment_method_dict.get(int(valve_id), "UNKNOWN")
+            color = TREATMENT_COLORS.get(treatment, "black")
+
+            window_times = time_normalized_df.loc[idx, 'TIME_NORM_GLOBAL[h]']
+            window_cs = time_normalized_df.loc[idx, 'NH3']
+
+            plt.plot(window_times, window_cs, '.', color=color, markersize=6, alpha=0.8)
+
+    
+    for treatment, color in TREATMENT_COLORS.items():
+        label = LABEL_MAP.get(treatment, treatment)
+        plt.plot([], [], color=color, label=label)
 
     # show the graph
+    plt.legend(fontsize=14, frameon=False, loc="best", prop={"family": "Times New Roman", "size": 14})
     plt.show()
     
 def extract_data_from_picarro_file(file_path, cycle_min=7):
@@ -118,6 +136,7 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
 
     # Initialization of dict to extract data from piccaro-file
     extracted_data = {'C[PPB]': [], 'C_STDEV[PPB]': [], 'VALVE_ID': [], 'DATE_TIME': []}
+    extracted_windows = [] # stores indexces of the extracted data
 
     # initialzation of extraction-checks
     previous_valve_pos = None
@@ -142,6 +161,8 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
         extracted_data['C_STDEV[PPB]'].append(NH3_stdev)
         extracted_data['VALVE_ID'].append(valve_ID)
         extracted_data['DATE_TIME'].append(time_val)
+
+        extracted_windows.append({"indices": df_segment.index.to_numpy(),"valve_id": valve_ID})
 
     for index, row in df.iterrows():  # looping over the rows
         valve_pos = row['MPVPosition']  # valve-ID
@@ -190,10 +211,10 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
     # Remove duplicates based on both time and valve
     result_df = result_df.drop_duplicates(subset=["VALVE_ID", "DATE_TIME"], keep="first").reset_index(drop=True)
 
-    return result_df
+    return result_df, extracted_windows
 
 
-def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualization = False):
+def combine_folder_txts_into_single_df(input_folder, cycle_min = 7 , visualization = False):
     '''
     Function handles overall logic of loading multiple data from a folder.
  
@@ -224,13 +245,13 @@ def combine_folder_txts_into_single_df(input_folder, cycle_min = 7, visualizatio
     
     for file_path in data_files:
         print(f'Processing {file_path.name}') # .name provides the filename instead of the entire path
-        extracted_df = extract_data_from_picarro_file(file_path, cycle_min)
+        extracted_df, extracted_windows = extracted_df, extracted_windows = extract_data_from_picarro_file(file_path, cycle_min)
 
         if not extracted_df.empty: # if not checks if the object is empty, extra precuation
             all_data.append(extracted_df)
 
         if visualization == True:
-            visualize_raw_data_per_day(file_path)
+            visualize_raw_data_per_day(file_path, extracted_df, extracted_windows)
 
     if not all_data:
         print(f'No data was extracted from {file_path.name}, something is wrong')
@@ -336,6 +357,23 @@ dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808
 treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
 11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
 
+# dictionaries used for visulaization
+TREATMENT_COLORS = {
+    "AA": "blue",
+    "H2SO4": "green",
+    "RAW": "orange",
+    "BACKGROUND": "red",
+    "UNKNOWN": "gray"
+}
+
+LABEL_MAP = {
+    "AA": "AA",
+    "H2SO4": "H2SO4",
+    "RAW": "unacidified",
+    "BACKGROUND": "background",
+    "UNKNOWN": "Dummy"
+}
+
 ### Script Excecution ###
 # copy the folderpath
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-10-28-field-cattle\Raw-picarro-files")
@@ -343,7 +381,7 @@ input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester -
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
 output_file_name = Path('2026-03-12-cattle-field-extracted-v3')
 
-combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
+combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7 , visualization = True)
 combined_df = time_normalization_global(combined_df)
 
 combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
