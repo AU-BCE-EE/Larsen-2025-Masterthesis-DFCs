@@ -162,6 +162,11 @@ input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
 output_file_name = Path('2026-03-12-field-pig-flux-v32')
 
+# Figures #
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("field-pig-temperature.pdf")
+output_path_figures = output_folder_figures / output_name_figure
+
 ##### Constants #####
 preasure_drop_dict = {1: 132.8, 2: 123.1, 3: 122.6, 4: 122.7, 5: 122.7, 6: 125.5, 7: 128.8, 8: 126.9, 9: 126.9,
 10: 129.4, 11: 121.4, 12: 124.3, 13: 125.0, 14: 126.5, 15: 143.1, 15: 143.1, 16: 141.1, 17: 135.3, 18: 125.4, 19: 129.3} # delta pa
@@ -182,7 +187,7 @@ combined_df = add_weather_conditions(picarro_df, weather_df)
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
-print(flux_df)
+#print(flux_df)
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = True)
 
@@ -203,7 +208,8 @@ filtered_weather_df['delta-t'] = (
     filtered_weather_df['DATE_TIME'] -
     filtered_weather_df['DATE_TIME'].iloc[0]
 ).dt.total_seconds() / 3600
-print(filtered_weather_df.head(50))
+#
+# print(filtered_weather_df.head(50))
 
 # Basic temperature stistics
 T = filtered_weather_df['megrtp']
@@ -222,6 +228,45 @@ cum_railfall = filtered_weather_df['prec'].sum()
 print(f'total rainfall was {cum_railfall} mm \n')
 
 ##### Visuals ##### 
+# global figure size and DPI
+FIGSIZE = (6, 4)
+DPI = 300
+
+# fonts-types and size and tick control, needs to be defined before all plots
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 12,
+    'axes.labelsize': 14,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1
+})
+
+### Weather data ###
+# Temperatures #
+plt.figure(figsize=(FIGSIZE)) # predefine the figure size
+
+# plotted data
+t = filtered_weather_df['delta-t']
+T_grass = filtered_weather_df['megrtp'] # y, T [degc] 20 cm above ground
+plt.plot(t, T_grass, '.-', color='black', linewidth=1.5)
+
+# axis
+plt.xlabel('Time Since first Application [h]')
+plt.ylabel('Temperature [°C]')
+plt.xlim(0, 165)
+plt.ylim(0, 17)
+
+# legend
+
+# save/show
+plt.tight_layout()
+plt.savefig(output_path_figures, dpi=DPI, bbox_inches='tight')
+plt.show()
+plt.close() 
+
 ### Flux data ###
 def preliminary_visualization2(df: pd.DataFrame, y_col: str, yerr_col: str, valve_lvl=False):
     xcol = 'TIME_NORM_GLOBAL[h]'
@@ -274,24 +319,5 @@ def preliminary_visualization2(df: pd.DataFrame, y_col: str, yerr_col: str, valv
 #preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
 #preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
 
-### Weather data ###
-# Temperatures ###
-t = filtered_weather_df['delta-t']
-T_grass = filtered_weather_df['megrtp'] # y, T [degc] 20 cm above ground
-
-plt.plot(t, T_grass, '.-', color='black')
-plt.xlabel('Time Since first Application [h]',)
-plt.ylabel('Temperature [°C]')
-plt.xlim(0, 165)
-
-# Font and label adjustments
-# Set the font to Times New Roman and adjust sizes
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['font.size'] = 12  # default font size
-plt.rcParams['axes.labelsize'] = 14  # Axis labels
-plt.rcParams['xtick.labelsize'] = 12  # x-axis ticks
-plt.rcParams['ytick.labelsize'] = 12  # y-axis ticks
-# show the plot
-plt.show()
 
 ### Code references ###

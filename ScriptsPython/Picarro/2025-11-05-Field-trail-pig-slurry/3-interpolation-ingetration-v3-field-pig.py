@@ -342,6 +342,11 @@ input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mastert
 ##### Output folder and files #####
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
+##### Figures #####
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("field-pig-flux.pdf")
+output_path_figures = output_folder_figures / output_name_figure
+
 ##### Constants #####
 treatment_valve_ids = [1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 18]
 
@@ -432,6 +437,21 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
 ##### Plot creation ##### 
 Create_plots = True
 
+# global figure size and DPI
+FIGSIZE = (6, 4)
+DPI = 300
+
+# fonts-types and size and tick control, needs to be defined before all plots
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 12,
+    'axes.labelsize': 14,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1})
+
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
@@ -454,6 +474,7 @@ if Create_plots == True:
     plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}, interpolated points per hour was {pts_per_h}')
     plt.legend()
     plt.show()
+    plt.close()
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
@@ -487,34 +508,45 @@ if Create_plots == True:
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
     plt.legend()
     plt.show()
+    plt.close()
 
     ##### Plot of relative flux for all merged treatments #####
+    plt.figure(figsize=(FIGSIZE)) # predefine the figure size
+
     # rename treatments for plotting
     # Define a fixed color mapping for treatments
     treatment_colors = {'AA': 'blue','RAW': 'orange','H2SO4': 'green', 'OSI': 'red', 'TH':'purple'}
-
     treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry (hand applied)','H2SO4': 'H₂SO₄', 'TH': 'Trailing Hose', 'OSI': 'Open Slot Injection'}
     
     # determine unique treatments in merged df
     for treatment in sorted(merged_df['TREATMENT'].unique()):
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
+        
         # extract relevant data
         t_treatment = treatment_df['TIME_SINCE_APP[h]']
         Rel_F = treatment_df['%REL_F_MEAN']
         Rel_F_stdev = treatment_df['%REL_F_STD']
 
+        # plot the data
         label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
         color = treatment_colors.get(treatment, 'gray')  # Default to gray if treatment not in mapping
-        plt.plot(t_treatment, Rel_F, '.-', color = color, label = label, linewidth = 1, markersize = 3)
-        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha = 0.3, color = color)
+        plt.plot(t_treatment, Rel_F, '-', color = color, label = label, linewidth = 1.5) # mean
+        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha = 0.3, color = color) # error shading
 
-    # graph visuals
-    plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
+    # graph x- and y-axis
+    plt.xlabel('Time Since Application [h]')
     plt.xlim(0, 160)
-    plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
-    plt.ylim(0, 0.5)
-    plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
+    plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
+    plt.ylim(auto= True)
+
+    # legend
+    plt.legend(frameon=False)
+
+    # save/show
+    plt.tight_layout()
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
+    plt.close()
 
 
 ##### Code References #####

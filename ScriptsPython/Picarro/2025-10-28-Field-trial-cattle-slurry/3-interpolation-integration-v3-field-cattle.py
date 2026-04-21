@@ -330,10 +330,16 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-12-field-cattle-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-03-12-field-cattle-flux-v32.csv")
 
 ##### Output folder and files #####
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
+
+##### Figures #####
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("field-cattle-flux.pdf")
+output_path_figures = output_folder_figures / output_name_figure
+
 
 ##### Constants #####
 treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to treamtents, bkgs excluded
@@ -357,8 +363,8 @@ raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_d
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print(filtered_df)
 
-times = determine_smallest_timerange_valve(filtered_df, pts_per_h=10)
-print(times)
+times = determine_smallest_timerange_valve(filtered_df, pts_per_h = 2)
+#print(times)
 
 treatment_df = background_correction(filtered_df, power=2) 
 #print(treatment_df)
@@ -373,7 +379,7 @@ TAN_df = TAN_normalization(integrated_df, TAN_dict)
 #print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
-print(merged_df)
+#print(merged_df)
 
 ### Rename collums before saving as csv-files
 # Treatment level
@@ -403,7 +409,6 @@ renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_apli
 
 #save_df_as_csv(renamed_df, output_folder, '2026-04-01-field-cattle-integrated-valve-lvl-v323-highRes', overwrite = True)
 
-
 ##### TEST and stats #####
 ### Relative reductions ###
 for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission from each treatment:
@@ -414,6 +419,21 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
 
 ##### Plot creation ##### 
 Create_plots = True
+
+# global figure size and DPI
+FIGSIZE = (6, 4)
+DPI = 300
+
+# fonts-types and size and tick control, needs to be defined before all plots
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 12,
+    'axes.labelsize': 14,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1})
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
@@ -437,6 +457,7 @@ if Create_plots == True:
     plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
     plt.legend()
     plt.show()
+    plt.close()
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
@@ -469,12 +490,12 @@ if Create_plots == True:
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
     plt.legend()
     plt.show()
+    plt.close()
 
     ##### Plot of relative flux for all merged treatments #####
-    treatment_colors = {'AA': 'blue','RAW': 'orange','H2SO4': 'green'}
-
-    # rename treatments for plotting
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
+    plt.figure(figsize=(FIGSIZE)) # predefine the figure size
+    treatment_colors = {'AA': 'blue','RAW': 'orange','H2SO4': 'green'} # treatment colors
+    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'} # treatment names
     
     # determine unique treatments in merged df
     for treatment in sorted(merged_df['TREATMENT'].unique()):
@@ -486,15 +507,24 @@ if Create_plots == True:
 
         label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
         color = treatment_colors.get(treatment, 'gray')  # Default to gray if treatment not in mapping
-        plt.plot(t_treatment, Rel_F, '.-', color = color, label = label, linewidth = 1, markersize = 3)
+        plt.plot(t_treatment, Rel_F, '-', color = color, label = label, linewidth = 1.5)
         plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha = 0.3, color = color)
 
-    # graph visuals
-    plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
+    
+    # x- and y-axis
+    plt.xlabel('Time Since Application [h]')
     plt.xlim(0, 160)
-    plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
-    plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
+    plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
+    plt.ylim(auto = True)
+
+    # legend
+    plt.legend(frameon=False)
+
+    # save/show
+    plt.tight_layout()
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
+    plt.close()
 
      
  
