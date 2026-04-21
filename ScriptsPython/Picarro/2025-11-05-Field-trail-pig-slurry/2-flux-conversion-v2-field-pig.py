@@ -182,11 +182,11 @@ combined_df = add_weather_conditions(picarro_df, weather_df)
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
-#print(flux_df)
+print(flux_df)
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = True)
 
-##### Weather Data ######
+##### Weather stats ######
 # Need:
 # - temperature data of soil and grass-level (also 2 m?), base statistics and a graph
 # - precipitation, total precipitation and a graph
@@ -220,8 +220,6 @@ print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}
 ### Determine total rainfall ###
 cum_railfall = filtered_weather_df['prec'].sum()
 print(f'total rainfall was {cum_railfall} mm \n')
-
-
 
 ##### Visuals ##### 
 ### Flux data ###
@@ -281,11 +279,19 @@ def preliminary_visualization2(df: pd.DataFrame, y_col: str, yerr_col: str, valv
 t = filtered_weather_df['delta-t']
 T_grass = filtered_weather_df['megrtp'] # y, T [degc] 20 cm above ground
 
-plt.plot(t, T_grass, 'o-', label='Raw Data', color='black')
-plt.xlabel('Time Since Application [h]')
+plt.plot(t, T_grass, '.-', color='black')
+plt.xlabel('Time Since first Application [h]',)
 plt.ylabel('Temperature [°C]')
-plt.xlim(0, 160)
-plt.legend()
+plt.xlim(0, 165)
+
+# Font and label adjustments
+# Set the font to Times New Roman and adjust sizes
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12  # default font size
+plt.rcParams['axes.labelsize'] = 14  # Axis labels
+plt.rcParams['xtick.labelsize'] = 12  # x-axis ticks
+plt.rcParams['ytick.labelsize'] = 12  # y-axis ticks
+# show the plot
 plt.show()
 
 ### Code references ###

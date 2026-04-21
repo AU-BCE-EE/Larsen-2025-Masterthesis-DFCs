@@ -175,11 +175,11 @@ combined_df = add_weather_conditions(picarro_df, weather_df)
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
-#print(flux_df)
+print(flux_df)
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
 
-##### Weather Data ######
+##### Weather stats ######
 # Filter weather based on experimental start and end
 picarro_df['DATE_TIME'] = pd.to_datetime(picarro_df['DATE_TIME'], errors='coerce')
 start_dateTime = picarro_df["DATE_TIME"].iloc[0]

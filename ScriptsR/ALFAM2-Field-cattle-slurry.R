@@ -83,11 +83,11 @@ datConstT <- data.frame(
 #print(predConstT)
 
 
-### Account for variability in TAN and DM ###
-mean_TAN_untr = 63
-SD_TAN_untr = 2
-mean_DM_untr = 7.42
-SD_DM_untr =  
+### Quick test, wheter DM can be fixed at the mean (small SD all treatments) ###
+# AA has the highest SD, using stats from this
+
+
+
 
 
 ### Documentation and clearing variables ###

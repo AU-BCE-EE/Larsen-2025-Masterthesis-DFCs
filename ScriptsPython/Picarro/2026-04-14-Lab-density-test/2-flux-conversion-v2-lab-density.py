@@ -117,11 +117,11 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 ##### Files and folders #####
 ### Input folders and files ###
 # picarro data:
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-17-pig-lab-extracted-v3.csv")
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction\2026-04-21-densityTest-lab-densityTest-v3.csv")
 
 ### Output folders and files ###
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
-output_file_name = Path('2026-03-17-lab-pig-flux-v32')
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion")
+output_file_name = Path('2026-04-21-lab-DensityTest-flux-v32')
 
 ##### Constants #####
 #treatment_method_dict = {1: 'HD_STD', 2: 'LD', 3: 'HD', 4: 'F', 5: 'HD', 11: 'BACKGROUND',
@@ -129,10 +129,10 @@ output_file_name = Path('2026-03-17-lab-pig-flux-v32')
 #17: 'F', 18: 'LD', 19: 'F', 20: 'HD', 21: 'F', 27: 'BACKGROUND',
 #22: 'HD', 23: 'LD', 24: 'HD', 25: 'F', 26: 'LD', 28: 'BACKGROUND'} # not used, here as an overview
 
-flow_dict = {1: 1.179, 2: 1.180, 3: 1.180, 4: 1.182, 5: 1.188, 11: 1.186,
-6: 1.180, 7: 1.182, 8: 1.180, 9: 1.181, 10: 1.182, 12: 1.187,
-17: 1.177, 18: 1.181, 19: 1.182, 20: 1.181, 21: 1.179, 27: 1.187,
-22: 1.181, 23: 1.182, 24: 1.182, 25: 1.182, 26: 1.181, 28: 1.188} # SL/ min
+flow_dict = {1: 1.175, 2: 1.183, 3: 1.183, 4: 1.176, 5: 1.182, 11: 1.191,
+6: 1.183, 7: 1.184, 8: 1.184, 9: 1.152, 10: 1.185, 12: 1.189,
+17: 1.182, 18: 1.185, 19: 1.428, 20: 1.185, 21: 1.184, 27: 1.193,
+22: 1.184, 23: 1.184, 24: 1.184, 25: 1.184, 26: 1.187, 28: 1.194} # [SL/ min], rot valve code
 
 Pres = 1.01325 # atmospheric pressure [bar]
 Temp = 22 # [deg c]
