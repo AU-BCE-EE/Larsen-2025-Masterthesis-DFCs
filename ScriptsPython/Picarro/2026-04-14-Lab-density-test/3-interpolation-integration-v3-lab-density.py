@@ -362,10 +362,10 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-17-lab-pig-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-04-21-lab-DensityTest-flux-v32.csv")
 
 ##### Output folder and files #####
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
 ##### Constants #####
 #treatment_method_dict = {1: 'PH2SO4', 2: 'FH2SO4', 3: 'FU', 4: 'PU', 5: 'PAA', 11: 'BACKGROUND',
@@ -373,23 +373,23 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 #17: 'FU', 18: 'PAA', 19: 'PH2SO4', 20: 'STD', 21: 'FAA', 27: 'BACKGROUND',
 #22: 'PH2SO4', 23: 'PU', 24: 'FH2SO4', 25: 'FU', 26: 'PAA', 28: 'BACKGROUND'} # not used, simply here to provide an overview
 
-Aplication_time_dict = {1: 0.0, 2: 0.23, 3: 0.75, 4: 1.00, 5: 1.25, 11: 1.99,
-6: 0.48, 7: 2.00, 8: 2.25, 9: 2.50, 10: 2.75, 12: 3.49,
-17: 3.5, 18: 3.75, 19: 4.0, 20: 4.25, 21: 4.5, 27: 5.24,
-22: 5.25, 23: 5.50, 24: 5.75, 25: 6.00, 26: 6.25, 28: 6.99} # [delta h] backgrounds simply set to 0
+Aplication_time_dict = {1: 0.0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1.0, 11: 1.75,
+6: 1.75, 7: 2.0, 8: 2.25, 9: 2.75, 10: 3.0, 12: 3.50,
+17: 3.5, 18: 3.75, 19: 4.0, 20: 4.25, 21: 4.5, 27: 5.25,
+22: 5.25, 23: 5.5, 24: 5.75, 25: 6, 26: 6.25, 28: 7.00} # [delta h], backgrounds corrected such that they are simply set to 0
 
 slurry_aplication_dict = {1: 2.061, 2: 2.031, 3: 2.010, 4: 2.015, 5: 2.103,
 6: 2.172, 7: 2.061, 8: 2.026, 9: 2.026, 10: 2.050,
 17: 2.050, 18: 2.052, 19: 2.120, 20: 2.046, 21: 2.045,
 22: 2.034, 23: 2.044, 24: 2.014, 25: 2.055, 26: 2.024} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
 
-treatment_TAN_conentration = {'HD' : 2.180, 'LD': 2.180, 'F': 2.180, 'STD': 4.2} # concentration [g/L] of NH4-N (TAN) in the sample  
+treatment_TAN_conentration = {'HD' : 2.180, 'LD': 2.180, 'F': 2.180, 'HD_STD': 4.2} # concentration [g/L] of NH4-N (TAN) in the sample  
 # HD = High density packed
 # LD = Low density packed 
 # F = field soil
 
-treatments = ['HD', 'LD','F', 'STD'] # Name of all treatments, only used for visuals
-treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used for visuals
+treatments = ['HD_STD', 'LD','F', 'STD'] # Name of all treatments, only used for visuals
+treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used for visualsTD
 
 ##### Script excecution #####
 raw_df = load_csv_file_as_df(input_path) # load flux-data
@@ -452,7 +452,7 @@ renamed_df = merged_df.rename(columns={
 #'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
 #print(renamed_df)
 
-#save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+save_df_as_csv(renamed_df, output_folder, '2026-04-21-field-cattle-integrated-valve-lvl-v323', overwrite = True)
 
 ##### Tests and stats #####
 ### Data for relative differences ####
@@ -540,8 +540,9 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
-    plt.xlim(0, 24)
+    plt.xlim(0, 140)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
+    plt.ylim(0, 5)
     plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
     plt.show()
 

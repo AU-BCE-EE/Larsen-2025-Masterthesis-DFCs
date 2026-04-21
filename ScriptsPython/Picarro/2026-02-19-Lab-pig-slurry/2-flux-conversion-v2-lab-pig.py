@@ -117,10 +117,10 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 ##### Files and folders #####
 ### Input folders and files ###
 # picarro data:
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction\2026-03-17-pig-lab-extracted-v3.csv")
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction\2026-03-17-pig-lab-extracted-v3.csv")
 
 ### Output folders and files ###
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion")
 output_file_name = Path('2026-03-17-lab-pig-flux-v32')
 
 ##### Constants #####

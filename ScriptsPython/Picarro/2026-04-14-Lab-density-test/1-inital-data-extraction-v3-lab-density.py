@@ -346,8 +346,8 @@ exp_start = '2026-04-14 08:02:0.00' # 2 hour delay in dat-file, switch to sommer
 
 ### Folders and files ###
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\lab-trails\2026-04-14-density-test-raw-picarro-files")
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
-output_file_name = Path('2026-04-XX-densityTest-lab-extracted-v3')
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction")
+output_file_name = Path('2026-04-14-densityTest-lab-densityTest-v3')
 
 ##### Script excecution #####
 combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=14, visualization = False)
@@ -362,7 +362,7 @@ print(combined_df_filtered)
 combined_df_method_added = add_method(combined_df_filtered, treatment_method_dict)
 print(combined_df_method_added)
 
-#save_df_as_csv(combined_df_method_added, output_folder, output_file_name, overwrite = False)
+save_df_as_csv(combined_df_method_added, output_folder, output_file_name, overwrite = False)
 
 ###### Checks #####
 ### quick analysis of PPB values for each treatment ###
