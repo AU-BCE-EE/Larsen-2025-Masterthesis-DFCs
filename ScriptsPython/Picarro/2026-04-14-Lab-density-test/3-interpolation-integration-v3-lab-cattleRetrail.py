@@ -362,43 +362,49 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-03-16-lab-cattle-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-04-21-lab-DensityTest-flux-v32.csv")
 
 ##### Output folder and files #####
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
 ##### Constants #####
+#ttreatment_method_dict = {1: 'FAA', 2: 'STD', 3: 'FH2SO4', 4: 'PH2SO4', 5: 'PRAW', 11: 'BACKGROUND',
+#6: 'PAA', 7: 'FRAW', 8: 'FH2SO4', 9: 'STD', 10: 'FAA', 12: 'BACKGROUND',
+#17: 'PRAW', 18: 'FRAW', 19: 'PAA', 20: 'PH2SO4', 21: 'PRAW', 27: 'BACKGROUND',
+#22: 'PAA', 23: 'PH2SO4', 24: 'FH2SO4', 25: 'FAA', 26: 'FRAW', 28: 'BACKGROUND'}
+
 Aplication_time_dict = {1: 0.0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1.0, 11: 1.75,
 6: 1.75, 7: 2.0, 8: 2.25, 9: 2.75, 10: 3.0, 12: 3.50,
 17: 3.5, 18: 3.75, 19: 4.0, 20: 4.25, 21: 4.5, 27: 5.25,
 22: 5.25, 23: 5.5, 24: 5.75, 25: 6, 26: 6.25, 28: 7.00} # [delta h], backgrounds corrected such that they are simply set to 0
 
-slurry_aplication_dict = {1: 2.019, 2: 2.039, 3: 2.137, 4: 2.108, 5: 2.057,
-6: 2.009, 7: 2.039, 8: 2.291, 9: 2.070, 10: 2.183,
-17: 2.024, 18: 2.083, 19: 2.040, 20: 2.057, 21: 2.093,
-22: 2.086, 23: 2.119, 24: 2.036, 25: 2.055, 26: 2.077} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
+slurry_aplication_dict = {1: 2.031, 2: 2.006, 3: 2.050, 4: 2.076, 5: 2.033,
+6: 2.025, 7: 2.018, 8: 2.072, 9: 2.037, 10: 2.072,
+17: 2.013, 18: 2.031, 19: 2.021, 20: 2.038, 21: 2.107,
+22: 2.065, 23: 2.031, 24: 2.013, 25: 2.076, 26: 2.102} # amount of slurry applied to each sample in [g] or [mL] (assuming simillar density as water)
 
-treatment_TAN_conentration = {'PAA' : 1.86, 'FAA': 1.86, 'PU': 1.96, 'FU': 1.96, 'PH2SO4': 1.83, 'FH2SO4': 1.83, 'STD': 3.13} # concentration [g/L] of NH4-N (TAN) in the sample  
-#TAN_M2_stdev_dict = ... # curently not used (not significant compared to variance between triplicates)
-# P = Packed soil
-# F = field soil
-# U = untreated
-# AA = acetic acid
-# H2SO4 = sulphuric acid
+treatment_TAN_conentration = {
+'FH2SO4' : 2.05, 'PH2SO4' : 2.05,
+'FAA': 2.05, 'PAA': 2.05,
+'FRAW': 1.89, 'PRAW' : 1.89,
+'STD': 3.57} 
+# concentration [g/L] of NH4-N (TAN) in the sample  
 
-treatments = ['PAA', 'FAA','PU', 'FU','PH2SO4', 'FH2SO4', 'STD'] # Name of all treatments, only used in plots
-treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used in plots
+
+treatments = ['HD_STD', 'LD','F', 'STD'] # Name of all treatments, only used for visuals
+treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used for visualsTD
 
 ##### Script excecution #####
 raw_df = load_csv_file_as_df(input_path) # load flux-data
-#print('inital data \n', raw_df)
+#print('inital data \n', raw_df.head(50))
+#print(raw_df.tail(50))
 
 # dropping collums not needed for down-stream
 raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]','Q[L/min]']).copy()
 #print('collums dropped \n', raw_df_small)
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
-print('time normalized  agianst application time \n', raw_df_new_time.head(30))
+#print('time normalized  agianst application time \n', raw_df_new_time.head(30))
 
 filtered_df = remove_nan_rows(raw_df_new_time)
 #print('rows with missing data removed \n', filtered_df)
@@ -406,8 +412,8 @@ filtered_df = remove_nan_rows(raw_df_new_time)
 times = determine_smallest_timerange_valve(filtered_df, pts_per_h = 2)
 #print(len(times))
 
-treatment_df = background_correction(filtered_df, power=2) 
-#print('background corrected data \n', treatment_df)
+treatment_df = background_correction(filtered_df, power=3) 
+#print('background corrected data \n', treatment_df.head(50))
 
 interp_df = interpolation_linear(treatment_df, times)
 #print('interpolated data', interp_df)
@@ -449,7 +455,7 @@ renamed_df = merged_df.rename(columns={
 #'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
 #print(renamed_df)
 
-#save_df_as_csv(renamed_df, output_folder, '2026-03-16-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+save_df_as_csv(renamed_df, output_folder, '2026-04-21-field-cattle-integrated-valve-lvl-v323', overwrite = True)
 
 ##### Tests and stats #####
 ### Data for relative differences ####
@@ -457,7 +463,7 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
     valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
     final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
     treatment = valve_df['TREATMENT'].iloc[0]
-    print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
+    #print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
 
 
 ##### Plot creation ##### 
@@ -488,7 +494,7 @@ if Create_plots == True:
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
-    mtest_treatment = 'PU'
+    #mtest_treatment = 'STD'
 
     # extract treatment-relevant data, merged and original
     original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]
@@ -537,8 +543,9 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
-    plt.xlim(0, 24)
+    plt.xlim(0, 140)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
+    plt.ylim(0, 5)
     plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
     plt.show()
 
