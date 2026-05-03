@@ -1,6 +1,6 @@
 ### Importing Libraries ###
 library(ALFAM2) # calling the library, same as a package-call in Python
-#? alfam2 # documentation of the alfam2 function
+#?alfam2 # documentation of the alfam2 function
 
 ### Change to DFC-specific function-parameters ####
 pars_df <- read.csv(file.choose())# the csv-file is in the same folder as the script, the name is Pars_AUDFC
@@ -26,9 +26,10 @@ T_df$time_shifted <- T_df$time - 10 * 60 # slight shift of the temperature-time
 # interpolate temperature func
 get_temp <- function(wanted_time) {
   approx(
-    x = as.numeric(T_df$time_shifted),
-    y = T_df$megrtp,
-    xout = as.numeric(wanted_time)
+x = as.numeric(T_df$time_shifted),
+y = T_df$megrtp,
+xout = as.numeric(wanted_time),
+rule = 2
   )$y
 }
 
@@ -36,6 +37,7 @@ get_temp <- function(wanted_time) {
 # T_df$time_shifted: shifted time-line: knwon temperature data 
 # as.numeric(wanted_time): the timestamp for which to aproximate a temperature
 # $y: ensures the function only returns the y-value, instead of a vector of T and related t
+# rule = 2 : if interpolating outside of bounds (at the final points), simply apply the nearest known value
 
 ### table of slurry-data for each treatment & time-delay for specific plots ###
 plot_scens <- data.frame(
@@ -95,8 +97,54 @@ dat_all <- do.call(rbind, lapply(1:nrow(plot_scens), function(i) {
   )
 }))
 
-subset(dat_all, scenario == 5)[1:10,]
+#subset(dat_all, scenario == 5)[1:10,]
 
+# apply the alfam2-function on all data #
+
+pred_all <- alfam2(
+  dat_all,
+  app.name = "TAN.app",
+  time.name = "ctime",
+  pars = pars_AUDFC,
+  group = "scenario"
+)
+
+### Quick tests of restult ###
+
+# final accumulated relative emissions of each scenario/plot #
+final_rel <- tapply(pred_all$er, pred_all$scenario, tail, 1)
+
+final_rel * 100
+
+final_df <- data.frame(
+  scenario = names(final_rel),
+  rel_emission_pct = final_rel * 100
+)
+
+#print(final_df)
+
+# Check of inputs for each scenario #
+input_check <- dat_all[!duplicated(dat_all$scenario),
+                      c("scenario","treatment","TAN.app","man.dm","man.ph")]
+
+#print(input_check)
+
+# Check the shifted temperature #
+#subset(dat_all, ctime == 0)[, c("scenario","air.temp")]
+
+
+### Prepare reuslts for csv-file ###
+# combine input df and result df
+result_df <- cbind(dat_all, pred_all[, c("j", "er")])
+
+# aditionaly add the time-shift of each scenario/plot
+result_df <- merge(result_df, plot_scens[, c("scenario","shift")], by = "scenario")
+
+head(result_df)# check the headers of combined df
+
+### Export results as csv-file ###
+folder <- "C:/Users/mikae/Desktop/Github - speciale/Larsen-2025-Masterthesis-DFCs/output/ALFAM2/Alfam2-model-results"
+write.csv(result_df, file.path(folder, "alfam2_Cattle.csv"), row.names = FALSE)
 
 ### Documentation and clearing variables ###
 #packageVersion("ALFAM2") # call of the version, for documentation

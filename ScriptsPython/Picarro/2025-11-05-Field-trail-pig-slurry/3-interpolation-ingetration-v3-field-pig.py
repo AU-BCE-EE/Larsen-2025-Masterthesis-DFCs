@@ -428,11 +428,18 @@ renamed_df = TAN_df.rename(columns={
 
 ##### TEST and stats #####
 ### Relative reductions ###
+target_time = 160 # [h]
+
 for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission from each treatment:
     valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
-    final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
-    treatment = valve_df['TREATMENT'].iloc[0]
-    print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
+    idx = (valve_df['TIME_SINCE_APP[h]'] - target_time).abs().idxmin() # finds the closest index to the target time
+
+    closest_row = valve_df.loc[idx]
+
+    emis_at_target = closest_row['%REL_ACUM_EMIS']
+    treatment = closest_row['TREATMENT']
+    actual_time = closest_row['TIME_SINCE_APP[h]']
+    print(f"Accumulated emission at ~160 h for valve {valve} is "f"{round(emis_at_target, 3)} %, treatment is {treatment}, exact time is {actual_time}")
 
 ##### Plot creation ##### 
 Create_plots = True
