@@ -362,10 +362,10 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-16-lab-cattle-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-03-16-lab-cattle-flux-v32.csv")
 
 ##### Output folder and files #####
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
 ##### Constants #####
 Aplication_time_dict = {1: 0.0, 2: 0.25, 3: 0.5, 4: 0.75, 5: 1.0, 11: 1.75,
@@ -461,7 +461,7 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
 
 
 ##### Plot creation ##### 
-Create_plots = False
+Create_plots = True
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
@@ -488,7 +488,7 @@ if Create_plots == True:
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
-    mtest_treatment = 'STD'
+    mtest_treatment = 'PU'
 
     # extract treatment-relevant data, merged and original
     original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]

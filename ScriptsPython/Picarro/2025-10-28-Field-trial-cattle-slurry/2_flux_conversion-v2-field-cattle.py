@@ -155,13 +155,18 @@ weather_df = date_time_object_conversion(weather_df)
 input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction\2026-03-12-cattle-field-extracted-v3.csv")
 
 ### Output folders and files ###
-# flux
+# flux #
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion")
 output_file_name = Path('2026-03-12-field-cattle-flux-v32')
 
-# weather
+# weather #
 output_folder_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\ScriptsR")
 output_file_name_weather = Path('weather-data-field-cattle')
+
+# Figures #
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("field-cattle-temperature.pdf")
+output_path_figures = output_folder_figures / output_name_figure
 
 ### Constants ###
 preasure_drop_dict = {4: 131.2 , 5: 131.2, 8: 131.2, 9: 131.2, 11: 127.3, 12: 129.5, 13: 127.3, 14: 131.6, 15: 131.3, 16: 131.3, 17: 129.5, 18: 125.6} # pa
@@ -175,7 +180,7 @@ combined_df = add_weather_conditions(picarro_df, weather_df)
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
-print(flux_df)
+#print(flux_df)
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
 
@@ -192,6 +197,12 @@ weather_df['DATE_TIME'] = pd.to_datetime(weather_df['DATE_TIME'])
 filtered_weather_df  = weather_df[(weather_df['DATE_TIME'] >= start_dateTime) & (weather_df['DATE_TIME'] <= end_dateTime)].copy()
 #print(filtered_weather_df)
 
+# Create delta-time column
+filtered_weather_df['delta-t'] = (
+    filtered_weather_df['DATE_TIME'] -
+    filtered_weather_df['DATE_TIME'].iloc[0]).dt.total_seconds() / 3600
+#print(filtered_weather_df.head(50))
+
 # Basic temperature stistics
 T = filtered_weather_df['megrtp']
 T_min = round(T.min(), 1)
@@ -206,7 +217,7 @@ print(f'Temperature during the experiment was (min, median, mean, max): ({T_min}
 
 ### Determine total rainfall ###
 cum_railfall = filtered_weather_df['prec'].sum()
-print(f'total rainfall was {cum_railfall} mm \n')
+#print(f'total rainfall was {cum_railfall} mm \n')
 
 ### Export temperature for ALFAM modelling ###
 filtered_weather_df['DATE_TIME'] = pd.to_datetime(filtered_weather_df['DATE_TIME'],errors='coerce')
@@ -215,6 +226,47 @@ filtered_weather_df['delta_t'] = (filtered_weather_df['DATE_TIME'] - filtered_we
 #save_df_as_csv(filtered_weather_df, output_folder_weather, output_file_name_weather)
 
 ##### Visuals ##### 
+# global figure size and DPI
+FIGSIZE = (6, 4)
+DPI = 300
+
+# fonts-types and size and tick control, needs to be defined before all plots
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 12,
+    'axes.labelsize': 14,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1
+})
+
+### Weather data ###
+# Temperatures #
+plt.figure(figsize=(FIGSIZE)) # predefine the figure size
+
+# plotted data
+t = filtered_weather_df['delta-t']
+T_grass = filtered_weather_df['megrtp'] # y, T [degc] 20 cm above ground
+plt.plot(t, T_grass, '.-', color='black', linewidth=1.5)
+
+# axis
+plt.xlabel('Time Since first Application [h]')
+plt.ylabel('Temperature [°C]')
+plt.xlim(0, 165)
+plt.ylim(0, 17)
+
+# legend
+
+# save/show
+plt.tight_layout()
+plt.savefig(output_path_figures, dpi=DPI, bbox_inches='tight')
+plt.show()
+plt.close() 
+
+### Flux-data ###
+
 def preliminary_visualization(df, valve_lvl = True):
     '''
     combines fluxes and related std-deviation from treatment-triplicates
@@ -330,8 +382,8 @@ def preliminary_visualization2(df, y_col, yerr_col, valve_lvl=False):
     plt.xlabel('Global time [h]')
     fig.supylabel(y_col)
     plt.show()
+    plt.close()
 
 #preliminary_visualization2(combined_df,'F[mg/h m2]','F_STDEV[mg/h m2]', valve_lvl = True)
 #preliminary_visualization2(combined_df,'TAN_RATE[1/h]','TAN_RATE_STDEV[1/h]', valve_lvl = False )
-
 ### Code references ###
