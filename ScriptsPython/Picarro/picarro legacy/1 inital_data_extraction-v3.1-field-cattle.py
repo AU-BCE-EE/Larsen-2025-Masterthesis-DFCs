@@ -57,7 +57,7 @@ def time_normalization_global(df, global_start = None):
 
 
    
-def visualize_raw_data_per_day(file_path, extracted_df = None, extracted_windows = None):
+def visualize_raw_data_per_day(file_path, output_path_figures, extracted_df = None, extracted_windows = None):
     
     df = load_picarro_file_as_df(file_path)
     '''
@@ -65,6 +65,20 @@ def visualize_raw_data_per_day(file_path, extracted_df = None, extracted_windows
 
     input: file_path, path-object of the specific picarro-file
     '''
+    FIGSIZE = (6, 4)
+    DPI = 300
+
+    # fonts-types and size and tick control, needs to be defined before all plots
+    plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 12,
+    'axes.labelsize': 14,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1})
+
 
     # normalizing the time and extracting concentration-measurements
     time_normalized_df = time_normalization_global(df)
@@ -86,8 +100,8 @@ def visualize_raw_data_per_day(file_path, extracted_df = None, extracted_windows
     ax.spines['right'].set_visible(False)
 
     # axis titles
-    plt.xlabel('Time since midnigt [h]', fontsize=14, fontname='Times New Roman')
-    plt.ylabel('concentration (PPB)', fontsize=14, fontname='Times New Roman')
+    plt.xlabel('Time since midnigt [h]')
+    plt.ylabel('concentration (PPB)')
 
     if extracted_windows is not None:
 
@@ -110,8 +124,10 @@ def visualize_raw_data_per_day(file_path, extracted_df = None, extracted_windows
         plt.plot([], [], color=color, label=label)
 
     # show the graph
-    plt.legend(fontsize=14, frameon=False, loc="best", prop={"family": "Times New Roman", "size": 14})
-    plt.show()
+    plt.tight_layout()
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    #plt.show()
+    plt.close()
     
 def extract_data_from_picarro_file(file_path, cycle_min=7):
     df = load_picarro_file_as_df(file_path)
@@ -214,7 +230,7 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
     return result_df, extracted_windows
 
 
-def combine_folder_txts_into_single_df(input_folder, cycle_min = 7 , visualization = False):
+def combine_folder_txts_into_single_df(input_folder, output_path_figures , cycle_min = 7 , visualization = False):
     '''
     Function handles overall logic of loading multiple data from a folder.
  
@@ -251,7 +267,7 @@ def combine_folder_txts_into_single_df(input_folder, cycle_min = 7 , visualizati
             all_data.append(extracted_df)
 
         if visualization == True:
-            visualize_raw_data_per_day(file_path, extracted_df, extracted_windows)
+            visualize_raw_data_per_day(file_path, output_path_figures, extracted_df, extracted_windows)
 
     if not all_data:
         print(f'No data was extracted from {file_path.name}, something is wrong')
@@ -379,9 +395,17 @@ LABEL_MAP = {
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Field-trails\2025-10-28-field-cattle\Raw-picarro-files")
 # copy the folderpath, add at least.csw
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
-output_file_name = Path('2026-03-12-cattle-field-extracted-v3')
+output_file_name = Path('2026-05-05-cattle-picarro-PPB')
 
-combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7 , visualization = True)
+##### Figures #####
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("field-cattle-raw-PPB.pdf")
+output_path_figures = output_folder_figures / output_name_figure
+
+
+### Functions ###
+
+combined_df = combine_folder_txts_into_single_df(input_folder, output_path_figures , cycle_min=7 , visualization = True)
 combined_df = time_normalization_global(combined_df)
 
 combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)

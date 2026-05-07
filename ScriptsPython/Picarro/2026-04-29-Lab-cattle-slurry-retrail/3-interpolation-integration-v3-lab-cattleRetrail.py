@@ -362,7 +362,7 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-04-21-lab-DensityTest-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-05-06-lab-CattleRetrail-flux-v32.csv")
 
 ##### Output folder and files #####
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
@@ -391,7 +391,7 @@ treatment_TAN_conentration = {
 # concentration [g/L] of NH4-N (TAN) in the sample  
 
 
-treatments = ['HD_STD', 'LD','F', 'STD'] # Name of all treatments, only used for visuals
+treatments = ['FAA', 'PAA','FH2SO4', 'PH2SO4', 'FRAW', 'PRAW', 'STD'] # Name of all treatments, only used for visuals
 treatment_valve_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 18, 19, 20, 21, 22, 23, 24, 26] # Bkgs exclulded, only used for visualsTD
 
 ##### Script excecution #####
@@ -455,7 +455,7 @@ renamed_df = merged_df.rename(columns={
 #'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
 #print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, '2026-04-21-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+save_df_as_csv(renamed_df, output_folder, '2026-05-05-lab-cattleField-integrated', overwrite = True)
 
 ##### Tests and stats #####
 ### Data for relative differences ####

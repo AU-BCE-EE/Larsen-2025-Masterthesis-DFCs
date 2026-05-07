@@ -117,11 +117,11 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 ##### Files and folders #####
 ### Input folders and files ###
 # picarro data:
-input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction\2026-04-21-densityTest-lab-densityTest-v3.csv")
+input_path_picarro = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction\2026-05-06-Lab-CattleRetrail-v3.csv")
 
 ### Output folders and files ###
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion")
-output_file_name = Path('2026-04-21-lab-DensityTest-flux-v32')
+output_file_name = Path('2026-05-06-lab-CattleRetrail-flux-v32')
 
 ##### Constants #####
 #treatment_method_dict = {1: 'FAA', 2: 'STD', 3: 'FH2SO4', 4: 'PH2SO4', 5: 'PRAW', 11: 'BACKGROUND',
@@ -129,10 +129,10 @@ output_file_name = Path('2026-04-21-lab-DensityTest-flux-v32')
 #17: 'PRAW', 18: 'FRAW', 19: 'PAA', 20: 'PH2SO4', 21: 'PRAW', 27: 'BACKGROUND',
 #22: 'PAA', 23: 'PH2SO4', 24: 'FH2SO4', 25: 'FAA', 26: 'FRAW', 28: 'BACKGROUND'}
 
-flow_dict = {1: 1.175, 2: 1.183, 3: 1.183, 4: 1.176, 5: 1.182, 11: 1.191,
-6: 1.183, 7: 1.184, 8: 1.184, 9: 1.152, 10: 1.185, 12: 1.189,
-17: 1.182, 18: 1.185, 19: 1.428, 20: 1.185, 21: 1.184, 27: 1.193,
-22: 1.184, 23: 1.184, 24: 1.184, 25: 1.184, 26: 1.187, 28: 1.194} # [SL/ min], rot valve code
+flow_dict = {1: 1.174, 2: 1.176, 3: 1.177, 4: 1.175, 5: 1.171, 11: 1.215,
+6: 1.175, 7: 1.177, 8: 1.177, 9: 1.176, 10: 1.177, 12: 1.183,
+17: 1.174, 18: 1.174, 19: 1.171, 20: 1.175, 21: 1.175, 27: 1.182,
+22: 1.174, 23: 1.174, 24: 1.176, 25: 1.176, 26: 1.175, 28: 1.186} # [SL/ min], rot valve code
 
 Pres = 1.01325 # atmospheric pressure [bar]
 Temp = 22 # [deg c]
