@@ -53,6 +53,10 @@ model_path= Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterth
 expt_path= Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration\2026-03-16-field-cattle-integrated-valve-lvl-v323.csv")
 
 ##### Output folders ####
+output_folder_figures = Path(r"C:\Users\mikae\Desktop")
+output_name_figure = Path("model-expt24h.jpeg")
+output_path_figures = output_folder_figures / output_name_figure
+
 
 ##### Script excecution #####
 ### Model Df ### 
@@ -119,8 +123,8 @@ linestyles = ['-', '--', ':']  # 3 scenarios
 # define treatment colors
 treatment_colors = {
     'AA': 'blue',
-    'H2SO4':'green',
-    'RAW': 'orange'
+    'H2SO4':'orange',
+    'RAW': 'black'
 }
 
 treatments = model_df['treatment'].unique()
@@ -138,24 +142,25 @@ for t_idx, treatment in enumerate(treatments):
         # graps color from the treatment dict, and linestyle from the list
 
 plt.xlim(0, 160)
-plt.ylim(0, 0.5)
+plt.ylim(0, 0.45)
 
 plt.xlabel("time since application [h]")
 plt.ylabel("Flux [kgN / ha h]")
 
 plt.legend()
 plt.tight_layout()
+#plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
 ### expermemtal data, valve-level together with mean from model ###
-markers = ['o', 'x', 's'] 
+markers = ['o', 'v', 's'] 
 
 # define treatment colors
 treatment_colors = {
     'AA': 'blue',
-    'H2SO4':'green',
-    'RAW': 'orange'
+    'H2SO4':'orange',
+    'RAW': 'black'
 }
 
 treatments = expt_df['TREATMENT'].unique()
@@ -166,24 +171,25 @@ for t_idx, treatment in enumerate(treatments):
 
     for s_idx, scenario in enumerate(scenarios):
         scenario_df = treatment_df[treatment_df['VALVE_ID'] == scenario]
-        plt.plot(scenario_df['time_since_slurry_aplication[h]'], scenario_df['flux [kgN/ha h]'], linestyle='None' , marker = markers[s_idx % 3], markersize = 3,   color = treatment_colors[treatment] , label =  None) 
+        plt.plot(scenario_df['time_since_slurry_aplication[h]'], scenario_df['flux [kgN/ha h]'], linestyle='None' , marker = markers[s_idx % 3], markersize = 1,   color = treatment_colors[treatment] , label =  None) 
         # setup to only label once per treatment
         # graps color from the treatment dict, and linestyle from the list
 
 for t_idx, treatment in enumerate(treatments):
     treatment_df = model_mean[model_mean['treatment'] == treatment]
-    plt.plot(treatment_df['ctime'], treatment_df['j'], linewidth = 2,  color = treatment_colors[treatment] , label = treatment) 
+    plt.plot(treatment_df['ctime'], treatment_df['j'], linewidth = 1, marker = 'D', markersize = 1,  color = treatment_colors[treatment] , label = treatment) 
 
 
 
 plt.xlim(0, 24)
-plt.ylim(0, 0.5)
+plt.ylim(0, 0.45)
 
 plt.xlabel("time since application [h]")
 plt.ylabel("Flux [kgN / ha h]")
 
 plt.legend()
 plt.tight_layout()
+plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 

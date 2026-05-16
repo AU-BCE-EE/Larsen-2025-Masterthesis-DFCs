@@ -367,6 +367,11 @@ input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mastert
 ##### Output folder and files #####
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
+##### Figures #####
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("Lab-cattle-PackedSoil-flux.pdf")
+output_path_figures = output_folder_figures / output_name_figure
+
 ##### Constants #####
 #ttreatment_method_dict = {1: 'FAA', 2: 'STD', 3: 'FH2SO4', 4: 'PH2SO4', 5: 'PRAW', 11: 'BACKGROUND',
 #6: 'PAA', 7: 'FRAW', 8: 'FH2SO4', 9: 'STD', 10: 'FAA', 12: 'BACKGROUND',
@@ -455,7 +460,7 @@ renamed_df = merged_df.rename(columns={
 #'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
 #print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, '2026-05-05-lab-cattleField-integrated', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-05-09-lab-cattleRetrail-integrated', overwrite = True)
 
 ##### Tests and stats #####
 ### Data for relative differences ####
@@ -463,11 +468,28 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
     valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
     final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
     treatment = valve_df['TREATMENT'].iloc[0]
-    #print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
+    print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
 
 
 ##### Plot creation ##### 
-Create_plots = True
+Create_plots = False
+
+
+# global figure size and DPI
+FIGSIZE = (6, 4)
+DPI = 300
+
+# fonts-types and size and tick control, needs to be defined before all plots
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 16,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1})
+
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
@@ -527,28 +549,57 @@ if Create_plots == True:
 
     ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
-    
+    treatment_names = {
+    'FAA': 'AA', 'PAA': 'AA',
+    'FRAW': 'None', 'PRAW': 'None',
+    'FH2SO4': 'SA', 'PH2SO4': 'SA'
+    }
+
+    treatment_colors = {
+    'FAA': 'blue', 'PAA' : 'blue',
+    'FRAW': 'darkorange', 'PRAW' : 'darkorange', 
+    'FH2SO4': 'darkgreen', 'PH2SO4': 'darkgreen'}
+
+    # filter to only packed or 
+    group_prefix = 'P' # F or P
+    plot_df = merged_df[merged_df['TREATMENT'].str.startswith(group_prefix)]
+
     # determine unique treatments in merged df
-    for treatment in merged_df['TREATMENT'].unique():
-        treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
+    for treatment in plot_df['TREATMENT'].unique():
+        treatment_df = plot_df[plot_df['TREATMENT'] == treatment]
+        color = treatment_colors.get(treatment, 'gray')  # Default to gray if treatment not in mapping
+        
         # extract relevant data
         t_treatment = treatment_df['TIME_SINCE_APP[h]']
         Rel_F = treatment_df['%REL_F_MEAN']
         Rel_F_stdev = treatment_df['%REL_F_STD']
 
         label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
-        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth=2, markersize=6)
-        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3)
+        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth=2, color = color)
+        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, color = color, alpha=0.3)
+
+    if group_prefix == 'P': # ammonium carbonate std needs to be plotted together with these
+        STD_df = TAN_df[TAN_df['TREATMENT'] == 'STD']
+            
+        for i, valve_id in enumerate(STD_df['VALVE_ID'].unique()):
+            valve_df = STD_df[STD_df['VALVE_ID'] == valve_id]
+            t_valve = valve_df['TIME_SINCE_APP[h]']
+            Rel_F = valve_df['%REL_F']
+                
+            if i == 0:
+                plt.plot(t_valve, Rel_F, linestyle = 'dashed', label= 'AC std', linewidth=1.5, color = 'black')
+            else:
+                plt.plot(t_valve, Rel_F, linestyle = 'dashed', linewidth=1.5, color = 'black')
+      
 
     # graph visuals
-    plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
+    plt.xlabel('Time Since Application [h]')
     plt.xlim(0, 140)
-    plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
-    plt.ylim(0, 5)
-    plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
+    plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
+    plt.ylim(-0.05 , 4.5)
+    plt.legend(frameon=False)
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
-
 
 ##### Code References #####
 # https://www.geeksforgeeks.org/python/add-zero-columns-to-pandas-dataframe/ 

@@ -147,13 +147,17 @@ def determine_smallest_timerange_valve(filtered_df: pd.DataFrame, pts_per_h = 2)
 
     # identify latest start and earliest end (shared time domian), and determine which valve contians the latest start
     latest_start_valve = max(start_times, key=start_times.get)  # type: ignore the dict always contains floats,
+    
     earliest_end = min(end_times.values())
     latest_start_time = start_times[latest_start_valve]
+
+    earliest_end_valve = min(end_times, key=end_times.get) # type: ignore
+    latest_start_valve = max(start_times, key=start_times.get)  # type: ignore the dict always contains floats,
 
     interp_step_size = 1 / pts_per_h # points per hour
     interp_times = np.arange(latest_start_time, earliest_end, interp_step_size)
 
-    print(f"Time window: {latest_start_time:.3f} to {earliest_end:.3f}")
+    print(f"Time window: {latest_start_time:.3f} to {earliest_end:.3f}, the lastest start-valve is {latest_start_valve}")
 
     return interp_times
 
@@ -343,7 +347,13 @@ output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
 treatment_valve_ids = [4, 8, 11, 12, 13, 14, 15, 17, 18] # valve ID related to treamtents, bkgs excluded
-Aplication_time_dict = {4.0 : 0, 5.0 : 0.13, 8.0 : 0.27, 9.0: 0.40, 11.0: 0.53, 12.0 : 0.67, 13.0: 0.80, 14.0: 0.93, 15.0: 1.07, 16.0: 1.20, 17.0: 1.33, 18.0: 1.47} # [h] 
+
+Aplication_time_dict = {
+4.0 : 0.0, 5.0 : 0.13, 8.0 : 0.93, 
+9.0: 1.06, 11.0: 2.10, 12.0 : 2.24,
+13.0: 2.37, 14.0: 2.50, 15.0: 2.64, 
+16.0: 2.77, 17.0: 1.30, 18.0: 1.44} # [h] 
+
 TAN_dict = {'AA' : 6167, 'RAW': 6258, 'H2SO4': 6253} # [mg/m2], spec kit
 #TAN_M2_stdev_dict = {'AA' : 143.2, 'RAW': 165.7, 'H2SO4': 95.3} # [mg/m2] # not currently used
 treatments = ['AA','RAW','H2SO4']
@@ -355,13 +365,13 @@ raw_df = load_csv_file_as_df(input_path) # load flux-data
 
 # dropping collums not needed for down-stream
 raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_ATMOS[hpa]','T[degc]' ]).copy()
-#print(raw_df_small)
+#print(raw_df_small.head(24))
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
-#print(raw_df_new_time)
+print(raw_df_new_time.head(24))
 
 filtered_df = remove_nan_rows(raw_df_new_time)
-#print(filtered_df)
+print(filtered_df.head(50))
 
 times = determine_smallest_timerange_valve(filtered_df, pts_per_h = 2)
 #print(times)
@@ -407,7 +417,7 @@ renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_apli
 })
 #print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, '2026-04-01-field-cattle-integrated-valve-lvl-v323-highRes', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-04-01-field-cattle-integrated-valve-lvl-v323-highRes', overwrite = True)
 
 ##### TEST and stats #####
 ### Relative and abosolute reductions ###
@@ -445,7 +455,7 @@ plt.rcParams.update({
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
-    interptest_valveid = 14
+    interptest_valveid = 17
     print(f'plotted valve is {interptest_valveid}')
 
     # extract raw data
@@ -472,6 +482,7 @@ if Create_plots == True:
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
+    mtest_treatment = 'RAW'
 
     # extract treatment-relevant data, merged and original
     original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]

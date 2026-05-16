@@ -369,7 +369,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("density-expt-flux.pdf")
+output_name_figure = Path("density-expt-flux-later-rates.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
@@ -547,7 +547,7 @@ if Create_plots == True:
 
     ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'F': 'CS Field','HD': 'CS Packed (HD)','HD_STD': 'AC Packed (HD)', 'LD': 'CS Packed (LD)'}
+    treatment_names = {'F': 'Cattle slurry, Field','HD': 'Cattle slurry, Packed high density','HD_STD': 'Ammonium carbonate std, packed high density', 'LD': 'Cattle slurry, packed low density'}
     
     # determine unique treatments in merged df
     for treatment in merged_df['TREATMENT'].unique():
@@ -583,9 +583,9 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 24)
+    plt.xlim(0, 140)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
-    plt.ylim(0, 4.2)
+    plt.ylim(0, 0.42)
     plt.legend(frameon=False)
     plt.tight_layout()
     #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
