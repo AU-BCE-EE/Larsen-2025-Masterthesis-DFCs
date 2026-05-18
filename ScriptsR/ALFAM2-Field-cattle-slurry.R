@@ -45,7 +45,7 @@ plot_scens <- data.frame(
   
   treatment = c("AA", "H2SO4", "RAW",
                 "H2SO4", "RAW", "AA",
-                "Raw", "AA", "H2SO4"),
+                "RAW", "AA", "H2SO4"),
   
   shift = c(0.00, 0.27, 0.53,
             0.67, 0.80, 0.93,
@@ -91,7 +91,7 @@ dat_all <- do.call(rbind, lapply(1:nrow(plot_scens), function(i) {
     man.dm  = plot_scens$man.dm[i],
     man.ph  = plot_scens$man.ph[i],
     
-    app.mthd = "bc",
+    app.mthd = "ts",
     rain.cum = 0,
     app.rate.ni = 29
   )
@@ -121,7 +121,7 @@ final_df <- data.frame(
   rel_emission_pct = final_rel * 100
 )
 
-#print(final_df)
+print(final_df)
 
 # Check of inputs for each scenario #
 input_check <- dat_all[!duplicated(dat_all$scenario),
@@ -144,7 +144,7 @@ head(result_df)# check the headers of combined df
 
 ### Export results as csv-file ###
 folder <- "C:/Users/mikae/Desktop/Github - speciale/Larsen-2025-Masterthesis-DFCs/output/ALFAM2/Alfam2-model-results"
-write.csv(result_df, file.path(folder, "alfam2_Cattle.csv"), row.names = FALSE)
+#write.csv(result_df, file.path(folder, "2026-05-05-alfam2_Cattle-ts.csv"), row.names = FALSE)
 
 ### Documentation and clearing variables ###
 #packageVersion("ALFAM2") # call of the version, for documentation

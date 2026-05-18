@@ -362,10 +362,14 @@ def save_df_as_csv(df : pd.DataFrame, output_folder: Path , output_file_name : s
     print(f" output_file saved as: {output_file}")
 
 ##### Input folder and Files #####
-input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-17-lab-pig-flux-v32.csv")
+input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-03-17-lab-pig-flux-v32.csv")
 
 ##### Output folder and files #####
-output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\3-intergration")
+output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
+
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("Lab-pig-PackedSoil-flux.pdf")
+output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
 #treatment_method_dict = {1: 'PH2SO4', 2: 'FH2SO4', 3: 'FU', 4: 'PU', 5: 'PAA', 11: 'BACKGROUND',
@@ -463,15 +467,31 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
     valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
     final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
     treatment = valve_df['TREATMENT'].iloc[0]
-    #print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
+    print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
 
 
 ##### Plot creation ##### 
 Create_plots = True
 
+# global figure size and DPI
+FIGSIZE = (6, 4)
+DPI = 300
+
+# fonts-types and size and tick control, needs to be defined before all plots
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 16,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1})
+
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
+    interptest_valveid = 5
 
     # extract raw data
     raw_valve_df =  treatment_df[treatment_df['VALVE_ID'] == interptest_valveid]
@@ -493,59 +513,57 @@ if Create_plots == True:
     plt.show()
 
     ##### Visual test of merging function #####
-    mtest_treatment = random.choice(treatments)
-    #mtest_treatment = 'STD'
-
-    # extract treatment-relevant data, merged and original
-    original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]
-    
-    merged_treatment_df = merged_df[merged_df['TREATMENT'] == mtest_treatment]
-    merged_treatment_df = merged_treatment_df.sort_values(by='TIME_SINCE_APP[h]')
-
-    for valve_id in original_treatment_df['VALVE_ID'].unique():
-        valve_data = original_treatment_df[original_treatment_df['VALVE_ID'] == valve_id]
-        F_valve = valve_data['F_BC']
-        t_valve = valve_data['TIME_SINCE_APP[h]']
-        plt.plot(t_valve, F_valve, 'o-', label=f'Valve {valve_id}', alpha=0.5)
-
-    # Plot merged mean line
-    F_merged = merged_treatment_df['F_INTERP_MEAN']
-    F_merged_err = merged_treatment_df['F_INTERP_STD']
-    t_merged = merged_treatment_df['TIME_SINCE_APP[h]']
-    plt.plot(t_merged, F_merged, 'x-', label='Merged (Mean)', color='black', linewidth=2, markersize=6)
-
-    # error as shading effect
-    plt.fill_between(t_merged,F_merged - F_merged_err, F_merged + F_merged_err, color='gray', alpha=0.3, label='± Std Dev')
-
-    plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 24)
-    plt.ylabel('Flux [mg/ m2 h]')
-    #plt.ylim(0, 30)
-    plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
-    plt.legend()
-    plt.show()
-
-    ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
-    
+    treatment_names = {
+    'FAA': 'AA', 'PAA': 'AA',
+    'FU': 'None', 'PU': 'None',
+    'FH2SO4': 'SA', 'PH2SO4': 'SA'
+    }
+
+    treatment_colors = {
+    'FAA': 'blue', 'PAA' : 'blue',
+    'FU': 'darkorange', 'PU' : 'darkorange', 
+    'FH2SO4': 'darkgreen', 'PH2SO4': 'darkgreen'}
+
+    # filter to only packed or 
+    group_prefix = 'P' # F or P
+    plot_df = merged_df[merged_df['TREATMENT'].str.startswith(group_prefix)]
+
     # determine unique treatments in merged df
-    for treatment in merged_df['TREATMENT'].unique():
-        treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
+    for treatment in plot_df['TREATMENT'].unique():
+        treatment_df = plot_df[plot_df['TREATMENT'] == treatment]
+        color = treatment_colors.get(treatment, 'gray')  # Default to gray if treatment not in mapping
+        
         # extract relevant data
         t_treatment = treatment_df['TIME_SINCE_APP[h]']
         Rel_F = treatment_df['%REL_F_MEAN']
         Rel_F_stdev = treatment_df['%REL_F_STD']
 
         label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
-        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth=2, markersize=6)
-        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3)
+        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth=2, color = color)
+        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, color = color, alpha=0.3)
+
+    if group_prefix == 'P': # ammonium carbonate std needs to be plotted together with these
+        STD_df = TAN_df[TAN_df['TREATMENT'] == 'STD']
+            
+        for i, valve_id in enumerate(STD_df['VALVE_ID'].unique()):
+            valve_df = STD_df[STD_df['VALVE_ID'] == valve_id]
+            t_valve = valve_df['TIME_SINCE_APP[h]']
+            Rel_F = valve_df['%REL_F']
+                
+            if i == 0:
+                plt.plot(t_valve, Rel_F, linestyle = 'dashed', label= 'AC std', linewidth=1.5, color = 'black')
+            else:
+                plt.plot(t_valve, Rel_F, linestyle = 'dashed', linewidth=1.5, color = 'black')
+      
 
     # graph visuals
-    plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
-    plt.xlim(0, 24)
-    plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
-    plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
+    plt.xlabel('Time Since Application [h]')
+    plt.xlim(0, 140)
+    plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
+    plt.ylim(-0.05 , 4.5)
+    plt.legend(frameon=False)
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
 
 

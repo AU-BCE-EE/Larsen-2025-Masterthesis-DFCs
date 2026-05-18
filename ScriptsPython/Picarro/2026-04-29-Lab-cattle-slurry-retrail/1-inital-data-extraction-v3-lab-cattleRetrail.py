@@ -343,10 +343,10 @@ exp_start = '2026-04-29 08:10:0.00' # 2 hour delay in dat-file, switch to sommer
 ### Folders and files ###
 input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\lab-trails\2026-04-29-cattleRetrail")
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\1-inital-extraction")
-output_file_name = Path('2026-05-2026-Lab-CattleRetrail-v3')
+output_file_name = Path('2026-05-06-Lab-CattleRetrail-v3')
 
 ##### Script excecution #####
-combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=14, visualization = False)
+combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=2, visualization = False)
 #print(combined_df)
 
 combined_df_normtime = time_normalization_global(combined_df, exp_start)
@@ -358,7 +358,7 @@ combined_df_filtered = remove_data(combined_df_normtime, before_exp_dict, drop_r
 combined_df_method_added = add_method(combined_df_filtered, treatment_method_dict)
 print(combined_df_method_added)
 
-#save_df_as_csv(combined_df_method_added, output_folder, output_file_name, overwrite = False)
+save_df_as_csv(combined_df_method_added, output_folder, output_file_name, overwrite = False)
 
 ###### Checks #####
 ### quick analysis of PPB values for each treatment ###

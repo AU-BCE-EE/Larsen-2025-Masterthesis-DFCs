@@ -180,7 +180,7 @@ combined_df = add_weather_conditions(picarro_df, weather_df)
 combined_df = add_presure_drop(combined_df, preasure_drop_dict)
 
 flux_df = flux_conversion_nonconst_weather(combined_df)
-#print(flux_df)
+print(flux_df.head(24))
 
 #save_df_as_csv(flux_df, output_folder, output_file_name, overwrite = False)
 

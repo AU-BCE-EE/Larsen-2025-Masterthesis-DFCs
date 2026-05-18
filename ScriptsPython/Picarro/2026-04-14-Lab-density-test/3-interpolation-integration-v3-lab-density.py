@@ -367,6 +367,11 @@ input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mastert
 ##### Output folder and files #####
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
+##### Figures #####
+output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
+output_name_figure = Path("density-expt-flux-later-rates.pdf")
+output_path_figures = output_folder_figures / output_name_figure
+
 ##### Constants #####
 #treatment_method_dict = {1: 'PH2SO4', 2: 'FH2SO4', 3: 'FU', 4: 'PU', 5: 'PAA', 11: 'BACKGROUND',
 #6: 'STD', 7: 'FAA', 8: 'FH2SO4', 9: 'FAA', 10: 'PU', 12: 'BACKGROUND',
@@ -422,7 +427,7 @@ integrated_df = integration(interp_df)
 TAN_dict = prepare_TAN_dict(slurry_aplication_dict, treatment_TAN_conentration, integrated_df)
 #print(TAN_dict)
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-#print('data normalized agianst slurry TAN \n', TAN_df)
+print('data normalized agianst slurry TAN \n', TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
 #print('triplicates averaged \n', merged_df)
@@ -452,7 +457,7 @@ renamed_df = merged_df.rename(columns={
 #'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
 #print(renamed_df)
 
-save_df_as_csv(renamed_df, output_folder, '2026-04-21-field-cattle-integrated-valve-lvl-v323', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-04-21-field-cattle-integrated-valve-lvl-v323', overwrite = True)
 
 ##### Tests and stats #####
 ### Data for relative differences ####
@@ -460,11 +465,27 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
     valve_df = TAN_df[TAN_df['VALVE_ID'] == valve]
     final_emis = valve_df['%REL_ACUM_EMIS'].iloc[-1]
     treatment = valve_df['TREATMENT'].iloc[0]
-    #print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
+    print(f'final accumulated emission for valve {valve} is {round(final_emis, 3)} %, treatment is {treatment}')
 
 
 ##### Plot creation ##### 
 Create_plots = True
+
+# global figure size and DPI
+FIGSIZE = (6, 4)
+DPI = 300
+
+# fonts-types and size and tick control, needs to be defined before all plots
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 12,
+    'axes.labelsize': 14,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'ytick.direction': 'in',
+    'xtick.direction': 'in',
+    'axes.linewidth': 1})
+
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
@@ -488,6 +509,7 @@ if Create_plots == True:
     plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
     plt.legend()
     plt.show()
+    plt.close()
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
@@ -521,31 +543,54 @@ if Create_plots == True:
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
     plt.legend()
     plt.show()
+    plt.close()
 
     ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'}
+    treatment_names = {'F': 'Cattle slurry, Field','HD': 'Cattle slurry, Packed high density','HD_STD': 'Ammonium carbonate std, packed high density', 'LD': 'Cattle slurry, packed low density'}
     
     # determine unique treatments in merged df
     for treatment in merged_df['TREATMENT'].unique():
         treatment_df = merged_df[merged_df['TREATMENT'] == treatment]
+
+        if treatment == 'HD_STD': # this one needs to be plotted as replicates
+            treatment_df = TAN_df[TAN_df['TREATMENT'] == treatment]
+
+            label = treatment_names.get(treatment, treatment)
+
+        # loop over each replicate (VALVE_ID)
+            for i, valve in enumerate(treatment_df['VALVE_ID'].unique()):
+                valve_df = treatment_df[treatment_df['VALVE_ID'] == valve]
+
+                t_valve = valve_df['TIME_SINCE_APP[h]']
+                Rel_F = valve_df['%REL_F']
+
+                if i == 0:
+                    plt.plot(t_valve, Rel_F, linestyle = 'dashed', label=label, linewidth=1.5, color = 'black')
+                else:
+                    plt.plot(t_valve, Rel_F, linestyle = 'dashed', linewidth=1.5, color = 'black')
+        
+            continue
+
         # extract relevant data
         t_treatment = treatment_df['TIME_SINCE_APP[h]']
         Rel_F = treatment_df['%REL_F_MEAN']
         Rel_F_stdev = treatment_df['%REL_F_STD']
 
         label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
-        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth=2, markersize=6)
+        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth= 2 , markersize=6)
         plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3)
 
     # graph visuals
-    plt.xlabel('Time Since Application [h]', fontsize=14, fontname='Times New Roman')
+    plt.xlabel('Time Since Application [h]')
     plt.xlim(0, 140)
-    plt.ylabel('Relative flux (% of TAN) [h⁻¹]', fontsize=14, fontname='Times New Roman')
-    plt.ylim(0, 5)
-    plt.legend(fontsize=14, prop={'family': 'Times New Roman'},frameon=False)
+    plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
+    plt.ylim(0, 0.42)
+    plt.legend(frameon=False)
+    plt.tight_layout()
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
-
+    plt.close()
 
 ##### Code References #####
 # https://www.geeksforgeeks.org/python/add-zero-columns-to-pandas-dataframe/ 

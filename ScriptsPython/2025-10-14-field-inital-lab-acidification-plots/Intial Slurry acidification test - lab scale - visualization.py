@@ -69,7 +69,7 @@ DPI = 300
 plt.rcParams.update({
     'font.family': 'Times New Roman',
     'font.size': 12,
-    'axes.labelsize': 14,
+    'axes.labelsize': 12,
     'xtick.labelsize': 12,
     'ytick.labelsize': 12,
     'ytick.direction': 'in',
@@ -80,11 +80,11 @@ plt.rcParams.update({
 plt.figure(figsize=FIGSIZE) 
 
 ### catte 
-plt.errorbar(xs3_catte, pH_cattle_AA, yerr=pH_stdev_cattle_AA, fmt='o', color='#2b8cbe', label='Cattle AA', capsize=1)
-plt.errorbar(xs1_cattle, pH_cattle_H2SO4, yerr=pH_stdev_cattle_H2SO4, fmt='o', color="#6e9fdf", label='Cattle H₂SO₄', capsize=1)
+plt.errorbar(xs3_catte, pH_cattle_AA, yerr=pH_stdev_cattle_AA, fmt='o', color="#14cae2", label='Cattle AA', capsize=1)
+plt.errorbar(xs1_cattle, pH_cattle_H2SO4, yerr=pH_stdev_cattle_H2SO4, fmt='o', color="#3b1de7", label='Cattle H₂SO₄', capsize=1)
 # Pig
-plt.errorbar(xs3_pig, pH_pig_AA, yerr = pH_stdev_pig_AA, fmt='o',color="#EB0D0D", label='Pig AA', capsize=2)
-plt.errorbar(xs1_pig, pH_pig_H2SO4, yerr = pH_stdev_pig_H2SO4, fmt='o',color="#fa7305", label='Pig H₂SO₄', capsize=2)
+plt.errorbar(xs3_pig, pH_pig_AA, yerr = pH_stdev_pig_AA, fmt='o',color="#0DEB50DC", label='Pig AA', capsize = 1)
+plt.errorbar(xs1_pig, pH_pig_H2SO4, yerr = pH_stdev_pig_H2SO4, fmt='o',color="#73fa0570", label='Pig H₂SO₄', capsize = 1)
 plt.xlabel('m(acid) / m(slurry) [kg / ton]')
 plt.ylabel('pH')
 

@@ -175,7 +175,7 @@ def extract_data_from_picarro_file(file_path, cycle_min=7):
                     print(f"Accepted short cycle near midnight ({cycle_time:.0f}s) at {current_time}.")
 
                 else:  # skipping over other short cycles
-                    print(f"Skipped short valve cycle ({cycle_time / 60:.1f} min) at {current_time}.")
+                    print(f"Skipped short valve cycle ({cycle_time / 60:.1f} min) at {current_time}, valve ID was {valve_pos}")
 
                 last_valve_shift_index = index
 
@@ -328,13 +328,15 @@ def save_df_as_csv(df, output_folder, output_file_name, overwrite = True):
 
     
 ### Constants ### 
-faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000') : [11, 12, 13, 14, 15, 16, 18, 17]}
+faulty_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-10-28 16:33:0.000') : [11, 12, 13, 14, 15, 16, 17, 18]} # accured 16:55 real time, Picarro delayed by 22 min
 end_of_experiment_removal_dict= {('2025-11-04 13:51:0.000', '2025-11-04 14:11:35.808') : []} 
 dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [1, 2, 3, 6, 7, 10, 19]}
 #dummy_valve_removal_dict = {('2025-10-28 10:27:12.891', '2025-11-04 14:11:35.808'): [18]}
 
-treatment_method_dict = {4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
-11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
+treatment_method_dict = {
+4: 'AA', 5: 'BACKGROUND', 8: 'H2SO4', 9: 'BACKGROUND',
+11: 'RAW', 12: 'H2SO4', 13: 'RAW', 14: 'AA', 
+15: 'RAW', 16:'BACKGROUND', 17: 'AA', 18: 'H2SO4'}
 
 ### Script Excecution ###
 # copy the folderpath
@@ -348,10 +350,10 @@ combined_df = time_normalization_global(combined_df)
 
 combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
 combined_df = remove_data(combined_df, end_of_experiment_removal_dict, drop_rows= True)
-combined_df = remove_data(combined_df, dummy_valve_removal_dict, drop_rows=True)
+#combined_df = remove_data(combined_df, dummy_valve_removal_dict, drop_rows=True)
 
 combined_df = add_method(combined_df, treatment_method_dict)
-#print(combined_df.head(50))
+print(combined_df.head(50))
 
 #save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=False)
 

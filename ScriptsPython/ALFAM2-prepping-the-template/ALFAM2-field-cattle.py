@@ -164,7 +164,7 @@ def save_df_as_csv(df: pd.DataFrame, output_folder: Path, output_file_name: Path
 
 ##### Input folders and files #####
 input_path_weather = Path(r"C:\Users\mikae\Desktop\Github - speciale\AgrosceNa-NEXT\data\weather\FoulumVejr_0110_1711.csv") #Weather data
-input_path_flux = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\2-flux-conversion\2026-03-12-field-cattle-flux-v32.csv")
+input_path_flux = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\2-flux-conversion\2026-03-12-field-cattle-flux-v32.csv")
 
 ##### Output folders and files ######
 output_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\ALFAM2")
@@ -208,6 +208,7 @@ df_picarro = df_picarro.drop(columns=['P_DROP[pa]'])
 
 ### add an interval counter ###
 df_picarro['INTERVAL'] = 0 # initalizie the collum
+
 for valve_id in df_picarro['VALVE_ID'].unique():
     valve_data = df_picarro[df_picarro['VALVE_ID'] == valve_id]
     valve_data = valve_data.sort_values(by='DATE_TIME')
@@ -246,9 +247,14 @@ df_picarro['SHIFT_LENGTH_HOURS'] = ((df_picarro['END_TIME'] - df_picarro['START_
 
 print('Final df \n', df_picarro)
 
+valve_id = 17
+filtered_valve_df = df_picarro[df_picarro['VALVE_ID'] == valve_id]
+print(f'valve {valve_id}')
+print(filtered_valve_df)
+
 ### Save the data ###
 #save_df_as_csv(df_picarro, output_path, Path('2026-03-26-ALFAM2-Cattle-v1'))
-df_picarro.to_excel(Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\ALFAM2\2026-03-26-ALFAM2-Cattle-v1.xlsx"), index=False)
+#df_picarro.to_excel(Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\ALFAM2\2026-03-26-ALFAM2-Cattle-v1.xlsx"), index=False)
 
 ##### Code References #####
  
