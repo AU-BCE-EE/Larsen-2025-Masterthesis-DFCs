@@ -369,7 +369,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("density-expt-flux-later-rates.pdf")
+output_name_figure = Path("density-expt-flux-early-rates.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
@@ -478,10 +478,10 @@ DPI = 300
 # fonts-types and size and tick control, needs to be defined before all plots
 plt.rcParams.update({
     'font.family': 'Times New Roman',
-    'font.size': 12,
-    'axes.labelsize': 14,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
+    'font.size': 16,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
     'ytick.direction': 'in',
     'xtick.direction': 'in',
     'axes.linewidth': 1})
@@ -547,7 +547,13 @@ if Create_plots == True:
 
     ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'F': 'Cattle slurry, Field','HD': 'Cattle slurry, Packed high density','HD_STD': 'Ammonium carbonate std, packed high density', 'LD': 'Cattle slurry, packed low density'}
+    treatment_names = {'F': 'Cattle None F','HD': 'Cattle None PHD','HD_STD': 'Std PHD', 'LD': 'Cattle None, PLD'}
+
+    
+    treatment_colors = {
+    'F': 'darkcyan',
+    'HD': 'olive', 
+    'LD': 'lightcoral',}
     
     # determine unique treatments in merged df
     for treatment in merged_df['TREATMENT'].unique():
@@ -573,22 +579,23 @@ if Create_plots == True:
             continue
 
         # extract relevant data
+        color = treatment_colors.get(treatment, 'gray')  # Default to gray if treatment not in mapping
         t_treatment = treatment_df['TIME_SINCE_APP[h]']
         Rel_F = treatment_df['%REL_F_MEAN']
         Rel_F_stdev = treatment_df['%REL_F_STD']
 
         label = treatment_names.get(treatment, treatment)  # Fallback to original if not found
-        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth= 2 , markersize=6)
-        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3)
+        plt.plot(t_treatment, Rel_F, '-', label=label, linewidth= 2 , markersize = 6, color = color)
+        plt.fill_between(t_treatment, Rel_F - Rel_F_stdev, Rel_F + Rel_F_stdev, alpha=0.3, color = color)
 
     # graph visuals
     plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 140)
+    plt.xlim(0, 24)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
-    plt.ylim(0, 0.42)
+    plt.ylim(0, 4.2)
     plt.legend(frameon=False)
     plt.tight_layout()
-    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 

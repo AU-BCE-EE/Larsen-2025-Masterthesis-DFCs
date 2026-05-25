@@ -344,7 +344,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("field-pig-flux.pdf")
+output_name_figure = Path("graph-2026-05-25-field-pig-flux.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
@@ -451,10 +451,10 @@ DPI = 300
 # fonts-types and size and tick control, needs to be defined before all plots
 plt.rcParams.update({
     'font.family': 'Times New Roman',
-    'font.size': 12,
-    'axes.labelsize': 14,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
+    'font.size': 16,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
     'ytick.direction': 'in',
     'xtick.direction': 'in',
     'axes.linewidth': 1})
@@ -522,8 +522,8 @@ if Create_plots == True:
 
     # rename treatments for plotting
     # Define a fixed color mapping for treatments
-    treatment_colors = {'AA': 'blue','RAW': 'orange','H2SO4': 'green', 'OSI': 'red', 'TH':'purple'}
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry (hand applied)','H2SO4': 'H₂SO₄', 'TH': 'Trailing Hose', 'OSI': 'Open Slot Injection'}
+    treatment_colors = {'AA': 'blue','RAW': 'darkorange','H2SO4': 'darkgreen', 'OSI': 'red', 'TH':'purple'}
+    treatment_names = {'AA': 'AA','RAW': 'None','H2SO4': 'SA', 'TH': 'TH', 'OSI': 'OSI'}
     
     # determine unique treatments in merged df
     for treatment in sorted(merged_df['TREATMENT'].unique()):

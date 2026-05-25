@@ -47,14 +47,14 @@ def remove_nan_rows(raw_df:pd.DataFrame) -> pd.DataFrame:
 
 ##### Input folders #####
 # Model-data #
-model_path= Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\ALFAM2\Alfam2-model-results\2026-05-06-alfam2_Cattle-ts.csv")
+model_path= Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\ALFAM2\Alfam2-model-results\2026-05-21-alfam2_Cattle-th.csv")
 
 # experimental data, plotlvl # 
 expt_path= Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration\2026-03-16-field-cattle-integrated-valve-lvl-v323.csv")
 
 ##### Output folders ####
 output_folder_figures = Path(r"C:\Users\mikae\Desktop")
-output_name_figure = Path("model-expt24h.jpeg")
+output_name_figure = Path("model-versus-ekpt.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 
@@ -108,10 +108,10 @@ DPI = 300
 # fonts-types and size and tick control, needs to be defined before all plots
 plt.rcParams.update({
     'font.family': 'Times New Roman',
-    'font.size': 12,
-    'axes.labelsize': 12,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
+    'font.size': 18,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
     'ytick.direction': 'in',
     'xtick.direction': 'in',
     'axes.linewidth': 1})
@@ -145,7 +145,7 @@ plt.xlim(0, 160)
 plt.ylim(0, 0.45)
 
 plt.xlabel("time since application [h]")
-plt.ylabel("Flux [kgN / ha h]")
+plt.ylabel("Flux [kgTAN ha⁻¹ h⁻¹]")
 
 plt.legend()
 plt.tight_layout()
@@ -159,8 +159,8 @@ markers = ['o', 'v', 's']
 # define treatment colors
 treatment_colors = {
     'AA': 'blue',
-    'H2SO4':'orange',
-    'RAW': 'black'
+    'H2SO4':'darkgreen',
+    'RAW': 'orangered'
 }
 
 treatments = expt_df['TREATMENT'].unique()
@@ -181,15 +181,15 @@ for t_idx, treatment in enumerate(treatments):
 
 
 
-plt.xlim(0, 24)
+plt.xlim(0, 160)
 plt.ylim(0, 0.45)
 
 plt.xlabel("time since application [h]")
-plt.ylabel("Flux [kgN / ha h]")
+plt.ylabel("Flux [kgTAN ha⁻¹ h⁻¹]")
 
-plt.legend()
+plt.legend(frameon=False)
 plt.tight_layout()
-plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+#plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 

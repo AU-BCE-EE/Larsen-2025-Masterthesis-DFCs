@@ -120,7 +120,7 @@ def background_correction(filtered_df:pd.DataFrame, power:int = 2) -> pd.DataFra
 
     return treatment_df
 
-def determine_smallest_timerange_valve(filtered_df: pd.DataFrame, pts_per_h = 2) -> np.ndarray:
+def determine_interpolation_timerange(filtered_df: pd.DataFrame, pts_per_h = 2, start_mode: str = "shared") -> np.ndarray:
     '''
     Determines a common time-interval for all valves for the downstream interpolation. Time of aplication used.
     1) Identifies the valve with the latest start
@@ -145,19 +145,25 @@ def determine_smallest_timerange_valve(filtered_df: pd.DataFrame, pts_per_h = 2)
         start_times[valve_id] = valve_data['TIME_SINCE_APP[h]'].min()
         end_times[valve_id] = valve_data['TIME_SINCE_APP[h]'].max()
 
-    # identify latest start and earliest end (shared time domian), and determine which valve contians the latest start
-    latest_start_valve = max(start_times, key=start_times.get)  # type: ignore the dict always contains floats,
-    
-    earliest_end = min(end_times.values())
-    latest_start_time = start_times[latest_start_valve]
+    if start_mode == "shared": # only interpolation
+        start_time = max(start_times.values())
 
-    earliest_end_valve = min(end_times, key=end_times.get) # type: ignore
-    latest_start_valve = max(start_times, key=start_times.get)  # type: ignore the dict always contains floats,
+    elif start_mode == "zero": # extrapolation to time 0
+        start_time = 0.0
+
+    elif start_mode == "earliest": # extrapolation to the earliest start (if data is lost)
+        start_time = min(start_times.values())
+
+    
+    end_time = min(end_times.values()) # setup to always cut off the tail
+    #earliest_end_valve = min(end_times, key=end_times.get) # type: ignore
 
     interp_step_size = 1 / pts_per_h # points per hour
-    interp_times = np.arange(latest_start_time, earliest_end, interp_step_size)
+    interp_times = np.arange(start_time, end_time, interp_step_size)
 
-    print(f"Time window: {latest_start_time:.3f} to {earliest_end:.3f}, the lastest start-valve is {latest_start_valve}")
+    #  Determine which valve contians the latest start, for the print
+    latest_start_valve = max(start_times, key=start_times.get)  # type: ignore the dict always contains floats,
+    print(f"Time window: {start_time:.3f} to {end_time:.3f}, the lastest start-valve is {latest_start_valve}")
 
     return interp_times
 
@@ -192,7 +198,7 @@ def interpolation_linear(treatment_df: pd.DataFrame, shortest_time_range_values:
         treatment = valve_df['TREATMENT'].iloc[0]
         
         # actual interpolation
-        F_interp = np.interp(shortest_time_range_values, t_raw_app, F_BC)
+        F_interp = np.interp(shortest_time_range_values, t_raw_app, F_BC, left=F_BC[0], right=0.0)
 
         # recreate DATETIME and global time for interpolated values   
         experiment_start = pd.to_datetime(valve_df['DATE_TIME'].iloc[0]) - pd.to_timedelta(valve_df['TIME_NORM_GLOBAL[h]'].iloc[0], unit='h')
@@ -341,7 +347,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("interpolation-test.pdf")
+output_name_figure = Path("extrapolation-test.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 
@@ -368,12 +374,12 @@ raw_df_small = raw_df.drop(columns=['C[PPB]','C_STDEV[PPB]', 'P_DROP[pa]', 'P_AT
 #print(raw_df_small.head(24))
 
 raw_df_new_time = time_normalization_application(raw_df_small, Aplication_time_dict)
-print(raw_df_new_time.head(24))
+#print(raw_df_new_time.head(24))
 
 filtered_df = remove_nan_rows(raw_df_new_time)
-print(filtered_df.head(50))
+#print(filtered_df.head(50))
 
-times = determine_smallest_timerange_valve(filtered_df, pts_per_h = 2)
+times = determine_interpolation_timerange(filtered_df, pts_per_h = 2, start_mode = "zero")
 #print(times)
 
 treatment_df = background_correction(filtered_df, power=2) 
@@ -386,38 +392,37 @@ integrated_df = integration(interp_df)
 #print(integrated_df)
 
 TAN_df = TAN_normalization(integrated_df, TAN_dict)
-#print(TAN_df)
 
 merged_df = merge_triplicates(TAN_df)
 #print(merged_df)
 
 ### Rename collums before saving as csv-files
 # Treatment level
-#renamed_df = merged_df.rename(columns={treatment df
-#'F_INTERP_MEAN' : 'flux [mg/m2 h]',
-#'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
-#'%REL_F_MEAN': 'relative_flux',
-#'%REL_F_STD': 'relative_flux_std_dev',
-#'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
-#'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
-#'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
-#'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
-#'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
-#print(renamed_df)
+renamed_df = merged_df.rename(columns={
+'F_INTERP_MEAN' : 'flux [mg/m2 h]',
+'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
+'%REL_F_MEAN': 'relative_flux',
+'%REL_F_STD': 'relative_flux_std_dev',
+'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
+'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
+'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
+'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
+'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
+print(renamed_df)
 
 # valve level
-renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
-'F_INTERP' : 'flux [mg/m2 h]',
-'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
-'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-'%REL_F': '%relative_flux',
-'ACUM_EMIS':'accumulated_emission [mg/m2]',
-'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'
-})
+#renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
+#'F_INTERP' : 'flux [mg/m2 h]',
+#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
+#'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+#'%REL_F': '%relative_flux',
+#'ACUM_EMIS':'accumulated_emission [mg/m2]',
+#'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'
+#})
 #print(renamed_df)
 
-#save_df_as_csv(renamed_df, output_folder, '2026-04-01-field-cattle-integrated-valve-lvl-v323-highRes', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-05-22-field-cattle-extrap-treatment-lvl', overwrite = True)
 
 ##### TEST and stats #####
 ### Relative and abosolute reductions ###
@@ -444,10 +449,10 @@ DPI = 300
 # fonts-types and size and tick control, needs to be defined before all plots
 plt.rcParams.update({
     'font.family': 'Times New Roman',
-    'font.size': 12,
-    'axes.labelsize': 12,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
+    'font.size': 16,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
     'ytick.direction': 'in',
     'xtick.direction': 'in',
     'axes.linewidth': 1})
@@ -455,8 +460,8 @@ plt.rcParams.update({
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
-    interptest_valveid = 17
-    print(f'plotted valve is {interptest_valveid}')
+    #interptest_valveid = 17
+    print(f'plotted valve for interpolation test is {interptest_valveid}')
 
     # extract raw data
     raw_valve_df =  treatment_df[treatment_df['VALVE_ID'] == interptest_valveid]
@@ -482,7 +487,7 @@ if Create_plots == True:
 
     ##### Visual test of merging function #####
     mtest_treatment = random.choice(treatments)
-    mtest_treatment = 'RAW'
+    #mtest_treatment = 'RAW'
 
     # extract treatment-relevant data, merged and original
     original_treatment_df = treatment_df[treatment_df['TREATMENT'] == mtest_treatment]
@@ -516,8 +521,8 @@ if Create_plots == True:
 
     ##### Plot of relative flux for all merged treatments #####
     plt.figure(figsize=(FIGSIZE)) # predefine the figure size
-    treatment_colors = {'AA': 'blue','RAW': 'orange','H2SO4': 'green'} # treatment colors
-    treatment_names = {'AA': 'Acetic acid','RAW': 'Unacidified slurry','H2SO4': 'H₂SO₄'} # treatment names
+    treatment_colors = {'AA': 'blue','RAW': 'darkorange','H2SO4': 'darkgreen'} # treatment colors
+    treatment_names = {'AA': 'AA','RAW': 'None','H2SO4': 'SA'} # treatment names
     
     # determine unique treatments in merged df
     for treatment in sorted(merged_df['TREATMENT'].unique()):
@@ -544,7 +549,7 @@ if Create_plots == True:
 
     # save/show
     plt.tight_layout()
-    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 

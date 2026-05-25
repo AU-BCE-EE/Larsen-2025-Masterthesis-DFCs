@@ -91,7 +91,7 @@ dat_all <- do.call(rbind, lapply(1:nrow(plot_scens), function(i) {
     man.dm  = plot_scens$man.dm[i],
     man.ph  = plot_scens$man.ph[i],
     
-    app.mthd = "ts",
+    app.mthd = "th",
     rain.cum = 0,
     app.rate.ni = 29
   )
@@ -144,7 +144,7 @@ head(result_df)# check the headers of combined df
 
 ### Export results as csv-file ###
 folder <- "C:/Users/mikae/Desktop/Github - speciale/Larsen-2025-Masterthesis-DFCs/output/ALFAM2/Alfam2-model-results"
-#write.csv(result_df, file.path(folder, "2026-05-05-alfam2_Cattle-ts.csv"), row.names = FALSE)
+write.csv(result_df, file.path(folder, "2026-05-21-alfam2_Cattle-th.csv"), row.names = FALSE)
 
 ### Documentation and clearing variables ###
 #packageVersion("ALFAM2") # call of the version, for documentation
