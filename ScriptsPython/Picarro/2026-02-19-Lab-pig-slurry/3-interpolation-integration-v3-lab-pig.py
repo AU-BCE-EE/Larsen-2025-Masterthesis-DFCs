@@ -563,7 +563,7 @@ if Create_plots == True:
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
     plt.ylim(-0.05 , 4.5)
     plt.legend(frameon=False)
-    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
 
 

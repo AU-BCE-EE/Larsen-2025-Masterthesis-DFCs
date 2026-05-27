@@ -595,7 +595,7 @@ if Create_plots == True:
     plt.ylim(0, 4.2)
     plt.legend(frameon=False)
     plt.tight_layout()
-    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 
