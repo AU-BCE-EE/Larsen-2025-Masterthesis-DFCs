@@ -15,9 +15,9 @@ Thesis paper will be presented here when made avalable through the university li
 # Description of directories and files
 ## `Field-trails`
 Overviews, data from tests analytical test and calculations for the field-experiments.
+
 * `cats.csv` age and weight of the experimental subjects
 * `breath.csv` breath scores from the experiment
-
 
 ### `2025-10-14-intial-lab-titration`
 Files specifically relavant to the inital lab titration
@@ -50,25 +50,25 @@ Background-corrected flux data, and accumulated emissions
 Files related to the ALFAM2 Model
 
 #### `ALFAM2-data-for-template`
-Data from field experiment in this work prepared for uploading into the ALFAM2 database
+Data from field experiments in this work, prepared in the same style as used in the ALFAM2 database
 
 #### `ALFAM2-model-resuts`
-Results from the internal modelling applying the alfam2 function within this proect
+Results from the project modelling applying the alfam2 function
 
 ## `ScriptsPython`
-Python scripts used in this project, used for CRDS data treatment and for creating repport plots
+Python scripts used in this project, used for CRDS data treatment and for creating report plots
 
 ### `2025-10-14-field-inital-lab-titration-plots`
 files used for creating plots for the initial titration
 
-### `AlFAM2-model-exerimentla-comparision`
+### `AlFAM2-model-exerimental-comparision`
 Files for comparing modelled and experimental data in a plot
 
 ### `ALFAM2-prepping-the-template`
-Files for converting treated data in this work into the same structure as applied in the ALFRAM2 database (for later uploading)
+Files for converting treated data in this work into the same structure as used in the ALFRAM2 database (for later uploading)
 
 ### `Picarro`
-Files for data treatment of the CRDS(Picarro)-data, same script-structure is setup to handle each respective experiment, using the 1-extraction, 2-flux-conversion, 3-integration format
+Files for data treatment of the CRDS(Picarro)-data, same script-structure is setup to handle each respective experiment, using the 1-extraction, 2-flux-conversion, 3-integration output-format
 
 #### `2025-10-28-Field-trail-cattle-slurry`
 Files for treating the field experiment applying cattle slurry
@@ -95,7 +95,7 @@ Former versions of these scripts, for example when the temperature was switched
 Inital scripts setup using former experimental data from the same setup provided by J. Pedersen
 
 ## `ScriptsR`
-R scripts used in this project, used for ALFAM2 modelling
+R scripts and related files used in this project for alfam2 modelling
 
 ## `SOPS's`
 Collection of used standard operating procedures
