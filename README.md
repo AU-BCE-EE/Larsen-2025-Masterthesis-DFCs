@@ -15,15 +15,17 @@ Thesis paper will be presented here when made avalable through the university li
 # Description of directories and files
 ## `Field-trails`
 Overviews, data from tests analytical test and calculations for the field-experiments.
-
 * `cats.csv` age and weight of the experimental subjects
 * `breath.csv` breath scores from the experiment
+
+
+### `2025-10-14-intial-lab-titration`
 
 ## `Lab-Trails/`
 Overviews, data from analytical tests and calculations for the lab-experiments
 
--` Lab-Trails/soil-sample-Ids`
-each soil sample has a distint number, denoted here
+### `soil-sample-Ids`
+each soil sample has a distint number, denoted in these files
 
 ## `Output`
 csv-output of CRDS data treatment and modelling.
