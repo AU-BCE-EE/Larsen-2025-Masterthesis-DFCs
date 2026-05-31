@@ -20,8 +20,15 @@ Overviews, data from tests analytical test and calculations for the field-experi
 
 
 ### `2025-10-14-intial-lab-titration`
+Files specifically relavant to the inital lab titration
 
-## `Lab-Trails/`
+### `2025-10-28-field-cattle-slurry`
+Files specifically relavant to the field experiment applying cattle slurry
+
+### `2025-11-05-field-pig-slurry`
+Files specifically relavant to the field experiment applying pig slurry
+
+## `Lab-Trails`
 Overviews, data from analytical tests and calculations for the lab-experiments
 
 ### `soil-sample-Ids`
@@ -30,8 +37,62 @@ each soil sample has a distint number, denoted in these files
 ## `Output`
 csv-output of CRDS data treatment and modelling.
 
+### `1-inital-extraction`
+Stable PPB-data extracted from raw-CRDS dat-files
+
+### `2-Flux-conversion`
+Original PPB-data converted into flux, outputted here before major data treatment decisions
+
+### `3-integration`
+Background-corrected flux data, and accumulated emissions
+
+### `ALFAM2`
+Files related to the ALFAM2 Model
+
+#### `ALFAM2-data-for-template`
+Data from field experiment in this work prepared for uploading into the ALFAM2 database
+
+#### `ALFAM2-model-resuts`
+Results from the internal modelling applying the alfam2 function within this proect
+
 ## `ScriptsPython`
 Python scripts used in this project, used for CRDS data treatment and for creating repport plots
+
+### `2025-10-14-field-inital-lab-titration-plots`
+files used for creating plots for the initial titration
+
+### `AlFAM2-model-exerimentla-comparision`
+Files for comparing modelled and experimental data in a plot
+
+### `ALFAM2-prepping-the-template`
+Files for converting treated data in this work into the same structure as applied in the ALFRAM2 database (for later uploading)
+
+### `Picarro`
+Files for data treatment of the CRDS(Picarro)-data, same script-structure is setup to handle each respective experiment, using the 1-extraction, 2-flux-conversion, 3-integration format
+
+#### `2025-10-28-Field-trail-cattle-slurry`
+Files for treating the field experiment applying cattle slurry
+
+#### `2025-10-28-Field-trail-pig-slurry`
+Files for treating the field experiment applying pig slurry
+
+#### `2026-01-06-Lab-cattle-slurry`
+Files for 1st lab acidification experiment applying cattle slurry - not presented in thesis - one of the slurries were potentially switched due to human error
+
+#### `2026-04-19-Lab-density-test`
+Files experiment testing soil homogeneity and density of packing
+
+#### `2026-01-06-Lab-pig-slurry`
+Files for lab acidification experiment applying pig slurry
+
+#### `2026-01-29-Lab-cattle-retrail`
+Files for 1st lab acidification experiment applying cattle slurry - presented in thesis
+
+#### `picarro legacy`
+Former versions of these scripts, for example when the temperature was switched
+
+##### `Picarro-non-thesis-data`
+Inital scripts setup using former experimental data from the same setup provided by J. Pedersen
 
 ## `ScriptsR`
 R scripts used in this project, used for ALFAM2 modelling
