@@ -345,7 +345,7 @@ input_folder = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester -
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output-picarro\1-inital-extraction")
 output_file_name = Path('2026-03-12-cattle-field-extracted-v3')
 
-combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = False)
+combined_df = combine_folder_txts_into_single_df(input_folder, cycle_min=7, visualization = True)
 combined_df = time_normalization_global(combined_df)
 
 combined_df = remove_data(combined_df, faulty_valve_removal_dict, drop_rows=False)
@@ -353,7 +353,7 @@ combined_df = remove_data(combined_df, end_of_experiment_removal_dict, drop_rows
 #combined_df = remove_data(combined_df, dummy_valve_removal_dict, drop_rows=True)
 
 combined_df = add_method(combined_df, treatment_method_dict)
-print(combined_df.head(50))
+#print(combined_df.head(50))
 
 #save_df_as_csv(combined_df, output_folder, output_file_name, overwrite=False)
 

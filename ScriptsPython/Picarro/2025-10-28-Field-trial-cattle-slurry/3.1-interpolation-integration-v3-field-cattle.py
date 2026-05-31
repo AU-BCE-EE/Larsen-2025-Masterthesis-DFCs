@@ -341,7 +341,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("graph-2026-05-25-field-cattle-flux.pdf")
+output_name_figure = Path("graph-2026-05-29-interp-test.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 
@@ -450,12 +450,15 @@ plt.rcParams.update({
     'ytick.labelsize': 14,
     'ytick.direction': 'in',
     'xtick.direction': 'in',
-    'axes.linewidth': 1})
+    'axes.linewidth': 1,
+    'mathtext.fontset': 'custom',
+    'mathtext.rm': 'Times New Roman',
+})
 
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
-    interptest_valveid = 17
+    interptest_valveid = 8
     print(f'plotted valve is {interptest_valveid}')
 
     # extract raw data
@@ -469,14 +472,14 @@ if Create_plots == True:
     F_interp = interp_valve_df['F_INTERP'].to_numpy()
 
     # modyfying plt
-    plt.plot(t_raw, F, 'o', label='Raw Data', color='Black', linewidth = 2, markersize = 3)
+    plt.plot(t_raw, F, 'o', label='Raw Data', color='Black', linewidth = 1, markersize = 3.5)
     plt.plot(t_interp, F_interp, 'x-', label='Interpolated Data', color='black', linewidth= 1 , markersize = 3)
     plt.xlabel('Time Since Application [h]')
-    plt.ylabel('Flux [mg/h m2]')
+    plt.ylabel('Flux [mg h$^{-1}$ m$^{-2}$]')
     plt.legend(frameon=False)
     #plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
     
-    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -544,9 +547,9 @@ if Create_plots == True:
 
     # save/show
     plt.tight_layout()
-    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    #plt.show()
+    #plt.close()
 
      
  

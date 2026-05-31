@@ -1,5 +1,7 @@
-# template-data
+# Repository Overview
 Data and files concerning NH3 emission mitigation from manure meassured using dynamic flux chambers (DFCs)
+And modelling of the related to the same experiment
+SOP's and general calculations related to the project has also been uploaded
 Related to the maintainers master thesis under Johanna Pedersen
 Project time is 2025-08-25 to 2026-06-03
 
@@ -8,20 +10,26 @@ Mikael Loevig Larsen
 202107228@post.au.dk
 
 # References
-(Add any papers or other references here.
-Include links like this: `[display text](https://www.theurl.com)` or just `<https://www.theurl.com>`.
-Omit the backtick quotes of course: [display text](https://www.theurl.com) or just <https://www.theurl.com>.)
+Thesis paper will be presented here when made avalable through the university library.
 
 # Description of directories and files
-## `data`
-(Directory contains data files as comma-separated text files.
-Use CSV files if at all possible
+## `Field-trails`
+Overviews, data from tests, calculations for the field-experiments.
 
 * `cats.csv` age and weight of the experimental subjects
-* `breath.csv` breath scores from the experiment)
+* `breath.csv` breath scores from the experiment
 
-## `others`
-(If you include other directories, describe them like this.)
+## `Lab-Trails`
+Overviews, data from tests, calculations for the field-experiments
+
+## `Output`
+csv-output of CRDS data treatment and modelling.
+
+## `ScriptsPython`
+Python scripts used in this project, for CRDS data treatment and for creating repport plots
+
+## `SOPS's`
+Collection of used standard operating procedures
 
 # Variables
 (Variables should be described here or in a separate file.
@@ -29,7 +37,3 @@ It may be necessary to have separate lists for the different data files.
 
 * `cat_key` unique integer key for each experimental subject
 * `breath_score` "breath foulness" index as median of three panelists)
-
-# License
-You do not need a license section in the README.md file (you can remove this section) but you should look through the available GitHub licenses and pick a suitable one to include in a LICENSE file in your repo.
-CC-BY-4.0 is a good choice for data (some details here: <https://choosealicense.com/licenses/cc-by-4.0/> and <https://choosealicense.com/non-software/>).
