@@ -40,7 +40,7 @@ csv-output of CRDS data treatment and modelling.
 Stable PPB-data extracted from raw-CRDS dat-files.
 
 ### `2-Flux-conversion`
-Original PPB-data converted into flux, outputted here before major data treatment decisions.
+Stable PPB-data converted into flux, outputted here before major data treatment decisions.
 
 ### `3-integration`
 Background-corrected (inverse ditance weighting) & linearly interpolated flux data, and accumulated emissions.
