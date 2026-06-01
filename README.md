@@ -13,9 +13,8 @@ Thesis paper will be presented here when made avalable through the university li
 
 # Description of directories and files
 ## `Field-trails`
-Overviews, data from tests analytical test and calculations for the field-experiments.
+Overviews, data from tests analytical test and calculations for the field-experiments. Includes overview of treatments for each plot, weather, soil(pH, BD, water content), slurry(pH, TAN, DM, acid dosage) and flow-data
 
-* `cats.csv` age and weight of the experimental subjects
 * `breath.csv` breath scores from the experiment
 
 ### `2025-10-14-intial-lab-titration`
@@ -28,7 +27,7 @@ Files specifically relavant to the field experiment applying cattle slurry
 Files specifically relavant to the field experiment applying pig slurry
 
 ## `Lab-Trails`
-Overviews, data from analytical tests and calculations for the lab-experiments
+Overviews, data from analytical tests and calculations for the lab-experiments. Includes overview of treatment for each sample, slurry(pH, TAN, DM, acid dosage) soil(BD, water content) and flow-data 
 
 ### `soil-sample-Ids`
 each soil sample has a distint number, denoted in these files
@@ -97,8 +96,4 @@ R scripts and related files used in this project for alfam2 modelling.
 Collection of used standard operating procedures.
 
 # Variables
-(Variables should be described here or in a separate file.
-It may be necessary to have separate lists for the different data files.
-
-* `cat_key` unique integer key for each experimental subject
-* `breath_score` "breath foulness" index as median of three panelists)
+* `breath_score` "breath foulness" index as median of three panelists
