@@ -1,9 +1,8 @@
 # Repository Overview
-Data and files concerning NH3 emission mitigation via acidification during slurry applicaton, meassured using dynamic flux chambers (DFCs) connected with cavity ring-down spectroscopy (CRDS)
-And modelling of the related to the same experiment
-SOP's and general calculations related to the project has also been uploaded
-Related to the maintainers master thesis under Johanna Pedersen
-Project time is 2025-08-25 to 2026-06-03
+Data and files concerning NH3 emission mitigation via acidification during slurry applicaton, meassured using dynamic flux chambers (DFCs) connected with cavity ring-down spectroscopy (CRDS).
+And modelling of the related to the same experiment.
+SOP's and general calculations related to the project has also been uploaded.
+Related to the maintainers master thesis under Johanna Pedersen. Project time is/was 2025-08-25 to 2026-06-03.
 
 # Maintainer
 Mikael Loevig Larsen
