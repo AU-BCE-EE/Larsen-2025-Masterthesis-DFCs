@@ -46,13 +46,10 @@ Original PPB-data converted into flux, outputted here before major data treatmen
 ### `3-integration`
 Background-corrected flux data, and accumulated emissions
 
-### `ALFAM2`
-Files related to the ALFAM2 Model
-
-#### `ALFAM2-data-for-template`
+### `ALFAM2-data-for-template`
 Data from field experiments in this work, prepared in the same style as used in the ALFAM2 database
 
-#### `ALFAM2-model-resuts`
+### `ALFAM2-model-resuts`
 Results from the project modelling applying the alfam2 function
 
 ## `ScriptsPython`
