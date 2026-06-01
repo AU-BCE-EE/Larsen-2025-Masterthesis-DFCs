@@ -369,7 +369,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("density-expt-flux-early-rates.pdf")
+#output_name_figure = Path("2026-06-01-density-expt-flux-late-rates.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
@@ -537,9 +537,9 @@ if Create_plots == True:
     plt.fill_between(t_merged,F_merged - F_merged_err, F_merged + F_merged_err, color='gray', alpha=0.3, label='± Std Dev')
 
     plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 24)
+    plt.xlim(0, 140)
     plt.ylabel('Flux [mg/ m2 h]')
-    #plt.ylim(0, 30)
+    #plt.ylim(0, 24)
     plt.title(f'Comparison of flux for Treatment {mtest_treatment}')
     plt.legend()
     plt.show()
@@ -547,7 +547,7 @@ if Create_plots == True:
 
     ##### Plot of relative flux for all merged treatments #####
     # rename treatments for plotting
-    treatment_names = {'F': 'Cattle None F','HD': 'Cattle None PHD','HD_STD': 'Std PHD', 'LD': 'Cattle None, PLD'}
+    treatment_names = {'F': 'Cattle None F','HD': 'Cattle None PHD','HD_STD': 'AC std PHD', 'LD': 'Cattle None, PLD'}
 
     
     treatment_colors = {
@@ -590,9 +590,9 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 24)
+    plt.xlim(0, 140)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
-    plt.ylim(0, 4.2)
+    plt.ylim(0, 0.42)
     plt.legend(frameon=False)
     plt.tight_layout()
     #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')

@@ -21,13 +21,13 @@ def load_data(input_folder,input_file_name):
 
 ##### defining constants #####
 # folder and filename
-input_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-14-inital-lab-acidification") # copy the filepath
+input_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\Field-trails\2025-10-14-inital-lab-titration") # copy the filepath
 input_file_name_pig = '2025-10-14-titration-pig-2nd.csv' # copy the name as a string, don't forget .csv
 input_file_name_cattle = '2025-11-11-Titration-cattle-3rd.csv'
 
 ### Output folder ###
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("inital-acidification.pdf")
+#output_name_figure = Path("graph-2026-06-01-inital-acidification.pdf")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### function-calls #####
@@ -68,10 +68,10 @@ DPI = 300
 
 plt.rcParams.update({
     'font.family': 'Times New Roman',
-    'font.size': 12,
-    'axes.labelsize': 12,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
+    'font.size': 18,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
     'ytick.direction': 'in',
     'xtick.direction': 'in',
     'axes.linewidth': 1})
@@ -80,12 +80,12 @@ plt.rcParams.update({
 plt.figure(figsize=FIGSIZE) 
 
 ### catte 
-plt.errorbar(xs3_catte, pH_cattle_AA, yerr=pH_stdev_cattle_AA, fmt='o', color="#14cae2", label='Cattle AA', capsize=1)
-plt.errorbar(xs1_cattle, pH_cattle_H2SO4, yerr=pH_stdev_cattle_H2SO4, fmt='o', color="#3b1de7", label='Cattle H₂SO₄', capsize=1)
+plt.errorbar(xs3_catte, pH_cattle_AA, yerr=pH_stdev_cattle_AA, fmt='o', color="steelblue", label='Cattle AA', capsize=1)
+plt.errorbar(xs1_cattle, pH_cattle_H2SO4, yerr=pH_stdev_cattle_H2SO4, fmt='o', color="lightsteelblue", label='Cattle SA', capsize=1)
 # Pig
-plt.errorbar(xs3_pig, pH_pig_AA, yerr = pH_stdev_pig_AA, fmt='o',color="#0DEB50DC", label='Pig AA', capsize = 1)
-plt.errorbar(xs1_pig, pH_pig_H2SO4, yerr = pH_stdev_pig_H2SO4, fmt='o',color="#73fa0570", label='Pig H₂SO₄', capsize = 1)
-plt.xlabel('m(acid) / m(slurry) [kg / ton]')
+plt.errorbar(xs3_pig, pH_pig_AA, yerr = pH_stdev_pig_AA, fmt='o',color="darkred", label='Pig AA', capsize = 1)
+plt.errorbar(xs1_pig, pH_pig_H2SO4, yerr = pH_stdev_pig_H2SO4, fmt='o',color="salmon", label='Pig SA', capsize = 1)
+plt.xlabel('Acid dose kg tonne⁻¹')
 plt.ylabel('pH')
 
 # legend
@@ -105,7 +105,7 @@ plt.ylim(0, 7.5)
 
 # save/show
 plt.tight_layout()
-plt.savefig(output_path_figures, dpi=DPI, bbox_inches='tight')
+#plt.savefig(output_path_figures, dpi=DPI, bbox_inches='tight')
 plt.show()
 plt.close()
 
