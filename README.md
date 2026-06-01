@@ -44,7 +44,7 @@ Stable PPB-data extracted from raw-CRDS dat-files
 Original PPB-data converted into flux, outputted here before major data treatment decisions
 
 ### `3-integration`
-Background-corrected flux data, and accumulated emissions
+Background-corrected (Inverse ditance weighting) & linearly interpolated flux data flux data and accumulated emissions
 
 ### `ALFAM2-data-for-template`
 Data from field experiments in this work, prepared in the same style as used in the ALFAM2 database
