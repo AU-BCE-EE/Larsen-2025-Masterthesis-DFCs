@@ -1,5 +1,5 @@
 # Repository Overview
-Data and files concerning NH3 emission mitigation from manure meassured using dynamic flux chambers (DFCs)
+Data and files concerning NH3 emission mitigation via acidification during slurry applicaton, meassured using dynamic flux chambers (DFCs) connected with cavity ring-down spectroscopy (CRDS)
 And modelling of the related to the same experiment
 SOP's and general calculations related to the project has also been uploaded
 Related to the maintainers master thesis under Johanna Pedersen
