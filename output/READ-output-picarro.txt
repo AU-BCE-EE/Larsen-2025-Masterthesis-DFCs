@@ -1,3 +1,6 @@
+##### Naming convention #####
+Example name: y-m-d-DESCRIPTION-v112 are produced from 1st versions of the sript1 and script2, and 2nd version of script3
+
 ##### Script1: Inital data extraction #####
     Handles extraction of PPB measurements from raw Picarro files
 
@@ -8,7 +11,7 @@
 
 
 # v3:
-    Changed the midnigt expeption - filtering off points based on cyckle-time doesn't work around midnigt as a new file created at 00:00 artificially shortening the duration, now use cycles down to 10 s
+    Changed the midnigt expeption - filtering off points based on cycle-time doesn't work around midnigt as a new file created at 00:00 artificially shortening the duration, now use cycles down to 10 s
         2026-03-12 Pig field: OSI had been switched around (as the original field plan was not completely followed), corrected this
 
 
@@ -17,7 +20,7 @@
 
 # v2: 
     changed the used temperature sensor, previously used temperature 10 cm bellow ground, now use 20 cm above
-    2026-03-12 Cattle lab: Had used flows from pig experiment by mistacke, fixed this
+    2026-03-12 Cattle lab: Had used flows from pig experiment by mistake, fixed this
 
 
 ##### Script 3 interpolation and integration #####
@@ -29,9 +32,6 @@
     changed logic for defining shared time domain, now uses latest start and earliest end instead of comparing distances
     changed TAN analysis method from tveskaeg to spectral kit - same as used in lab experiments
 
-
-##### Naming convention #####
-Example name: y-m-d-DESCRIPTION-v112 are produced from 1st versions of the sript1 and script2, and 2nd version of script3
 
          
 
