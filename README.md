@@ -11,29 +11,39 @@ Mikael Loevig Larsen
 # References
 Thesis paper will be presented here when made avalable through the university library.
 
+* `General Calculations` Word-file includes quick "by-hand"-calculations, - check of coding results, derrivations of theoretical equations, and the scaling factor calculation
+* `Reductions` Excel-file caclulations for relative and absolute reductions for all experiments - also includes and overview although this doen't contain the later experiment (felt less relevant in the writing process)
+
+
 # Description of directories and files
 ## `Field-trails`
 Overviews, data from tests analytical test and calculations for the field-experiments. Includes overview of treatments for each plot, weather, soil(pH, BD, water content), slurry(pH, TAN, DM, acid dosage) and flow-data
 
-* `breath.csv` breath scores from the experiment
+* `2025-12.05-field-picarro-callibration` Excel-file, results and data from the Picarro(CRDS) callibration - created by F. Pierre and shared
+* `FoulumVejr` 2 CSV-files containing weather data for the respective field experiments
+* `Slurry ` Excelfile containing "raw" data for the acidifications (masses of slurry and acids, pH before and after)
+* `SlurryData ` Csv-file, contains analytical results for slurry at application for the field experiments (TAN, VFA, pH) - not all were used for this project
+* `soil-data ` Excel-file, contains analytical results (water content, BD) and raw data (masses before/after drying) for the soils at application for the field experiments
+* `TAN-concentration-and-application-rate ` Excelfile - calculation of the applied TAN [kg ha⁻¹]
+* `weather-data-guide ` PNG - description of the different collumns in the wather-files
 
 ### `2025-10-14-intial-lab-titration`
-Files specifically relavant to the inital lab titration
+Files specifically relavant to the inital lab titration. Contains related pictures, and pH meassured per applied volume - and the conversion of this volume into mass.
 
 ### `2025-10-28-field-cattle-slurry`
-Files specifically relavant to the field experiment applying cattle slurry
+Files specifically relavant to the field experiment applying cattle slurry. Includes and overview of the DFC and thier respective flows, and the applied treatments.
 
 ### `2025-11-05-field-pig-slurry`
-Files specifically relavant to the field experiment applying pig slurry
+Files specifically relavant to the field experiment applying cattle slurry. Includes and overview of the DFC and thier respective flows, and the applied treatments.
 
 ## `Lab-Trails`
-Overviews, data from analytical tests and calculations for the lab-experiments. Includes overview of treatment for each sample, slurry(pH, TAN, DM, acid dosage) soil(BD, water content) and flow-data 
+Overviews, data from analytical tests and calculations for the lab-experiments. Includes overview of treatment for each sample, slurry(pH, TAN, DM, acid dosage) soil(BD, water content) and flow-data, and calculation of the application rates.
 
 ### `soil-sample-Ids`
-each soil sample has a distint number, denoted in these files
+each soil sample has a distint number, denoted in these files in the case they had been switched.
 
 ## `Output`
-csv-output of CRDS data treatment and modelling.
+csv-output of CRDS data treatment and modelling. There is also a txt-file which explains changes between script version
 
 ### `1-inital-extraction`
 Stable PPB-data extracted from raw-CRDS dat-files.
@@ -60,7 +70,7 @@ files used for creating plots for the initial titration.
 Files for comparing modelled and experimental data in a plot.
 
 ### `ALFAM2-prepping-the-template`
-Files for converting treated data in this work into the same structure as used in the ALFRAM2 database (for later uploading).
+Scripts for converting treated data in this work into the same structure as used in the ALFRAM2 database (for later uploading).
 
 ### `Picarro`
 Files for data treatment of the CRDS(Picarro)-data, same script-structure is setup to handle each respective experiment, using the 1-extraction, 2-flux-conversion, 3-integration output-format.
@@ -69,7 +79,7 @@ Files for data treatment of the CRDS(Picarro)-data, same script-structure is set
 Files for treating the field experiment applying cattle slurry.
 
 #### `2025-10-28-Field-trail-pig-slurry`
-Files for treating the field experiment applying pig slurry.
+Files for treating the field experiment applying pig slurry. This one also contains an addtional script compared to the other where constant extrapolation was applied
 
 #### `2026-01-06-Lab-cattle-slurry`
 Files for 1st lab acidification experiment applying cattle slurry - not presented in thesis, one of the slurries were potentially switched due to human error.
@@ -84,16 +94,18 @@ Files for lab acidification experiment applying pig slurry.
 Files for 1st lab acidification experiment applying cattle slurry - presented in thesis.
 
 #### `picarro legacy`
-Former versions of these scripts, for example when the temperature was switched.
+Former versions of these scripts, for example when the temperature was switched, as a sensor bellow gorund was mistakenly used initally. A txt-file in the output denotes changes in the applied versions
 
 ##### `Picarro-non-thesis-data`
 Inital scripts setup using former experimental data from the same setup provided by J. Pedersen.
 
 ## `ScriptsR`
 R scripts and related files used in this project for alfam2 modelling.
+* `ALFAM2-Field-cattle-slurry` R-file actual similation
+* `ALFAM2-Field-cattle-slurry-inital-test` R-file Inital tests only with final results
+* `par_comb_AUDFC` Csv-file, Generic and specific function-paramters, to compare
+* `pars_AUDFC` Csv-file Au-specific function paramters
+* `weather-data-field-cattle` csv-file weather data with the 160 hours relevant for this simulation extracted
 
 ## `SOPS's`
 Collection of used standard operating procedures.
-
-# Variables
-* `breath_score` "breath foulness" index as median of three panelists
