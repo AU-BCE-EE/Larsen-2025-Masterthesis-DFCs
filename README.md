@@ -11,13 +11,12 @@ Mikael Loevig Larsen
 # References
 Thesis paper will be presented here when made avalable through the university library.
 
-# Description of directories and files
+# Description of directories
 * `General Calculations` Word-file includes quick "by-hand"-calculations, - check of coding results, derrivations of theoretical equations, and the scaling factor calculation
-* `Reductions` Excel-file caclulations for relative and absolute reductions for all experiments - also includes and overview of results although this doesn't contain the later experiment (felt less relevant to update after the report was set up)
+* `Reductions` Excel-file caclulations for relative and absolute reductions for all experiments - also includes and overview of results although this doesn't contain the later experiments (felt less relevant to update when report writing was started)
 
 ## `Field-trails`
-Overviews, data from tests analytical test and calculations for the field-experiments. Includes overview of treatments for each plot, weather, soil(pH, BD, water content), slurry(pH, TAN, DM, acid dosage) and flow-data
-
+Overviews, data from analytical test and calculations for the field-experiments. Includes overview of treatments for each plot, weather, soil(pH, BD, water content), slurry(pH, TAN, DM, acid dosage) and flow-data
 * `2025-12-05-field-picarro-callibration` Excel-file, results and data from the Picarro(CRDS) callibration - created by F. Pierre and shared
 * `FoulumVejr` 2 CSV-files containing weather data for the respective field experiments
 * `Slurry ` Excelfile containing "raw" data for the acidifications (masses of slurry and acids, pH before and after)
