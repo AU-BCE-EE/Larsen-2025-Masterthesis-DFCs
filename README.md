@@ -37,19 +37,19 @@ Files specifically relavant to the field experiment applying cattle slurry. Incl
 Files specifically relavant to the field experiment applying cattle slurry. Includes and overview of the DFC and thier respective flows, and the applied treatments.
 
 ## `Lab-Trails`
-Overviews, data from analytical tests and calculations for the lab-experiments. Includes overview of treatment for each sample, slurry(pH, TAN, DM, acid dosage) soil(BD, water content) and flow-data, and calculation of the application rates.
+Overviews, data from analytical tests and calculations for the lab-experiments. Includes overview of treatment for each sample, slurry(pH, TAN, DM, acid dosage) soil(BD, water content) and flow-data, calculations of the application rates and the calculations for preparing the packed soils.
 
 ### `soil-sample-Ids`
 each soil sample has a distint number, denoted in these files in the case they had been switched.
 
 ## `Output`
-csv-output of CRDS data treatment and modelling. There is also a txt-file which explains changes between script version
+csv-output of CRDS data treatment and modelling. There is also a txt-file which explains changes between script versions
 
 ### `1-inital-extraction`
 Stable PPB-data extracted from raw-CRDS dat-files.
 
 ### `2-Flux-conversion`
-Stable PPB-data converted into flux, outputted here before major data treatment decisions.
+Stable PPB-data converted into flux, outputted here before major data treatment forks.
 
 ### `3-integration`
 Background-corrected (inverse ditance weighting) & linearly interpolated flux data, and accumulated emissions.
@@ -65,9 +65,6 @@ Python scripts used in this project, used for CRDS data treatment and for creati
 
 ### `2025-10-14-field-inital-lab-titration-plots`
 files used for creating plots for the initial titration.
-
-### `AlFAM2-model-exerimental-comparision`
-Files for comparing modelled and experimental data in a plot.
 
 ### `ALFAM2-prepping-the-template`
 Scripts for converting treated data in this work into the same structure as used in the ALFRAM2 database (for later uploading).
