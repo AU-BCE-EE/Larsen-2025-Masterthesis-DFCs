@@ -98,7 +98,7 @@ Inital scripts setup using former experimental data from the same setup provided
 
 ## `ScriptsR`
 R scripts and related files used in this project for alfam2 modelling.
-* `ALFAM2-Field-cattle-slurry` R-file actual similation
+* `ALFAM2-Field-cattle-slurry` R-file actual simulation file
 * `ALFAM2-Field-cattle-slurry-inital-test` R-file Inital tests only with final results
 * `par_comb_AUDFC` Csv-file, Generic and specific function-paramters, to compare
 * `pars_AUDFC` Csv-file Au-specific function paramters
