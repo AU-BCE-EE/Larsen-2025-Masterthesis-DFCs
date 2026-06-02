@@ -37,7 +37,7 @@ Files specifically relavant to the field experiment applying cattle slurry. Incl
 Files specifically relavant to the field experiment applying cattle slurry. Includes and overview of the DFC and thier respective flows, and the applied treatments.
 
 ## `Lab-Trails`
-Overviews, data from analytical tests and calculations for the lab-experiments. Includes overview of treatment for each sample, slurry(pH, TAN, DM, acid dosage) soil(BD, water content) and flow-data, calculations of the application rates and the calculations for preparing the packed soils.
+Overviews, data from analytical tests and calculations for the lab-experiments. Includes overview of treatment for each sample, slurry(pH, TAN, DM, acid dosage) soil(BD, water content), flow-data, calculations of the application rates and the calculations for preparing the packed soils.
 
 ### `soil-sample-Ids`
 each soil sample has a distint number, denoted in these files in the case they had been switched.
