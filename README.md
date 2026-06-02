@@ -19,7 +19,7 @@ Thesis paper will be presented here when made avalable through the university li
 ## `Field-trails`
 Overviews, data from tests analytical test and calculations for the field-experiments. Includes overview of treatments for each plot, weather, soil(pH, BD, water content), slurry(pH, TAN, DM, acid dosage) and flow-data
 
-* `2025-12.05-field-picarro-callibration` Excel-file, results and data from the Picarro(CRDS) callibration - created by F. Pierre and shared
+* `2025-12-05-field-picarro-callibration` Excel-file, results and data from the Picarro(CRDS) callibration - created by F. Pierre and shared
 * `FoulumVejr` 2 CSV-files containing weather data for the respective field experiments
 * `Slurry ` Excelfile containing "raw" data for the acidifications (masses of slurry and acids, pH before and after)
 * `SlurryData ` Csv-file, contains analytical results for slurry at application for the field experiments (TAN, VFA, pH) - not all were used for this project
