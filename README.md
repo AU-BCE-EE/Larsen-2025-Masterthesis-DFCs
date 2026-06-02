@@ -73,10 +73,10 @@ Scripts for converting treated data in this work into the same structure as used
 Files for data treatment of the CRDS(Picarro)-data, same script-structure is setup to handle each respective experiment, using the 1-extraction, 2-flux-conversion, 3-integration output-format.
 
 #### `2025-10-28-Field-trail-cattle-slurry`
-Files for treating the field experiment applying cattle slurry.
+Files for treating the field experiment applying cattle slurry. This one also contains an addtional script compared to the other where constant extrapolation of an inital data-loss was applied
 
 #### `2025-10-28-Field-trail-pig-slurry`
-Files for treating the field experiment applying pig slurry. This one also contains an addtional script compared to the other where constant extrapolation was applied
+Files for treating the field experiment applying pig slurry.
 
 #### `2026-01-06-Lab-cattle-slurry`
 Files for 1st lab acidification experiment applying cattle slurry - not presented in thesis, one of the slurries were potentially switched due to human error.
