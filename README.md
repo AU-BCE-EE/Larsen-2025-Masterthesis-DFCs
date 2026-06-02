@@ -12,7 +12,7 @@ Mikael Loevig Larsen
 Thesis paper will be presented here when made avalable through the university library.
 
 * `General Calculations` Word-file includes quick "by-hand"-calculations, - check of coding results, derrivations of theoretical equations, and the scaling factor calculation
-* `Reductions` Excel-file caclulations for relative and absolute reductions for all experiments - also includes and overview although this doesn't contain the later experiment (felt less relevant to update after the report was set up)
+* `Reductions` Excel-file caclulations for relative and absolute reductions for all experiments - also includes and overview of results although this doesn't contain the later experiment (felt less relevant to update after the report was set up)
 
 
 # Description of directories and files
