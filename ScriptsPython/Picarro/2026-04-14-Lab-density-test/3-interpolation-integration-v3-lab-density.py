@@ -370,7 +370,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
 #output_name_figure = Path("2026-06-01-density-expt-flux-late-rates.pdf")
-output_path_figures = output_folder_figures / output_name_figure
+#output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
 #treatment_method_dict = {1: 'PH2SO4', 2: 'FH2SO4', 3: 'FU', 4: 'PU', 5: 'PAA', 11: 'BACKGROUND',

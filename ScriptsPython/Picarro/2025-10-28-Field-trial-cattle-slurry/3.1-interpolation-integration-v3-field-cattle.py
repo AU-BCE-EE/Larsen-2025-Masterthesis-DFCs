@@ -341,7 +341,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("graph-2026-05-29-interp-test.pdf")
+output_name_figure = Path("2026-06-06-graph-cattle-field-flux.png")
 output_path_figures = output_folder_figures / output_name_figure
 
 
@@ -479,7 +479,7 @@ if Create_plots == True:
     plt.legend(frameon=False)
     #plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
     
-    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -547,9 +547,9 @@ if Create_plots == True:
 
     # save/show
     plt.tight_layout()
-    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
-    #plt.show()
-    #plt.close()
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    plt.show()
+    plt.close()
 
      
  

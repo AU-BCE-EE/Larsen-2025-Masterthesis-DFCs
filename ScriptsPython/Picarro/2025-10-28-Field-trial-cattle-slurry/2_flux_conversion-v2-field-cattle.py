@@ -165,7 +165,7 @@ output_file_name_weather = Path('weather-data-field-cattle')
 
 # Figures #
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("graph-2026-05-25-field-cattle-temperature.pdf")
+output_name_figure = Path("2026-06-06-FieldCattleTemperature.png")
 output_path_figures = output_folder_figures / output_name_figure
 
 ### Constants ###

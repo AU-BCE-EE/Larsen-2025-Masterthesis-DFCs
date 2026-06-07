@@ -347,7 +347,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("extrapolation-test.pdf")
+output_name_figure = Path("2026-06-06-graph-ExtrapolationTest.png")
 output_path_figures = output_folder_figures / output_name_figure
 
 
@@ -398,31 +398,31 @@ merged_df = merge_triplicates(TAN_df)
 
 ### Rename collums before saving as csv-files
 # Treatment level
-renamed_df = merged_df.rename(columns={
-'F_INTERP_MEAN' : 'flux [mg/m2 h]',
-'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
-'%REL_F_MEAN': 'relative_flux',
-'%REL_F_STD': 'relative_flux_std_dev',
-'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
-'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
-'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
-'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
-'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
-print(renamed_df)
-
-# valve level
-#renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
-#'F_INTERP' : 'flux [mg/m2 h]',
-#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
+#renamed_df = merged_df.rename(columns={
+#'F_INTERP_MEAN' : 'flux [mg/m2 h]',
+#'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
+#'%REL_F_MEAN': 'relative_flux',
+#'%REL_F_STD': 'relative_flux_std_dev',
+#'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
+#'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
+#'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
+#'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
 #'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-#'%REL_F': '%relative_flux',
-#'ACUM_EMIS':'accumulated_emission [mg/m2]',
-#'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'
-#})
+#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
 #print(renamed_df)
 
-#save_df_as_csv(renamed_df, output_folder, '2026-05-22-field-cattle-extrap-treatment-lvl', overwrite = True)
+# valve level
+renamed_df = TAN_df.rename(columns={
+'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
+'F_INTERP' : 'flux [mg/m2 h]',
+'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
+'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+'%REL_F': '%relative_flux',
+'ACUM_EMIS':'accumulated_emission [mg/m2]',
+'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
+#print(renamed_df)
+
+#save_df_as_csv(renamed_df, output_folder, '2026-06-05-field-cattle-extrap-valve-lvl', overwrite = True)
 
 ##### TEST and stats #####
 ### Relative and abosolute reductions ###
@@ -460,7 +460,7 @@ plt.rcParams.update({
 if Create_plots == True:
     ##### Check of interpolation vs raw data for random valve #####
     interptest_valveid = random.choice(treatment_valve_ids)
-    #interptest_valveid = 17
+    interptest_valveid = 14
     print(f'plotted valve for interpolation test is {interptest_valveid}')
 
     # extract raw data
@@ -477,11 +477,11 @@ if Create_plots == True:
     plt.plot(t_raw, F, 'o', label='Raw Data', color='Black', linewidth = 2, markersize = 3)
     plt.plot(t_interp, F_interp, 'x-', label='Interpolated Data', color='black', linewidth= 1 , markersize = 3)
     plt.xlabel('Time Since Application [h]')
-    plt.ylabel('Flux [mg/h m2]')
+    plt.ylabel('Flux [mg h⁻¹ m⁻²]')
     plt.legend(frameon=False)
     #plt.title(f'Raw vs. Interpolated Data for Valve {interptest_valveid}')
     
-    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -549,7 +549,7 @@ if Create_plots == True:
 
     # save/show
     plt.tight_layout()
-    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 

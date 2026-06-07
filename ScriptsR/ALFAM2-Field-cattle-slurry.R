@@ -1,6 +1,7 @@
 ### Importing Libraries ###
 library(ALFAM2) # calling the library, same as a package-call in Python
 #?alfam2 # documentation of the alfam2 function
+#packageVersion("ALFAM2") # call of the version, for documentation
 
 ### Change to DFC-specific function-parameters ####
 pars_df <- read.csv(file.choose())# the csv-file is in the same folder as the script, the name is Pars_AUDFC
@@ -147,7 +148,6 @@ folder <- "C:/Users/mikae/Desktop/Github - speciale/Larsen-2025-Masterthesis-DFC
 write.csv(result_df, file.path(folder, "2026-05-21-alfam2_Cattle-th.csv"), row.names = FALSE)
 
 ### Documentation and clearing variables ###
-#packageVersion("ALFAM2") # call of the version, for documentation
 #args(alfam2) # which argumments where used for modeeling getting these results
 
 ### Other ###

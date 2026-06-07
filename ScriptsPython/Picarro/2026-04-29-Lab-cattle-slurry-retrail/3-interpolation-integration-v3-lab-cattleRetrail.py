@@ -369,7 +369,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("Lab-cattle-PackedSoil-flux.pdf")
+output_name_figure = Path("graph-2026-06-05Lab-cattle-PackedSoil-24hflux.png")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
@@ -437,30 +437,30 @@ merged_df = merge_triplicates(TAN_df)
 
 ### Rename collums before saving as csv-files
 # Treatment level
-renamed_df = merged_df.rename(columns={
-'F_INTERP_MEAN' : 'flux [mg/m2 h]',
-'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
-'%REL_F_MEAN': 'relative_flux',
-'%REL_F_STD': 'relative_flux_std_dev',
-'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
-'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
-'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
-'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
-'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
+#renamed_df = merged_df.rename(columns={
+#'F_INTERP_MEAN' : 'flux [mg/m2 h]',
+#'F_INTERP_STD': 'flux_std_dev[mg/m2 h]',
+#'%REL_F_MEAN': 'relative_flux',
+#'%REL_F_STD': 'relative_flux_std_dev',
+#'%REL_ACUM_EMIS_MEAN': '%_relative_accumulated_emissions',
+#'%REL_ACUM_EMIS_STD' : '%_relative_accumulated_emisssions_std_dev',
+#'ACUM_EMIS_MEAN':'accumulated_emission [mg/m2]',
+#'ACUM_EMIS_STD': 'accumulated_emission_std_dev[mg/m2]',
+#'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment'}) 
 #print(renamed_df)
 
 # valve level
-#renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
-#'F_INTERP' : 'flux [mg/m2 h]',
-#'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
-#'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
-#'%REL_F': '%relative_flux',
-#'ACUM_EMIS':'accumulated_emission [mg/m2]',
-#'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
-#print(renamed_df)
+renamed_df = TAN_df.rename(columns={'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]', 
+'F_INTERP' : 'flux [mg/m2 h]',
+'TIME_NORM_GLOBAL[h]': 'time_since_start_of_experiment',
+'TIME_SINCE_APP[h]': 'time_since_slurry_aplication[h]',
+'%REL_F': '%relative_flux',
+'ACUM_EMIS':'accumulated_emission [mg/m2]',
+'%REL_ACUM_EMIS': '%_relative_accumulated_emissions'})
+print(renamed_df)
 
-#save_df_as_csv(renamed_df, output_folder, '2026-05-09-lab-cattleRetrail-integrated', overwrite = True)
+#save_df_as_csv(renamed_df, output_folder, '2026-06-05-lab-cattleRetrail-integrated-replicate_lvl', overwrite = True)
 
 ##### Tests and stats #####
 ### Data for relative differences ####
@@ -594,7 +594,7 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 140)
+    plt.xlim(0, 24)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
     plt.ylim(-0.05 , 4.5)
     plt.legend(frameon=False)

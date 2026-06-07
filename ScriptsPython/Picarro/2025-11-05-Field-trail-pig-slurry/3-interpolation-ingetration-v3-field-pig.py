@@ -344,7 +344,7 @@ output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mast
 
 ##### Figures #####
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("graph-2026-05-25-field-pig-flux.pdf")
+output_name_figure = Path("2026-06-06-graph-field-pig-flux.png")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
@@ -442,7 +442,7 @@ for valve in TAN_df['VALVE_ID'].unique(): # extract final accumalted emission fr
     print(f"Accumulated emission at ~160 h for valve {valve} is "f"{round(emis_at_target, 3)} %, treatment is {treatment}, exact time is {actual_time}")
 
 ##### Plot creation ##### 
-Create_plots = True
+Create_plots = False 
 
 # global figure size and DPI
 FIGSIZE = (6, 4)
@@ -551,7 +551,7 @@ if Create_plots == True:
 
     # save/show
     plt.tight_layout()
-    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
     plt.close()
 

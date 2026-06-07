@@ -27,7 +27,7 @@ input_file_name_cattle = '2025-11-11-Titration-cattle-3rd.csv'
 
 ### Output folder ###
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-#output_name_figure = Path("graph-2026-06-01-inital-acidification.pdf")
+output_name_figure = Path("-2026-06-02-graph-InitalAcidification.png")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### function-calls #####
@@ -68,10 +68,10 @@ DPI = 300
 
 plt.rcParams.update({
     'font.family': 'Times New Roman',
-    'font.size': 18,
-    'axes.labelsize': 18,
-    'xtick.labelsize': 16,
-    'ytick.labelsize': 16,
+    'font.size': 16,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
     'ytick.direction': 'in',
     'xtick.direction': 'in',
     'axes.linewidth': 1})
@@ -105,7 +105,7 @@ plt.ylim(0, 7.5)
 
 # save/show
 plt.tight_layout()
-#plt.savefig(output_path_figures, dpi=DPI, bbox_inches='tight')
+plt.savefig(output_path_figures, dpi=DPI, bbox_inches='tight')
 plt.show()
 plt.close()
 

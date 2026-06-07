@@ -368,7 +368,7 @@ input_path = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Mastert
 output_folder = Path(r"C:\Users\mikae\Desktop\Github - speciale\Larsen-2025-Masterthesis-DFCs\output\3-intergration")
 
 output_folder_figures = Path(r"C:\Users\mikae\OneDrive - Aarhus universitet\10 semester - Speciale\Report Graphs")
-output_name_figure = Path("Graph-Lab-pig-PackedSoil-flux.pdf")
+output_name_figure = Path("2026-06-06-graph-LabPigField.png")
 output_path_figures = output_folder_figures / output_name_figure
 
 ##### Constants #####
@@ -526,7 +526,7 @@ if Create_plots == True:
     'FH2SO4': 'darkgreen', 'PH2SO4': 'darkgreen'}
 
     # filter to only packed or 
-    group_prefix = 'P' # F or P
+    group_prefix = 'F' # F or P
     plot_df = merged_df[merged_df['TREATMENT'].str.startswith(group_prefix)]
 
     # determine unique treatments in merged df
@@ -559,11 +559,11 @@ if Create_plots == True:
 
     # graph visuals
     plt.xlabel('Time Since Application [h]')
-    plt.xlim(0, 48)
+    plt.xlim(0, 24)
     plt.ylabel('Relative flux (% of TAN) [h⁻¹]')
     plt.ylim(-0.05 , 4.5)
     plt.legend(frameon=False)
-    #plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path_figures, dpi=300, bbox_inches='tight')
     plt.show()
 
 
